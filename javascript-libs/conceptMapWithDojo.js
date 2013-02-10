@@ -557,7 +557,11 @@ define("conceptMap", [
 
         addText(group, item.text, 75);
 
+        //console.log("group", group);
+        //console.log("blueCircle", blueCircle);
+
         //touch.press(group, function(e) {
+        //touch.press(blueCircle, function(e) {
         //noinspection JSUnusedLocalSymbols
         group.connect("onmousedown", function (e) {
             // require(["dojo/on"], function(on) {
