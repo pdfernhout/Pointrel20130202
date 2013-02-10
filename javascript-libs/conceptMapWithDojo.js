@@ -123,9 +123,12 @@ define("conceptMap", [
 
         setupAccountRelatedButton();
 
-        setupMainSurface();
+        var newBr = document.createElement("br");
+        document.body.appendChild(newBr);
 
         addItemEditor();
+
+        setupMainSurface();
 
         updateAccountInformation(loggedInUserID);
     }
@@ -282,29 +285,14 @@ define("conceptMap", [
 //    }
 
     function addItemEditor() {
+        var textBoxWidth = "width: 50em; margin-left: 2em;";
         textBox = new TextBox({
             name: "conceptTextBox",
             value: "",
-            placeHolder: "type in a concept"
+            placeHolder: "type in a concept",
+            style: textBoxWidth
         }, "conceptTextBox");
         document.body.appendChild(textBox.domNode);
-
-        //  var newBreak = document.createElement("br");
-        //  document.body.appendChild(newBreak);
-
-        urlBox = new TextBox({
-            name: "urlTextBox",
-            value: "", // http://www.rakontu.org
-            placeHolder: "type in a url"
-        }, "urlTextBox");
-        document.body.appendChild(urlBox.domNode);
-
-        var goButton = newButton("goButton", "Go", function () {
-            go(urlBox.get("value"));
-        });
-
-        //  var newBreak = document.createElement("br");
-        //  document.body.appendChild(newBreak);
 
         var updateItemButton = newButton("updateItemButton", "Update item", function () {
             if (lastSelectedItem) {
@@ -315,6 +303,26 @@ define("conceptMap", [
                 rebuildItems(mainSurface, items);
             }
         });
+
+        var newBreak = document.createElement("br");
+        document.body.appendChild(newBreak);
+
+        // var urlBoxWidth = "width: 500em; border: 5px solid #C4C4C4; padding: 6px;";
+        var urlBoxWidth = "width: 50em; margin-left: 2em;";
+        urlBox = new TextBox({
+            name: "urlTextBox",
+            value: "", // http://www.rakontu.org
+            placeHolder: "type in a url",
+            style: urlBoxWidth
+        }, "urlTextBox");
+        document.body.appendChild(urlBox.domNode);
+
+        var goButton = newButton("goButton", "Go", function () {
+            go(urlBox.get("value"));
+        });
+
+        //  var newBreak = document.createElement("br");
+        //  document.body.appendChild(newBreak);
     }
 
     function clickedLogin(event) {
