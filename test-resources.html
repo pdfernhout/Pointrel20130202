@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>Pointrel In JavaScript test-resources</title>
+<script type="text/javascript" src="../jquery-1.9.1.js"></script>
+<script type="text/javascript" src="javascript-libs/sha256.js"></script>
+</head>
+
+<body>
+<h3>Test resources</h3>
+This automatically tests Pointrel functionality for storing and retrieving a resource string from a web server using JavaScript.
+JavaScript must be enabled for this page for this test to work.
+Click here to test the back-end script with no data: 
+<a href="resource-add.php">test upload</a>.
+<p/>
+ERROR <div id="errorcontainer"></div><BR>
+QUERY <div id="query"></div><BR>
+RESPONSE <div id="response"></div><BR>
+RETRIEVE <div id="retrieve"></div><BR>
+
+<script type="text/javascript">
+$(document).ready(function() {
+  //  alert("jQuery is online.");
+
+// TODO: A no-op for now...
+function EncodeAsUTF8(text) { return text }
+
+$("div#errorcontainer")
+    .ajaxError(
+        function(e, x, settings, exception) {
+            var message;
+            var statusErrorMap = {
+                '400' : "Server understood the request but request content was invalid.",
+                '401' : "Unauthorised access.",
+                '403' : "Forbidden resouce can't be accessed",
+                '500' : "Internal Server Error.",
+                '503' : "Service Unavailable"
+            };
+            if (x.status) {
+                message = statusErrorMap[x.status];
+                if(!message) {
+                   message = "Unknown Error \n.";
+                }
+            } else if (exception == 'parsererror') {
+                message = "Error.\nParsing JSON Request failed.";
+            } else if (exception == 'timeout') {
+                message = "Request Time out.";
+            } else if (exception == 'abort') {
+                message = "Request was aborted by the server";
+            } else {
+                message = "Unknown Error \n.";
+            }
+            $(this).css("display", "inline");
+            $(this).html(message);
+  });
+
+  var originalDataString = "this is a test";
+  var myContent = EncodeAsUTF8(originalDataString);
+  // var hash = CryptoJS.SHA3(myContent, { outputLength: 256 });
+  // var myName = "pointrel://sha3-256_" + hash + "_" + myContent.length + ".txt";
+  var hash = CryptoJS.SHA256(myContent);
+  var myName = "pointrel://sha256_" + hash + "_" + myContent.length + ".txt";
+
+  var request = {
+    type: "POST",
+    url: "resource-add.php",
+    data: {"resourceURI": myName, "resourceContent": myContent, "userID": "anonymous"},
+    dataType: "text",
+    // cache: false,
+    success: function (data, statusThing) {
+        // alert("POST success status: " + statusThing);
+        //alert("POST result: '" + data + "'");
+        document.getElementById("response").innerHTML = data; // JSON.stringify(data);
+        var status = JSON.parse(data).status;
+        if (status == "OK") retrieveTest();
+      },
+    error: function (xhr, ajaxOptions, thrownError) {
+        alert("POST xhr.status: " + xhr.status);
+        alert("POST xhr: " + xhr);
+        alert("POST thrownError : " + thrownError);
+      },
+    // dataType: "text/html",
+    complete: function (requestThing, typeOfSuccess) {
+        // alert("POST ajax completed: " + typeOfSuccess);
+      } 
+  };
+
+  $.ajax(request);
+
+  // alert("sent request: " + JSON.stringify(request));
+  document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request);
+});
+
+var fileToGet = "pointrel://sha256_2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c_14.txt";
+
+function retrieveTest() {
+   var request = {
+    type: "GET",
+    url: "resource-get.php",
+    data: {"resourceURI": fileToGet, "userID": "anonymous"},
+    dataType: "text",
+    // cache: false,
+    success: function (data, statusThing) {
+        // alert("GET success status: " + statusThing);
+        // alert("GET result: '" + data + "'");
+        document.getElementById("retrieve").innerHTML = data;
+      },
+    error: function (xhr, ajaxOptions, thrownError) {
+        alert("GET xhr.status: " + xhr.status);
+        alert("GET xhr: " + xhr);
+        alert("GET thrownError : " + thrownError);
+      },
+    // dataType: "text/html",
+    complete: function (requestThing, typeOfSuccess) {
+        // alert("GET ajax completed: " + typeOfSuccess);
+      } 
+  };
+
+  $.ajax(request);
+
+  // alert("sent request: " + JSON.stringify(request));
+  document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request); 
+}
+
+</script>
+
+</body>
+</html>

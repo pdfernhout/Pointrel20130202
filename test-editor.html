@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <title>Pointrel In JavaScript test-editor</title>
+  <script type="text/javascript" src="../jquery-1.9.1.js"></script>
+  <script type="text/javascript" src="javascript-libs/sha256.js"></script>
+  <script type="text/javascript" src="javascript-libs/pointrel20130202ForJQuery.js"></script>
+  <script type="text/javascript">
+    var currentVersionURI = "";
+    var variableName = "editor-test";
+    /*
+    TODO:
+    Variable points to a version
+    Version has timestamp, user, resource, previous
+    */
+    function latest() {
+      variableName = $("#variableName").val();
+      pointrel_variable_get(variableName, function(error, variableGetResult) {
+        console.log("pointrel_variable_get");
+        if (error) {
+          currentVersionURI = "";
+          $("#timestamp").val("");
+          $("#userID").val("");
+          $("#versionURI").val("");
+          // $("#textURI").val("");
+          // $("#editor").val("");
+          alert("Error happened on variable get; variable name may be new? Result: " + variableGetResult.message);
+          return;
+        }
+        var versionURI = variableGetResult.currentValue;
+        pointrel_resource_get(versionURI, function(error, versionContents) {
+          console.log("pointrel_resource_get");
+          if (error) { alert("Error happened on versionContents get"); return; }
+          console.log("versionContents:", versionContents);
+          var version = JSON.parse(versionContents);
+          var textURI = version.value;
+          pointrel_resource_get(textURI, function(error, text) {
+            console.log("pointrel_resource_get");
+            if (error) { alert("Error happened when getting text of version"); return; }
+            console.log("latest updating before:", versionURI);
+            $("#timestamp").val(version.timestamp);
+            $("#userID").val(version.userID);
+            $("#versionURI").val(versionURI);
+            $("#textURI").val(textURI);
+            $("#editor").val(text);
+            console.log("latest updating after:", versionURI);
+            currentVersionURI = versionURI;
+          });
+        });        
+      });
+    }
+    function previous() {
+      var versionURI = $("#versionURI").val();
+      pointrel_resource_get(versionURI, function(error, versionContents) {
+        console.log("pointrel_resource_get");
+        if (error) { alert("Error happened on versionContents get"); return; }
+        console.log("versionContents:", versionContents);
+        var version = JSON.parse(versionContents);
+
+        var previousVersionURI = version.previousVersion;
+        if (previousVersionURI === "") { alert ("No previous version"); return; }
+        pointrel_resource_get(previousVersionURI, function(error, previousVersionContents) {
+          console.log("pointrel_resource_get");
+          if (error) { alert("Error happened on previousVersionContents get"); return; }
+          console.log("previousVersionContents:", previousVersionContents);
+          var previousVersion = JSON.parse(previousVersionContents);
+
+          var textURI = previousVersion.value;
+          pointrel_resource_get(textURI, function(error, text) {
+            console.log("pointrel_resource_get");
+            if (error) { alert("Error happened when getting text of previous version"); return; }
+            console.log("previousVersion:", previousVersion);
+            $("#timestamp").val(previousVersion.timestamp);
+            $("#userID").val(previousVersion.userID);
+            $("#versionURI").val(previousVersionURI);
+            $("#textURI").val(textURI);
+            $("#editor").val(text);
+            console.log("latest updating after:", previousVersion);
+            currentVersionURI = previousVersionURI;
+          });
+        }); 
+      });       
+    }
+    function store() {
+        variableName = $("#variableName").val();
+        var editorText = $("#editor").val();
+        // alert(editorText);
+        console.log(editorText);
+        var textURI = pointrel_resource_add(editorText, "txt");
+        console.log(textURI);
+        var timestamp = new Date().toISOString();
+        var userID = "anonymous";
+        var previousVersionURI = currentVersionURI;
+        var version = {timestamp: timestamp, userID: userID, previousVersion: previousVersionURI, value: textURI};
+        console.log("version:", version);
+        var versionAsString = JSON.stringify(version);
+        console.log("versionAsString:", versionAsString);
+        var newVersionURI = pointrel_resource_add(versionAsString, "Version.json");
+        console.log("newVersionURI:", newVersionURI);
+        pointrel_variable_set(variableName, currentVersionURI, newVersionURI, function (error, result) {
+          if (error) { alert("Error happened when tryping to set variable"); return; }
+          console.log("store updating before:", currentVersionURI);
+          $("#timestamp").val(timestamp);
+          $("#userID").val(userID);
+          $("#versionURI").val(newVersionURI);
+          $("#textURI").val(textURI);
+          console.log("store updating after:", newVersionURI);
+          currentVersionURI = newVersionURI;
+        });
+        // alert(textURI);
+    }
+    function fetch() {
+        var textURI = $("#textURI").val();
+        // alert(textURI);
+        // TODO: Must be asyncronous
+        pointrel_resource_get(textURI, function(error, text) {
+          if (error) { alert("Error when fetching"); return; }
+          // alert(text);
+          $("#editor").val(text);
+        });
+    }
+  </script>
+</head>
+<body>
+  <h3>Test versioned text editor</h3>
+  This tests Pointrel functionality for keeping track of a list (or tree) of versions of a piece of text.
+  Add some later versions by typing text in the box and then clicking "Store".
+  Click the "Latest" button to get the latest version of a text document for some variable name.
+  Then click "Previous" to get previous versions. JavaScript must be enabled for this page for this test to work.
+  <p>
+  To add a new variable, change the variable name and clear the current version field by hand and then store text for it.
+  Or you can click "Latest" after changing the name, and ignore the error message there about a missing variable file.
+  Otherwise, if there is any text in the version field, you will get an error later when you go to store text for a new variable.
+  <p/>
+  <form>
+    Variable: <input type="text" id="variableName" style="width:300px;" value="editor-test"/><input type="button" onclick="latest()" value="Latest"/><br/>
+    Time: <input type="text" id="timestamp" style="width:200px;"/> User: <input type="text" id="userID" style="width:200px;"/><br/>
+    Version: <input type="text" id="versionURI" style="width:700px;"/><input type="button" onclick="previous()" value="Previous"/><br/>
+    Text resource URI: <input type="text" id="textURI" style="width:700px;"/><input type="button" onclick="fetch()" value="Fetch"/><br/>
+    <textarea id="editor"></textarea><br/>
+    <input type="button" onclick="store()" value="Store"/>
+  </form>
+</body>
+</html>

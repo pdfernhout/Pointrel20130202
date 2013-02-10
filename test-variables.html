@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>Pointrel In JavaScript text-variables</title>
+<script type="text/javascript" src="../jquery-1.9.1.js"></script>
+
+</head>
+<body>
+<h3>Test resources</h3>
+This tests Pointrel functionality for creating, getting, updating, and deleting a variable from a web server using JavaScript.
+JavaScript must be enabled for this page for this test to work.
+Click here to test the back-end script with no data: 
+<a href="variable-query.php">test variable query</a>.
+<p/>
+ERROR <div id="errorcontainer"></div><BR>
+QUERY <div id="query"></div><BR>
+RESPONSE <div id="response"></div><BR>
+RETRIEVE <div id="retrieve"></div><BR>
+
+<script type="text/javascript">
+$(document).ready(function() {
+  //  alert("jQuery is online.");
+
+// TODO: A no-op for now...
+function EncodeAsUTF8(text) { return text }
+
+$("div#errorcontainer")
+    .ajaxError(
+        function(e, x, settings, exception) {
+            var message;
+            var statusErrorMap = {
+                '400' : "Server understood the request but request content was invalid.",
+                '401' : "Unauthorised access.",
+                '403' : "Forbidden resouce can't be accessed",
+                '500' : "Internal Server Error.",
+                '503' : "Service Unavailable"
+            };
+            if (x.status) {
+                message = statusErrorMap[x.status];
+                if(!message) {
+                   message = "Unknown Error \n.";
+                }
+            } else if (exception == 'parsererror') {
+                message = "Error.\nParsing JSON Request failed.";
+            } else if (exception == 'timeout') {
+                message = "Request Time out.";
+            } else if (exception == 'abort') {
+                message = "Request was aborted by the server";
+            } else {
+                message = "Unknown Error \n.";
+            }
+            $(this).css("display", "inline");
+            $(this).html(message);
+  });
+
+  var sampleURI1 = "pointrel://sha256_2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c_14.txt";
+  var sampleURI2 = "pointrel://sha256_2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c_14.dat";
+
+  var request = {
+    type: "POST",
+    url: "variable-query.php",
+    data: {"variableName": "test", "operation": "new", "newValue": sampleURI1, "userID": "anonymous"},
+    dataType: "text",
+    // cache: false,
+    success: function (data, statusThing) {
+        // alert("POST success status: " + statusThing);
+        //alert("POST result: '" + data + "'");
+        document.getElementById("response").innerHTML = data; // JSON.stringify(data);
+        var status = JSON.parse(data).status;
+        if (status == "OK") retrieveTest();
+      },
+    error: function (xhr, ajaxOptions, thrownError) {
+        alert("POST xhr.status: " + xhr.status);
+        alert("POST xhr: " + xhr);
+        alert("POST thrownError : " + thrownError);
+      },
+    complete: function (requestThing, typeOfSuccess) {
+        // alert("POST ajax completed: " + typeOfSuccess);
+      } 
+  };
+
+  $.ajax(request);
+
+  // alert("sent request: " + JSON.stringify(request));
+  document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request);
+
+function retrieveTest() {
+   var request = {
+    type: "POST",
+    url: "variable-query.php",
+    data: {"variableName": "test", "operation": "get", "userID": "anonymous"},
+    dataType: "text",
+    // cache: false,
+    success: function (data, statusThing) {
+        // alert("GET success status: " + statusThing);
+        // alert("GET result: '" + data + "'");
+        document.getElementById("retrieve").innerHTML = data;
+        var status = JSON.parse(data).status;
+        if (status == "OK") updateTest();
+      },
+    error: function (xhr, ajaxOptions, thrownError) {
+        alert("GET xhr.status: " + xhr.status);
+        alert("GET xhr: " + xhr);
+        alert("GET thrownError : " + thrownError);
+      },
+    complete: function (requestThing, typeOfSuccess) {
+       // alert("GET ajax completed: " + typeOfSuccess);
+      } 
+  };
+
+  $.ajax(request);
+
+  // alert("sent request: " + JSON.stringify(request));
+  document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request); 
+}
+
+
+function updateTest() {
+   // alert("starting update test");
+   var request = {
+    type: "POST",
+    url: "variable-query.php",
+    data: {"variableName": "test", "operation": "set", "currentValue": sampleURI1, "newValue": sampleURI2, "userID": "anonymous"},
+    dataType: "text",
+    // cache: false,
+    success: function (data, statusThing) {
+        // alert("GET success status: " + statusThing);
+        // alert("GET result: '" + data + "'");
+        document.getElementById("retrieve").innerHTML = data;
+        var status = JSON.parse(data).status;
+        if (status == "OK") deleteTest();
+      },
+    error: function (xhr, ajaxOptions, thrownError) {
+        alert("GET xhr.status: " + xhr.status);
+        alert("GET xhr: " + xhr);
+        alert("GET thrownError : " + thrownError);
+      },
+    complete: function (requestThing, typeOfSuccess) {
+        // alert("GET ajax completed: " + typeOfSuccess);
+      } 
+  };
+
+  $.ajax(request);
+
+  // alert("sent request: " + JSON.stringify(request));
+  document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request); 
+}
+
+function deleteTest() {
+   var request = {
+    type: "POST",
+    url: "variable-query.php",
+    data: {"variableName": "test", "operation": "delete", "currentValue": sampleURI2, "userID": "anonymous"},
+    dataType: "text",
+    // cache: false,
+    success: function (data, statusThing) {
+        // alert("GET success status: " + statusThing);
+        // alert("GET result: '" + data + "'");
+        document.getElementById("retrieve").innerHTML = data;
+        var status = JSON.parse(data).status;
+        // if (status == "OK") somethingElse();
+      },
+    error: function (xhr, ajaxOptions, thrownError) {
+        alert("GET xhr.status: " + xhr.status);
+        alert("GET xhr: " + xhr);
+        alert("GET thrownError : " + thrownError);
+      },
+    complete: function (requestThing, typeOfSuccess) {
+        // alert("GET ajax completed: " + typeOfSuccess);
+      } 
+  };
+
+  $.ajax(request);
+
+  // alert("sent request: " + JSON.stringify(request));
+  document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request); 
+}
+
+});
+
+
+</script>
+
+</body>
+</html>
