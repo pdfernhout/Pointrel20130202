@@ -233,10 +233,12 @@ define("conceptMap", [
             title: "Diagram source",
             id: "sourceDialog",
             style: {width: "400px", height: "400px", overflow: "auto"},
-            content: "source: <input dojoType='dijit.form.Textarea' type='text' name='sourceTextArea' id='sourceTextArea'>" +
-                '<br/><button dojoType="dijit.form.Button" type="submit" onClick="updateSource();">Update</button>' +
-                '<button dojoType="dijit.form.Button" type="submit">Cancel</button>'
+            content: "source: <input data-dojo-type='dijit/form/Textarea' type='text' name='sourceTextArea' id='sourceTextArea'>" +
+                '<br/><button data-dojo-type="dijit/form/Button" type="submit" onClick="document.updateSource();">Update</button>' +
+                '<button data-dojo-type="dijit/form/Button" type="submit">Cancel</button>'
         });
+        // Make our function available globally so the dialog can find it
+        document.updateSource = updateSource;
     }
 
     function defineEntryDialog() {
@@ -244,11 +246,12 @@ define("conceptMap", [
             title: "New item",
             id: "formDialog",
             style: "width: 300px",
-            content: "name: <input dojoType='dijit.form.TextBox' type='text' name='name' id='name'>" +
-                "<br/>url: <input dojoType='dijit.form.TextBox' type='text' name='url' id='url'>" +
-                //'<br/><button dojoType="dijit.form.Button" type="submit" onClick="return registry.byId("formDialog").isValid();">OK</button>'
-                '<br/><button dojoType="dijit.form.Button" type="submit" onClick="clickedOK();">OK</button>'
+            content: "name: <input data-dojo-type='dijit/form/TextBox' type='text' name='name' id='name'>" +
+                "<br/>url: <input data-dojo-type='dijit/form/TextBox' type='text' name='url' id='url'>" +
+                //'<br/><button data-dojo-type="dijit/form/Button" type="submit" onClick="return registry.byId("formDialog").isValid();">OK</button>'
+                '<br/><button data-dojo-type="dijit/form/Button" type="submit" onClick="document.clickedNewEntryOK();">OK</button>'
         });
+        document.clickedNewEntryOK = clickedNewEntryOK;
     }
 
     function defineLoginDialog() {
@@ -256,10 +259,11 @@ define("conceptMap", [
             title: "Login",
             id: "loginDialog",
             style: "width: 300px",
-            content: "name: <input dojoType='dijit.form.TextBox' type='text' name='loginName' id='loginName'>" +
-                // "<br/>password: <input dojoType='dijit.form.TextBox' type='password' name='loginPassword' id='loginPassword'>" +
-                '<br/><button dojoType="dijit.form.Button" type="submit" onClick="clickedLogin();">Login</button>'
+            content: "name: <input data-dojo-type='dijit/form/TextBox' type='text' name='loginName' id='loginName'>" +
+                // "<br/>password: <input data-dojo-type='dijit/form/TextBox' type='password' name='loginPassword' id='loginPassword'>" +
+                '<br/><button data-dojo-type="dijit/form/Button" type="submit" onClick="document.clickedLogin();">Login</button>'
         });
+        document.clickedLogin = clickedLogin;
     }
 
 //    function defineSignupDialog() {
@@ -267,13 +271,14 @@ define("conceptMap", [
 //            title: "Signup for new account",
 //            id: "signupDialog",
 //            style: "width: 300px",
-//            content: "name: <input dojoType='dijit.form.TextBox' type='text' name='signupName' id='signupName'>" +
-//                "<br>email: <input dojoType='dijit.form.TextBox' type='text' name='signupEmail' id='signupEmail'>" +
+//            content: "name: <input data-dojo-type='dijit/form/TextBox' type='text' name='signupName' id='signupName'>" +
+//                "<br>email: <input data-dojo-type='dijit/form/TextBox' type='text' name='signupEmail' id='signupEmail'>" +
 //                "<br><i>Please <b>do not use a valuable password</b> like one already used for a bank or significant social media site.</i>" +
-//                "<br/>password: <input dojoType='dijit.form.TextBox' type='password' name='signupPassword' id='signupPassword'>" +
-//                "<br/>confirm: <input dojoType='dijit.form.TextBox' type='password' name='signupPassword2' id='signupPassword2'>" +
-//                '<br/><button dojoType="dijit.form.Button" type="submit" onClick="clickedSignup();">Create account</button>'
+//                "<br/>password: <input data-dojo-type='dijit/form/TextBox' type='password' name='signupPassword' id='signupPassword'>" +
+//                "<br/>confirm: <input data-dojo-type='dijit/form/TextBox' type='password' name='signupPassword2' id='signupPassword2'>" +
+//                '<br/><button data-dojo-type="dijit/form/Button" type="submit" onClick="document.clickedSignup();">Create account</button>'
 //        });
+//        document.clickedSignup = clickedSignup
 //    }
 
     function addItemEditor() {
@@ -352,7 +357,7 @@ define("conceptMap", [
 //        }
 //    }
 
-    function clickedOK(event) {
+    function clickedNewEntryOK(event) {
         console.log("Clicked OK", event);
         var data = entryDialog.get("value");
         console.log("data", data);
