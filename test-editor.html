@@ -31,22 +31,26 @@
                 console.log("Read document from: " + chosenVariable);
                 variableName = chosenVariable;
                 $("#variableName").val(chosenVariable);
-                latest();
+                latest("ignoreMissing");
             }
             updateURI();
         }
 
         function updateURI() {
             var chosenVariable = getParameter("documentName");
-            if (chosenVariable != variableName) {
+            // if (chosenVariable != variableName) {
                 var url = document.URL;
                 var tempArray = url.split("?");
                 var baseURL = tempArray[0];
+                baseURL = "test-editor.html";
                 var newURI = baseURL + "?documentName=" + encodeURI(variableName);
                 console.log("Updating permalink URI to:", newURI);
-                $("a").prop("href", newURI);
+                $("a#editorLink").prop("href", newURI);
+                newURI = newURI.replace("test-editor.html", "viewer.html");
+                console.log("Updating viewerLink URI to:", newURI);
+                $("a#viewerLink").prop("href", newURI);
                 // window.history.replaceState("object or string", "Pointrel In JavaScript test-editor for: " + variableName, "/new-url");
-            }
+            // }
         }
 
         $(document).ready(loadLatestFromParameter);
@@ -57,7 +61,7 @@
             return text;
         }
 
-        function latest() {
+        function latest(ignoreMissing) {
             variableName = $("#variableName").val();
             updateURI();
             pointrel_variable_get(variableName, function (error, variableGetResult) {
@@ -68,8 +72,10 @@
                     $("#userID").val("");
                     $("#versionURI").val("");
                     // $("#textURI").val("");
-                    // $("#editor").val("");
-                    alert("Error happened on variable get; variable name may be new? Result: " + variableGetResult.message);
+                    $("#editor").val("");
+                    var errorMessage = "Error happened on variable get; variable name may be new? Result: " + variableGetResult.message;
+                    console.log(errorMessage);
+                    if (!ignoreMissing) alert(errorMessage);
                     return;
                 }
                 var versionURI = variableGetResult.currentValue;
@@ -179,7 +185,7 @@
         function fetch() {
             var textURI = $("#textURI").val();
             // alert(textURI);
-            // TODO: Must be asyncronous
+            // TODO: Must be asynchronous
             pointrel_resource_get(textURI, function (error, text) {
                 if (error) {
                     alert("Error when fetching");
@@ -207,12 +213,12 @@ Then click "Previous" to get previous versions. JavaScript must be enabled for t
 <p/>
 
 <form>
-    Variable: <input type="text" id="variableName" style="width:300px;" value="editor-test"/><input type="button" onclick="latest()" value="Latest"/><a href="#">Permalink</a><br/>
+    Variable: <input type="text" id="variableName" style="width:300px;" value="editor-test"/><input type="button" onclick="latest()" value="Latest"/><a id="editorLink" href="">editor</a> <a id="viewerLink" href="">viewer</a><br/>
     Time: <input type="text" id="timestamp" style="width:200px;"/> User: <input type="text" id="userID" style="width:200px;"/><br/>
     Version: <input type="text" id="versionURI" style="width:700px;"/><input type="button" onclick="previous()" value="Previous"/><br/>
     Text resource URI: <input type="text" id="textURI" style="width:700px;"/><input type="button" onclick="fetch()" value="Fetch"/><br/>
     <input type="button" onclick="store()" value="Store new version of text below"/><br/>
-    <textarea id="editor" style="width:800px; height:500px;"></textarea><br/>
+    <textarea id="editor" style="width:800px; height:500px; overflow: auto;"></textarea><br/>
 </form>
 </body>
 </html>

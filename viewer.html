@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>Pointrel In JavaScript viewer</title>
+    <script type="text/javascript" src="../jquery-1.9.1.js"></script>
+    <script type="text/javascript" src="javascript-libs/sha256.js"></script>
+    <script type="text/javascript" src="javascript-libs/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript">
+        var currentVersionURI = "";
+        var variableName = "editor-test";
+
+        function getParameter(paramName) {
+            var searchString = window.location.search.substring(1);
+            var i;
+            var val;
+            var params = searchString.split("&");
+
+            for (i = 0; i < params.length; i++) {
+                val = params[i].split("=");
+                if (val[0] == paramName) {
+                    return decodeURI(val[1]);
+                }
+            }
+            return null;
+        }
+
+        function loadLatestFromParameter() {
+            var chosenVariable = getParameter("documentName");
+            if (chosenVariable) {
+                console.log("Read document from: " + chosenVariable);
+                variableName = chosenVariable;
+                latest();
+                var url = document.URL;
+                var tempArray = url.split("?");
+                var baseURL = tempArray[0];
+                baseURL = "viewer.html";
+                baseURL = baseURL.replace("viewer.html", "test-editor.html");
+                var newURI = baseURL + "?documentName=" + encodeURI(variableName);
+                console.log("Updating editor link URI to:", newURI);
+                $("a#editLink").prop("href", newURI);
+            }
+        }
+
+        $(document).ready(loadLatestFromParameter);
+
+        function process(text) {
+            // Seems like jQuery is handling this anyway?
+            // return $('<div/>').text(text).html();
+            text = text.replace(/\n/g, '<br />');
+            text = text.replace(new RegExp("[A-Z]([A-Z0-9]*[a-z][a-z0-9]*[A-Z]|[a-z0-9]*[A-Z][A-Z0-9]*[a-z])[A-Za-z0-9]*", "g"), function (match) {
+              return '<a href="viewer.html?documentName=' + match + '">' + match + '</a>';
+            });
+            return text;
+        }
+
+        function latest() {
+            $("#documentName").text(variableName);
+            pointrel_variable_get(variableName, function (error, variableGetResult) {
+                console.log("pointrel_variable_get");
+                if (error) {
+                    currentVersionURI = "";
+                    $("#timestamp").text("unknown");
+                    $("#userID").text("unknown");
+                    // $("#documentContent").text("");
+                    $("#documentContent").text("Could not retrieve document -- maybe you need to create it?");
+                    // alert("Error happened on variable get; variable name may be new? Result: " + variableGetResult.message);
+                    return;
+                }
+                var versionURI = variableGetResult.currentValue;
+                pointrel_resource_get(versionURI, function (error, versionContents) {
+                    console.log("pointrel_resource_get");
+                    if (error) {
+                        alert("Error happened on versionContents get");
+                        return;
+                    }
+                    console.log("versionContents:", versionContents);
+                    var version = JSON.parse(versionContents);
+                    var textURI = version.value;
+                    pointrel_resource_get(textURI, function (error, text) {
+                        console.log("pointrel_resource_get2 ");
+                        if (error) {
+                            alert("Error happened when getting text of version");
+                            return;
+                        }
+                        console.log("latest updating before:", versionURI);
+                        $("#timestamp").text(version.timestamp);
+                        $("#userID").text(version.userID);
+                        $("#documentContent").html(process(text));
+                        console.log("latest updating after:", versionURI);
+                        currentVersionURI = versionURI;
+                    });
+                });
+            });
+        }
+    </script>
+</head>
+<body>
+Document: <b id="documentName">documentName</b> Time: <b id="timestamp">Timestamp</b> User: <b id="userID">userID</b><br/>
+<hr/>
+<div id="documentContent">Document content</div>
+<a id="editLink" href="test-editor.html?documentName=test">edit</a>
+</body>
+</html>
