@@ -1,5 +1,7 @@
 define("pointrel", ["dojo/_base/xhr"], function (xhr) {
 
+    // Need to load jstorage and pointrel_authentication first
+
     // TODO: Might need to think about decoding URLs passed back to user and encoding them for variables
 
     var pointrel = {};
@@ -27,7 +29,7 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
         var request = {
             url: "resource-add.php",
             // Need to pass original data string as it will be utf-8 encoded by dojo
-            content: {"resourceURI": uri, "resourceContent": originalDataString, "userID": "anonymous"},
+            content: {"resourceURI": uri, "resourceContent": originalDataString, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
             headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
             handleAs: "text",
             load: function (data) {
@@ -58,7 +60,7 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
         console.log("pointrel_resource_get: " + uri);
         var request = {
             url: "resource-get.php",
-            content: {"resourceURI": uri, "userID": "anonymous"},
+            content: {"resourceURI": uri, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
             handleAs: "text",
             load: function (data) {
                 // Guessing this is done by dojo??? data = DecodeFromUTF8(data);
@@ -85,7 +87,7 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
         var encodedVariableName = EncodeAsUTF8(variableName);
         var request = {
             url: "variable-query.php",
-            content: {"variableName": encodedVariableName, "operation": "get", "userID": "anonymous"},
+            content: {"variableName": encodedVariableName, "operation": "get", "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
             handleAs: "text",
             load: function (data) {
                 // alert("GET result: '" + data + "'");
@@ -116,7 +118,7 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
         var encodedVariableName = EncodeAsUTF8(variableName);
         var request = {
             url: "variable-query.php",
-            content: {"variableName": encodedVariableName, "operation": "set", "currentValue": oldVersionURI, "newValue": newVersionURI, "userID": "anonymous"},
+            content: {"variableName": encodedVariableName, "operation": "set", "currentValue": oldVersionURI, "newValue": newVersionURI, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
             handleAs: "text",
             load: function (data) {
                 // alert("GET result: '" + data + "'");

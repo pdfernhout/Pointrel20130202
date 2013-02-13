@@ -35,8 +35,6 @@ define("conceptMap", [
 
     var currentVersionURI = "";
 
-    var loggedInUserID = "anonymous";
-
     // Some Dom nodes
     var loginButton;
     var logoutButton;
@@ -130,7 +128,7 @@ define("conceptMap", [
 
         setupMainSurface();
 
-        updateAccountInformation(loggedInUserID);
+        updateDisplayedAccountInformation();
     }
 
     function setFieldValue(name, value) {
@@ -195,20 +193,21 @@ define("conceptMap", [
         // });
 
         logoutButton = newButton("logoutButton", "Logout", function () {
-            updateAccountInformation("anonymous");
+            $.pointrel_authentication.setUserID("");
+            updateDisplayedAccountInformation();
         });
 
-        // TODO maybe: updateAccountInformation();
+        // TODO maybe: updateDisplayedAccountInformation();
     }
 
-    function updateAccountInformation(newID) {
-        console.log("user name", newID);
-        loggedInUserID = newID;
-        if (newID != "anonymous") {
+    function updateDisplayedAccountInformation() {
+        var userID = $.pointrel_authentication.getUserID();
+        console.log("user name", userID);
+        if (userID) {
             loginButton.domNode.style.display = "none";
             // signupButton.domNode.style.display = "none";
             logoutButton.domNode.style.display = "";
-            accountText.textContent = "Logged in as: " + newID;
+            accountText.textContent = "Logged in as: " + userID;
         } else {
             loginButton.domNode.style.display = "";
             // signupButton.domNode.style.display = "";
@@ -331,7 +330,8 @@ define("conceptMap", [
         console.log("login data", data);
         // setFieldValue("loginPassword", "");
         //noinspection JSUnresolvedVariable
-        updateAccountInformation(data.loginName);
+        $.pointrel_authentication.setUserID(data.loginName);
+        updateDisplayedAccountInformation();
         loginDialog.hide();
     }
 
@@ -359,7 +359,7 @@ define("conceptMap", [
 //                console.log("Created account OK");
 //                alert("Account created OK");
 //                jQuery.couch.login({name: data.signupName, password: data.signupPassword, success: function () {
-//                    updateAccountInformation(data.signupName);
+//                    updateDisplayedAccountInformation(data.signupName);
 //                }});
 //            }});
 //        }
@@ -446,6 +446,7 @@ define("conceptMap", [
     }
 
     function saveChanges() {
+        if (!$.pointrel_authentication.isLoggedIn()) { alert ("Please login first"); return;}
         // Try to get old value to update it...
         // Although maybe you should not, as it is a conflict?
         // Could warn?
@@ -466,7 +467,7 @@ define("conceptMap", [
         console.log(textURI);
         var timestamp = new Date().toISOString();
         var previousVersionURI = currentVersionURI;
-        var version = {timestamp: timestamp, userID: loggedInUserID, previousVersion: previousVersionURI, value: textURI};
+        var version = {timestamp: timestamp, userID: $.pointrel_authentication.getUserID(), previousVersion: previousVersionURI, value: textURI};
         console.log("version:", version);
         var versionAsString = JSON.stringify(version);
         console.log("versionAsString:", versionAsString);
@@ -482,6 +483,7 @@ define("conceptMap", [
             console.log("store updating after:", newVersionURI);
             currentVersionURI = newVersionURI;
             changesCount = 0;
+            alert("Saved concept map");
         });
 
     }

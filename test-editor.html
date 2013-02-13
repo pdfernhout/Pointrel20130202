@@ -5,10 +5,15 @@
     <title>Pointrel In JavaScript test-editor</title>
     <script type="text/javascript" src="../jquery-1.9.1.js"></script>
     <script type="text/javascript" src="javascript-libs/sha256.js"></script>
+    <script type="text/javascript" src="javascript-libs/jstorage.js"></script>
+    <script type="text/javascript" src="javascript-libs/pointrel_authentication.js"></script>
     <script type="text/javascript" src="javascript-libs/pointrel20130202ForJQuery.js"></script>
     <script type="text/javascript">
         var currentVersionURI = "";
         var variableName = "editor-test";
+
+        $(document).ready(loadLatestFromParameter);
+        $($.pointrel_authentication.loginPageLoaded);
 
         function getParameter(paramName) {
             var searchString = window.location.search.substring(1);
@@ -52,8 +57,6 @@
                 // window.history.replaceState("object or string", "Pointrel In JavaScript test-editor for: " + variableName, "/new-url");
             // }
         }
-
-        $(document).ready(loadLatestFromParameter);
 
         function process(text) {
             // Seems like jQuery is handling this anyway?
@@ -160,7 +163,7 @@
                 if (error) { alert("could not write resource: " + JSON.stringify(status)); return }
                 console.log("wrote", textURI);
                 var timestamp = new Date().toISOString();
-                var userID = "anonymous";
+                var userID = $.pointrel_authentication.getUserIDOrAnonymous();
                 var previousVersionURI = currentVersionURI;
                 var version = {timestamp: timestamp, userID: userID, previousVersion: previousVersionURI, value: textURI};
                 console.log("version:", version);
@@ -218,10 +221,10 @@ Then click "Previous" to get previous versions. JavaScript must be enabled for t
 <form accept-charset="UTF-8">
     <label for="variableName">Variable: </label><input type="text" id="variableName" style="width:300px;" value="editor-test"/><input type="button" onclick="latest()" value="Latest"/><a id="editorLink" href="">editor</a> <a id="viewerLink" href="">viewer</a><br/>
     <label for="timestamp">Time: </label><input type="text" id="timestamp" style="width:200px;"/><br/>
-    <label for="userID">User: </label><input type="text" id="userID" style="width:200px;"/><br/>
+    <label for="userID">User: </label><input type="text" id="userID" style="width:200px;" readonly/><br/>
     <label for="versionURI">Version: </label><input type="text" id="versionURI" style="width:700px;"/><input type="button" onclick="previous()" value="Previous"/><br/>
     <label for="textURI">Text resource URI: </label><input type="text" id="textURI" style="width:700px;"/><input type="button" onclick="fetch()" value="Fetch"/><br/>
-    <input type="button" onclick="store()" value="Store new version of text below"/><br/>
+    <input type="button" onclick="store()" value="Store new version of text below"/>  <span id="form_loginStatus">Not logged in</span> <a href="login.html">login page</a><br/>
     <label for="editor">Content:<br/></label><textarea id="editor" style="width:800px; height:500px; overflow: auto;"></textarea><br/>
 </form>
 </body>

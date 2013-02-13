@@ -1,3 +1,5 @@
+// Need to load jstorage and pointrel_authentication first
+
 // TODO: Might need to think about decoding URLs passed back to user and encoding them for variables
 
 function EncodeAsUTF8(text) {
@@ -24,7 +26,7 @@ function pointrel_resource_add(originalDataString, extension, callback) {
         type: "POST",
         url: "resource-add.php",
         // Need to pass original data string as it will be utf-8 encoded by jQuery
-        data: {"resourceURI": uri, "resourceContent": originalDataString, "userID": "anonymous"},
+        data: {"resourceURI": uri, "resourceContent": originalDataString, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
         dataType: "text",
         // cache: false,
         success: function (data) {
@@ -58,7 +60,7 @@ function pointrel_resource_get(uri, callback) {
     var request = {
         type: "GET",
         url: "resource-get.php",
-        data: {"resourceURI": uri, "userID": "anonymous"},
+        data: {"resourceURI": uri, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
         dataType: "text",
         // cache: false,
         success: function (data) {
@@ -89,7 +91,7 @@ function pointrel_variable_get(variableName, callback) {
     var request = {
         type: "POST",
         url: "variable-query.php",
-        data: {"variableName": encodedVariableName, "operation": "get", "userID": "anonymous"},
+        data: {"variableName": encodedVariableName, "operation": "get", "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
         dataType: "text",
         // cache: false,
         success: function (data) {
@@ -124,7 +126,7 @@ function pointrel_variable_set(variableName, oldVersionURI, newVersionURI, callb
     var request = {
         type: "POST",
         url: "variable-query.php",
-        data: {"variableName": encodedVariableName, "operation": "set", "currentValue": oldVersionURI, "newValue": newVersionURI, "userID": "anonymous"},
+        data: {"variableName": encodedVariableName, "operation": "set", "currentValue": oldVersionURI, "newValue": newVersionURI, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
         dataType: "text",
         // cache: false,
         success: function (data) {
