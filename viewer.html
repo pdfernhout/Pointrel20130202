@@ -8,6 +8,7 @@
     <script type="text/javascript" src="javascript-libs/jstorage.js"></script>
     <script type="text/javascript" src="javascript-libs/pointrel_authentication.js"></script>
     <script type="text/javascript" src="javascript-libs/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="javascript-libs/markdown.js"></script>
     <script type="text/javascript">
         var currentVersionURI = "";
         var variableName = "editor-test";
@@ -49,10 +50,13 @@
         function process(text) {
             // Seems like jQuery is handling this anyway?
             // return $('<div/>').text(text).html();
-            text = text.replace(/\n/g, '<br />');
-            text = text.replace(new RegExp("[A-Z]([A-Z0-9]*[a-z][a-z0-9]*[A-Z]|[a-z0-9]*[A-Z][A-Z0-9]*[a-z])[A-Za-z0-9]*", "g"), function (match) {
-              return '<a href="viewer.html?documentName=' + match + '">' + match + '</a>';
-            });
+            // text = text.replace(/\n/g, '<br />');
+            text = markdown.toHTML(text);
+            console.log("about to convert using marked");
+            // text = marked(text);
+            // text = text.replace(new RegExp("[A-Z]([A-Z0-9]*[a-z][a-z0-9]*[A-Z]|[a-z0-9]*[A-Z][A-Z0-9]*[a-z])[A-Za-z0-9]*", "g"), function (match) {
+            //  return '<a href="viewer.html?documentName=' + match + '">' + match + '</a>';
+            //});
             return text;
         }
 
