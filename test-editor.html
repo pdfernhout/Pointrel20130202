@@ -40,9 +40,9 @@
             var chosenVariable = getParameter("documentName");
             // if (chosenVariable != variableName) {
                 var url = document.URL;
-                var tempArray = url.split("?");
-                var baseURL = tempArray[0];
-                baseURL = "test-editor.html";
+                // var tempArray = url.split("?");
+                // var baseURL = tempArray[0];
+                var baseURL = "test-editor.html";
                 var newURI = baseURL + "?documentName=" + encodeURI(variableName);
                 console.log("Updating permalink URI to:", newURI);
                 $("a#editorLink").prop("href", newURI);
@@ -169,7 +169,7 @@
             console.log("newVersionURI:", newVersionURI);
             pointrel_variable_set(variableName, currentVersionURI, newVersionURI, function (error, result) {
                 if (error) {
-                    alert("Error happened when tryping to set variable");
+                    alert("Error happened when trying to set variable");
                     return;
                 }
                 console.log("store updating before:", currentVersionURI);
@@ -209,16 +209,16 @@ Then click "Previous" to get previous versions. JavaScript must be enabled for t
     Or you can click "Latest" after changing the name, and ignore the error message there about a missing variable file.
     Otherwise, if there is any text in the version field, you will get an error later when you go to store text for a
     new variable.
-
-<p/>
+</p>
 
 <form>
-    Variable: <input type="text" id="variableName" style="width:300px;" value="editor-test"/><input type="button" onclick="latest()" value="Latest"/><a id="editorLink" href="">editor</a> <a id="viewerLink" href="">viewer</a><br/>
-    Time: <input type="text" id="timestamp" style="width:200px;"/> User: <input type="text" id="userID" style="width:200px;"/><br/>
-    Version: <input type="text" id="versionURI" style="width:700px;"/><input type="button" onclick="previous()" value="Previous"/><br/>
-    Text resource URI: <input type="text" id="textURI" style="width:700px;"/><input type="button" onclick="fetch()" value="Fetch"/><br/>
+    <label for="variableName">Variable: </label><input type="text" id="variableName" style="width:300px;" value="editor-test"/><input type="button" onclick="latest()" value="Latest"/><a id="editorLink" href="">editor</a> <a id="viewerLink" href="">viewer</a><br/>
+    <label for="timestamp">Time: </label><input type="text" id="timestamp" style="width:200px;"/><br/>
+    <label for="userID">User: </label><input type="text" id="userID" style="width:200px;"/><br/>
+    <label for="versionURI">Version: </label><input type="text" id="versionURI" style="width:700px;"/><input type="button" onclick="previous()" value="Previous"/><br/>
+    <label for="textURI">Text resource URI: </label><input type="text" id="textURI" style="width:700px;"/><input type="button" onclick="fetch()" value="Fetch"/><br/>
     <input type="button" onclick="store()" value="Store new version of text below"/><br/>
-    <textarea id="editor" style="width:800px; height:500px; overflow: auto;"></textarea><br/>
+    <label for="editor">Content:<br/></label><textarea id="editor" style="width:800px; height:500px; overflow: auto;"></textarea><br/>
 </form>
 </body>
 </html>

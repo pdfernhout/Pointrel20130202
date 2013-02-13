@@ -32,9 +32,9 @@
                 variableName = chosenVariable;
                 latest();
                 var url = document.URL;
-                var tempArray = url.split("?");
-                var baseURL = tempArray[0];
-                baseURL = "viewer.html";
+                // var tempArray = url.split("?");
+                // var baseURL = tempArray[0];
+                var baseURL = "viewer.html";
                 baseURL = baseURL.replace("viewer.html", "test-editor.html");
                 var newURI = baseURL + "?documentName=" + encodeURI(variableName);
                 console.log("Updating editor link URI to:", newURI);
