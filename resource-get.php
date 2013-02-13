@@ -1,4 +1,20 @@
 <?php
+// recursively strip slashes from an array to deal with "magic quotes"
+function stripslashes_r($array) {
+    foreach ($array as $key => $value) {
+        $array[$key] = is_array($value) ?
+            stripslashes_r($value) :
+            stripslashes($value);
+    }
+    return $array;
+}
+
+if (get_magic_quotes_gpc()) {
+    $_GET     = stripslashes_r($_GET);
+    $_POST    = stripslashes_r($_POST);
+    $_COOKIE  = stripslashes_r($_COOKIE);
+    $_REQUEST = stripslashes_r($_REQUEST);
+}
 
 $directory = "../pointrel-data/resources";
 $log = "../pointrel-data/logs/" . gmdate("Y-m-d") . ".log";
@@ -73,4 +89,6 @@ if (!file_exists($fullName)) {
   die('{"status": "FAIL", "message": "File does not exists: ' . $fullName . '"}');
 }
 
+// TODO: What content type? What encoding?
+// ??? header("Content-type: text/html; charset=UTF-8");
 readfile($fullName);

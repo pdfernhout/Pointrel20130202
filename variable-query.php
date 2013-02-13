@@ -1,5 +1,22 @@
 <?php
 
+// recursively strip slashes from an array to deal with "magic quotes"
+function stripslashes_r($array) {
+    foreach ($array as $key => $value) {
+        $array[$key] = is_array($value) ?
+            stripslashes_r($value) :
+            stripslashes($value);
+    }
+    return $array;
+}
+
+if (get_magic_quotes_gpc()) {
+    $_GET     = stripslashes_r($_GET);
+    $_POST    = stripslashes_r($_POST);
+    $_COOKIE  = stripslashes_r($_COOKIE);
+    $_REQUEST = stripslashes_r($_REQUEST);
+}
+
 $directory = "../pointrel-data/variables";
 $log = "../pointrel-data/logs/" . gmdate("Y-m-d") . ".log";
 
@@ -201,6 +218,7 @@ if ($operation == "query") {
   die('{"status": "FAIL", "message": "Operation query not supported yet"}');
 }
 
+// ??? header("Content-type: text/json; charset=UTF-8");
 echo '{"status": "OK", "message": "Successful operation: ' . $operation . '", "variable": "' . $variableName . '", "currentValue": "' . $variableValueAfterOperation . '"}';
 
 

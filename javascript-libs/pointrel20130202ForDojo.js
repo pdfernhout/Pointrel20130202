@@ -1,26 +1,34 @@
 define("pointrel", ["dojo/_base/xhr"], function (xhr) {
 
+    // TODO: Might need to think about decoding URLs passed back to user and encoding them for variables
+
     var pointrel = {};
 
-    // TODO: A no-op for now...
     function EncodeAsUTF8(text) {
-        return text
+        return unescape(encodeURIComponent(text));
+    }
+
+    function DecodeFromUTF8(text) {
+        return decodeURIComponent(escape(text));
     }
 
     // TODO: Add callback for success and errors
-    function pointrel_resource_add(originalDataString, extension) {
+    function pointrel_resource_add(originalDataString, extension, callback) {
         console.log("pointrel_resource_add extension: " + extension);
         var encodedContent = EncodeAsUTF8(originalDataString);
+        var encodedExtension = EncodeAsUTF8(extension);
         // var hash = CryptoJS.SHA3(encodedContent, { outputLength: 256 });
-        // var myName = "pointrel://sha3-256_" + hash + "_" + encodedContent.length + "." + extension;
+        // var myName = "pointrel://sha3-256_" + hash + "_" + encodedContent.length + "." + encodedExtension;
         var hash = CryptoJS.SHA256(encodedContent);
         var extensionSeperator = ".";
         if (extension == "") extensionSeperator = "";
-        var uri = "pointrel://sha256_" + hash + "_" + encodedContent.length + extensionSeperator + extension;
+        var uri = "pointrel://sha256_" + hash + "_" + encodedContent.length + extensionSeperator + encodedExtension;
 
         var request = {
             url: "resource-add.php",
-            content: {"resourceURI": uri, "resourceContent": encodedContent, "userID": "anonymous"},
+            // Need to pass original data string as it will be utf-8 encoded by dojo
+            content: {"resourceURI": uri, "resourceContent": originalDataString, "userID": "anonymous"},
+            headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
             handleAs: "text",
             load: function (data) {
                 //alert("POST result: '" + data + "'");
@@ -53,6 +61,7 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
             content: {"resourceURI": uri, "userID": "anonymous"},
             handleAs: "text",
             load: function (data) {
+                // Guessing this is done by dojo??? data = DecodeFromUTF8(data);
                 //alert("GET result: '" + data + "'");
                 // document.getElementById("retrieve").innerHTML = data;
                 if (typeof(callback) == "function") callback(null, data);
@@ -73,9 +82,10 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
 
     function pointrel_variable_get(variableName, callback) {
         console.log("pointrel_variable_get: " + variableName);
+        var encodedVariableName = EncodeAsUTF8(variableName);
         var request = {
             url: "variable-query.php",
-            content: {"variableName": variableName, "operation": "get", "userID": "anonymous"},
+            content: {"variableName": encodedVariableName, "operation": "get", "userID": "anonymous"},
             handleAs: "text",
             load: function (data) {
                 // alert("GET result: '" + data + "'");
@@ -103,9 +113,10 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
 
     function pointrel_variable_set(variableName, oldVersionURI, newVersionURI, callback) {
         console.log("pointrel_resource_set: " + variableName + " old: " + oldVersionURI + "new: " + newVersionURI);
+        var encodedVariableName = EncodeAsUTF8(variableName);
         var request = {
             url: "variable-query.php",
-            content: {"variableName": variableName, "operation": "set", "currentValue": oldVersionURI, "newValue": newVersionURI, "userID": "anonymous"},
+            content: {"variableName": encodedVariableName, "operation": "set", "currentValue": oldVersionURI, "newValue": newVersionURI, "userID": "anonymous"},
             handleAs: "text",
             load: function (data) {
                 // alert("GET result: '" + data + "'");

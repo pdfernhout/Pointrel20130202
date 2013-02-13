@@ -1,4 +1,20 @@
 <?php
+// recursively strip slashes from an array to deal with "magic quotes"
+function stripslashes_r($array) {
+    foreach ($array as $key => $value) {
+        $array[$key] = is_array($value) ?
+            stripslashes_r($value) :
+            stripslashes($value);
+    }
+    return $array;
+}
+
+if (get_magic_quotes_gpc()) {
+    $_GET     = stripslashes_r($_GET);
+    $_POST    = stripslashes_r($_POST);
+    $_COOKIE  = stripslashes_r($_COOKIE);
+    $_REQUEST = stripslashes_r($_REQUEST);
+}
 
 $directory = "../pointrel-data/resources";
 $log = "../pointrel-data/logs/" . gmdate("Y-m-d") . ".log";
@@ -13,8 +29,6 @@ function quiet_mkdir($path) {
 $resourceURI = $_POST['resourceURI'];
 $content = $_POST['resourceContent'];
 $userID = $_POST['userID'];
-
-if(get_magic_quotes_gpc()) $content = stripslashes($content);
 
 // For later use
 $session = $_POST['session'];
@@ -63,7 +77,7 @@ $uriSpecifiedLength = intval($lengthAndRest[0]);
 $contentLength = strlen($content);
 
 if ($uriSpecifiedLength != $contentLength) {
-  die('{"status": "FAIL", "message": "Lengths do not agree from URI: ' . $uriSpecifiedLength . ' derived from: \'' . $lengthAndRest[0] . '\' and from content: ' . $contentLength . ' for content: \'' . $content . '\'"}');
+  die('{"status": "FAIL", "message": "Lengths do not agree from URI: ' . $uriSpecifiedLength . ' derived from: \'' . $lengthAndRest[0] . '\' and from content: \'' . $contentLength . '\'"}');
 }
 
 // TODO: Verify SHA256 of content
@@ -104,4 +118,5 @@ if (!$fp) {
 fwrite($fp, $content);
 fclose($fp);
 
+// ??? header("Content-type: text/json; charset=UTF-8");
 echo '{"status": "OK", "message": "Wrote ' . $fullName . '"}';

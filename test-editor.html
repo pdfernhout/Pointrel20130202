@@ -156,31 +156,35 @@
             var editorText = $("#editor").val();
             // alert(editorText);
             console.log(editorText);
-            var textURI = pointrel_resource_add(editorText, "txt");
-            console.log(textURI);
-            var timestamp = new Date().toISOString();
-            var userID = "anonymous";
-            var previousVersionURI = currentVersionURI;
-            var version = {timestamp: timestamp, userID: userID, previousVersion: previousVersionURI, value: textURI};
-            console.log("version:", version);
-            var versionAsString = JSON.stringify(version);
-            console.log("versionAsString:", versionAsString);
-            var newVersionURI = pointrel_resource_add(versionAsString, "Version.json");
-            console.log("newVersionURI:", newVersionURI);
-            pointrel_variable_set(variableName, currentVersionURI, newVersionURI, function (error, result) {
-                if (error) {
-                    alert("Error happened when trying to set variable");
-                    return;
-                }
-                console.log("store updating before:", currentVersionURI);
-                $("#timestamp").val(timestamp);
-                $("#userID").val(userID);
-                $("#versionURI").val(newVersionURI);
-                $("#textURI").val(textURI);
-                console.log("store updating after:", newVersionURI);
-                currentVersionURI = newVersionURI;
+            var textURI = pointrel_resource_add(editorText, "txt", function(error, status) {
+                if (error) { alert("could not write resource: " + JSON.stringify(status)); return }
+                console.log("wrote", textURI);
+                var timestamp = new Date().toISOString();
+                var userID = "anonymous";
+                var previousVersionURI = currentVersionURI;
+                var version = {timestamp: timestamp, userID: userID, previousVersion: previousVersionURI, value: textURI};
+                console.log("version:", version);
+                var versionAsString = JSON.stringify(version);
+                console.log("versionAsString:", versionAsString);
+                var newVersionURI = pointrel_resource_add(versionAsString, "Version.json", function(error, status) {
+                    if (error) { alert("could not write new version: " + JSON.stringify(status)); return }
+                    console.log("wrote newVersionURI:", newVersionURI);
+                    pointrel_variable_set(variableName, currentVersionURI, newVersionURI, function (error, status) {
+                        if (error) {
+                            alert("Error happened when trying to set variable: " + JSON.stringify(status));
+                            return;
+                        }
+                        console.log("store updating before:", currentVersionURI);
+                        $("#timestamp").val(timestamp);
+                        $("#userID").val(userID);
+                        $("#versionURI").val(newVersionURI);
+                        $("#textURI").val(textURI);
+                        console.log("store updating after:", newVersionURI);
+                        currentVersionURI = newVersionURI;
+                    });
+                });
+                // alert("tried to write: " + textURI);
             });
-            // alert(textURI);
         }
         function fetch() {
             var textURI = $("#textURI").val();
@@ -188,7 +192,7 @@
             // TODO: Must be asynchronous
             pointrel_resource_get(textURI, function (error, text) {
                 if (error) {
-                    alert("Error when fetching");
+                    alert("Error when fetching:" + JSON.stringify(text));
                     return;
                 }
                 // alert(text);
@@ -211,7 +215,7 @@ Then click "Previous" to get previous versions. JavaScript must be enabled for t
     new variable.
 </p>
 
-<form>
+<form accept-charset="UTF-8">
     <label for="variableName">Variable: </label><input type="text" id="variableName" style="width:300px;" value="editor-test"/><input type="button" onclick="latest()" value="Latest"/><a id="editorLink" href="">editor</a> <a id="viewerLink" href="">viewer</a><br/>
     <label for="timestamp">Time: </label><input type="text" id="timestamp" style="width:200px;"/><br/>
     <label for="userID">User: </label><input type="text" id="userID" style="width:200px;"/><br/>
