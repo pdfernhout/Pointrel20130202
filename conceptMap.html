@@ -24,8 +24,11 @@
     <script src="javascript-libs/conceptMapWithDojo.js"></script>
 
     <script>
-        var element = document.getElementById("nojavascript");
-        element.innerHTML = "Loading concept map application...";
+        require(["dojo/domReady!"], function(){
+            // will not run until DOM is finished loading
+            var element = document.getElementById("nojavascript");
+            element.innerHTML = "Loading concept map application...";
+        });
     </script>
 </head>
 
@@ -55,6 +58,5 @@ then I think there is an easy explanation for
 </pre>
 Please enable JavaScript (or read Vernor Vinge's "A Fire Upon the Deep" :-) to see the rest of this content.
 </div>
-
 </body>
 </html>
