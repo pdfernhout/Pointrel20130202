@@ -27,7 +27,7 @@ function quiet_mkdir($path) {
 }
 
 $resourceURI = $_POST['resourceURI'];
-$content = $_POST['resourceContent'];
+$encodedContent = $_POST['resourceContent'];
 $userID = $_POST['userID'];
 
 // For later use
@@ -38,8 +38,8 @@ $timeStamp = gmdate('Y-m-d\TH:i:s\Z');
 error_log('{"timeStamp": "' . $timeStamp . '", "request": "resource-add", "resourceURI": "' . $resourceURI . '", "userID": "' . $userID . '", "session": "' . $session . '"}' . "\n", 3, $log);
 
 if (empty($resourceURI)) {
-  header("HTTP/1.1 400 resourceURI not specified");
-  die('{"status": "FAIL", "message": "No resourceURI was specified"}');
+    header("HTTP/1.1 400 resourceURI not specified");
+    die('{"status": "FAIL", "message": "No resourceURI was specified"}');
 }
 
 if (!array_key_exists('resourceContent', $_POST)) {
@@ -74,6 +74,8 @@ if (strlen($hexDigits) != 64) {
 
 $lengthAndRest = explode(".", $shaAndRest[2]);
 $uriSpecifiedLength = intval($lengthAndRest[0]);
+
+$content = base64_decode($encodedContent);
 $contentLength = strlen($content);
 
 if ($uriSpecifiedLength != $contentLength) {

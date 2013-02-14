@@ -16,11 +16,20 @@ if (get_magic_quotes_gpc()) {
     $_REQUEST = stripslashes_r($_REQUEST);
 }
 
+// Example: http://localhost/~pdf/pointrel-app/resource-get.php?userID=anonymous&resourceURI=pointrel://sha256_a2ca24b424919216bdf441301d65fd83215562891a2bd2195984313a26f04029_12466.txt&contentType=text/plain&charset=UTF-8
+
 $directory = "../pointrel-data/resources";
 $log = "../pointrel-data/logs/" . gmdate("Y-m-d") . ".log";
 
 $resourceURI = $_GET['resourceURI'];
 $userID = $_GET['userID'];
+$contentType = $_GET['contentType'];
+$charset = $_GET['charset'];
+$fileName = $_GET['fileName'];
+
+// TODO: Make a decision based on the extension
+if (empty($contentType)) $charset = "text/plain";
+if (empty($charset)) $charset = "UTF-8";
 
 // For later use
 $session = $_POST['session'];
@@ -89,6 +98,6 @@ if (!file_exists($fullName)) {
   die('{"status": "FAIL", "message": "File does not exists: ' . $fullName . '"}');
 }
 
-// TODO: What content type? What encoding?
-// ??? header("Content-type: text/html; charset=UTF-8");
+header("Content-type: " . $contentType . "; charset=" . $charset);
+if ($fileName) header('Content-Disposition: attachment; filename="' . $fileName . '"');
 readfile($fullName);

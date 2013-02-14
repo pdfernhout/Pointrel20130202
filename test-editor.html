@@ -157,10 +157,11 @@
             variableName = $("#variableName").val();
             updateURI();
             var editorText = $("#editor").val();
-            // alert(editorText);
-            console.log(editorText);
-            var textURI = pointrel_resource_add(editorText, "txt", function(error, status) {
-                if (error) { alert("could not write resource: " + JSON.stringify(status)); return }
+            console.log("editorText", editorText.length, editorText);
+            var editorTextAsUTF8 = encodeAsUTF8(editorText);
+            console.log("editorTextAsUTF8", editorTextAsUTF8.length, editorTextAsUTF8);
+            var textURI = pointrel_resource_add(editorTextAsUTF8, "txt", function(error, status) {
+                if (error) { alert("could not write resource: " + JSON.stringify(status) + " error: " + error); return }
                 console.log("wrote", textURI);
                 var timestamp = new Date().toISOString();
                 var userID = $.pointrel_authentication.getUserIDOrAnonymous();
@@ -169,7 +170,7 @@
                 console.log("version:", version);
                 var versionAsString = JSON.stringify(version);
                 console.log("versionAsString:", versionAsString);
-                var newVersionURI = pointrel_resource_add(versionAsString, "Version.json", function(error, status) {
+                var newVersionURI = pointrel_resource_add(encodeAsUTF8(versionAsString), "Version.json", function(error, status) {
                     if (error) { alert("could not write new version: " + JSON.stringify(status)); return }
                     console.log("wrote newVersionURI:", newVersionURI);
                     pointrel_variable_set(variableName, currentVersionURI, newVersionURI, function (error, status) {
