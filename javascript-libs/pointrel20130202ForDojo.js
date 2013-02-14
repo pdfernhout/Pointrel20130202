@@ -32,6 +32,7 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
         //    return btoa(data);
         //}
         var b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+        //noinspection JSUnusedAssignment
         var o1, o2, o3, h1, h2, h3, h4, bits, i = 0,
             ac = 0,
             enc = "",
@@ -68,8 +69,8 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
     // Data should be in 0-255 character range
     function pointrel_resource_add(originalDataString, extension, callback) {
         console.log("pointrel_resource_add extension: " + extension);
-        //var encodedContent = EncodeAsUTF8(originalDataString);
-        //var encodedExtension = EncodeAsUTF8(extension);
+        //var encodedContent = encodeAsUTF8(originalDataString);
+        //var encodedExtension = encodeAsUTF8(extension);
         // var hash = CryptoJS.SHA3(encodedContent, { outputLength: 256 });
         // var myName = "pointrel://sha3-256_" + hash + "_" + encodedContent.length + "." + encodedExtension;
         // var hash = CryptoJS.SHA256(encodedContent);
@@ -136,10 +137,10 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
 
     function pointrel_variable_get(variableName, callback) {
         console.log("pointrel_variable_get: " + variableName);
-        var encodedVariableName = EncodeAsUTF8(variableName);
+        // var encodedVariableName = encodeAsUTF8(variableName);
         var request = {
             url: "variable-query.php",
-            content: {"variableName": encodedVariableName, "operation": "get", "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
+            content: {"variableName": variableName, "operation": "get", "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
             handleAs: "text",
             load: function (data) {
                 // alert("GET result: '" + data + "'");
@@ -167,10 +168,10 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
 
     function pointrel_variable_set(variableName, oldVersionURI, newVersionURI, callback) {
         console.log("pointrel_resource_set: " + variableName + " old: " + oldVersionURI + "new: " + newVersionURI);
-        var encodedVariableName = EncodeAsUTF8(variableName);
+        // var encodedVariableName = encodeAsUTF8(variableName);
         var request = {
             url: "variable-query.php",
-            content: {"variableName": encodedVariableName, "operation": "set", "currentValue": oldVersionURI, "newValue": newVersionURI, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
+            content: {"variableName": variableName, "operation": "set", "currentValue": oldVersionURI, "newValue": newVersionURI, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
             handleAs: "text",
             load: function (data) {
                 // alert("GET result: '" + data + "'");
