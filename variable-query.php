@@ -97,8 +97,10 @@ if ($createIfMissing == "f" || $createIfMissing == "false" || $createIfMissing =
   $createIfMissing = TRUE;
 }
 
+$remoteAddress = $_SERVER['REMOTE_ADDR'];
+
 $timeStamp = gmdate('Y-m-d\TH:i:s\Z');
-error_log('{"timeStamp": "' . $timeStamp . '", "request": "variable-change", "variableName": "' . $variableName . '", "operation": "' . $operation . '", "newValue": "' . $newValue . '", "currentValue": "' . $currentValue . '", "userID": "' . $userID . '", "session": "' . $session . '"}' . "\n", 3, $log);
+error_log('{"timeStamp": "' . $timeStamp . '", "remoteAddress": "' . $remoteAddress . '", "request": "variable-change", "variableName": "' . $variableName . '", "operation": "' . $operation . '", "newValue": "' . $newValue . '", "currentValue": "' . $currentValue . '", "userID": "' . $userID . '", "session": "' . $session . '"}' . "\n", 3, $log);
 
 if (!array_key_exists('operation', $_POST)) {
   // header("HTTP/1.1 400 operation not specified");

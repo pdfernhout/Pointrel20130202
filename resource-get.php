@@ -35,8 +35,10 @@ if (empty($charset)) $charset = "UTF-8";
 $session = $_POST['session'];
 $authentication = $_POST['authentication'];
 
+$remoteAddress = $_SERVER['REMOTE_ADDR'];
+
 $timeStamp = gmdate('Y-m-d\TH:i:s\Z');
-error_log('{"timeStamp": "' . $timeStamp . '", "request": "resource-get", "resourceURI": "' . $resourceURI . '", "userID": "' . $userID . '", "session": "' . $session . '"}' . "\n", 3, $log);
+error_log('{"timeStamp": "' . $timeStamp . '", "remoteAddress": "' . $remoteAddress . '", "request": "resource-get", "resourceURI": "' . $resourceURI . '", "userID": "' . $userID . '", "session": "' . $session . '"}' . "\n", 3, $log);
 
 if (empty($resourceURI)) {
   header("HTTP/1.1 400 resourceURI not specified");
