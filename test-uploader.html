@@ -31,8 +31,8 @@
                     var url = "resource-get.php?userID=" + $.pointrel_authentication.getUserIDOrAnonymous()
                             + "&resourceURI=" + pointrelURI
                             + "&contentType=" + file.type
-                            + "&fileName=" + file.name
-                            + "&charset=UTF-8";
+                            + "&$attachmentName=" + file.name
+                            + "&charset=utf-8";
                     $("a#form_downloadURL").prop("href", url);
                 });
             };

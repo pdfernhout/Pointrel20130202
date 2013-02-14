@@ -59,8 +59,9 @@
         }
 
         function process(text) {
-            // Seems like jQuery is handling this anyway?
+            // Seems like jQuery is handling this anyway, to restore from utf-8?
             // return $('<div/>').text(text).html();
+            // return decodeFromUTF8(text);
             return text;
         }
 

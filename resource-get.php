@@ -25,11 +25,11 @@ $resourceURI = $_GET['resourceURI'];
 $userID = $_GET['userID'];
 $contentType = $_GET['contentType'];
 $charset = $_GET['charset'];
-$fileName = $_GET['fileName'];
+$attachmentName = $_GET['attachmentName'];
 
 // TODO: Make a decision based on the extension
 if (empty($contentType)) $charset = "text/plain";
-if (empty($charset)) $charset = "UTF-8";
+if (empty($charset)) $charset = "utf-8";
 
 // For later use
 $session = $_POST['session'];
@@ -101,5 +101,5 @@ if (!file_exists($fullName)) {
 }
 
 header("Content-type: " . $contentType . "; charset=" . $charset);
-if ($fileName) header('Content-Disposition: attachment; filename="' . $fileName . '"');
+if ($attachmentName) header('Content-Disposition: attachment; filename="' . $attachmentName . '"');
 readfile($fullName);
