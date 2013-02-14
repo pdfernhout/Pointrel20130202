@@ -28,7 +28,7 @@ $charset = $_GET['charset'];
 $attachmentName = $_GET['attachmentName'];
 
 // TODO: Make a decision based on the extension
-if (empty($contentType)) $charset = "text/plain";
+if (empty($contentType)) $contentType = "text/plain";
 if (empty($charset)) $charset = "utf-8";
 
 // For later use
