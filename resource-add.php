@@ -1,30 +1,5 @@
 <?php
-// recursively strip slashes from an array to deal with "magic quotes"
-function stripslashes_r($array) {
-    foreach ($array as $key => $value) {
-        $array[$key] = is_array($value) ?
-            stripslashes_r($value) :
-            stripslashes($value);
-    }
-    return $array;
-}
-
-if (get_magic_quotes_gpc()) {
-    $_GET     = stripslashes_r($_GET);
-    $_POST    = stripslashes_r($_POST);
-    $_COOKIE  = stripslashes_r($_COOKIE);
-    $_REQUEST = stripslashes_r($_REQUEST);
-}
-
-$directory = "../pointrel-data/resources";
-$log = "../pointrel-data/logs/" . gmdate("Y-m-d") . ".log";
-
-function quiet_mkdir($path) {
-  if (is_dir($path)) return;
-  if (!mkdir($path)) {
-    die("could not make directory " . $path);
-  }
-}
+include "pointrel_utils.php";
 
 $resourceURI = $_POST['resourceURI'];
 $encodedContent = $_POST['resourceContent'];
@@ -36,87 +11,44 @@ $authentication = $_POST['authentication'];
 
 $remoteAddress = $_SERVER['REMOTE_ADDR'];
 
-$timeStamp = gmdate('Y-m-d\TH:i:s\Z');
-error_log('{"timeStamp": "' . $timeStamp . '", "remoteAddress": "' . $remoteAddress . '", "request": "resource-add", "resourceURI": "' . $resourceURI . '", "userID": "' . $userID . '", "session": "' . $session . '"}' . "\n", 3, $log);
+error_log('{"timeStamp": "' . currentTimeStamp() . '", "remoteAddress": "' . $remoteAddress . '", "request": "resource-add", "resourceURI": "' . $resourceURI . '", "userID": "' . $userID . '", "session": "' . $session . '"}' . "\n", 3, $fullLogFileName);
 
 if (empty($resourceURI)) {
-    header("HTTP/1.1 400 resourceURI not specified");
-    die('{"status": "FAIL", "message": "No resourceURI was specified"}');
+  exitWithJSONStatusMessage("No resourceURI was specified", SEND_FAILURE_HEADER, 400);
 }
 
 if (!array_key_exists('resourceContent', $_POST)) {
-  header("HTTP/1.1 400 resourceContent not specified");
-  die('{"status": "FAIL", "message": "No resourceContent was specified"}');
+  exitWithJSONStatusMessage("No resourceContent was specified", SEND_FAILURE_HEADER, 400);
 }
 
 if (empty($userID)) {
-  header("HTTP/1.1 400 userID not specified");
-  die('{"status": "FAIL", "message": "No userID was specified"}');
+  exitWithJSONStatusMessage("No userID was specified", SEND_FAILURE_HEADER, 400);
 }
 
-$pointrelAndRest = explode("//", $resourceURI, 2);
-$shortName = $pointrelAndRest[1];
-
-if ($pointrelAndRest[0] != "pointrel:") {
-  die('{"status": "FAIL", "message": "Does not start with pointrel://"}');
-}
-
-// sha256_HEX_SIZE.extension
-$shaAndRest = explode("_", $shortName, 3);
-
-if ($shaAndRest[0] != "sha256") {
-  die('{"status": "FAIL", "message": "Does not use sha256"}');
-}
-
-$hexDigits = $shaAndRest[1];
-
-if (strlen($hexDigits) != 64) {
-  die('{"status": "FAIL", "message": "Does have 64 sha256 characters for: ' . $hexDigits . '"}');
-}
-
-$lengthAndRest = explode(".", $shaAndRest[2]);
-$uriSpecifiedLength = intval($lengthAndRest[0]);
+$urlInfo = validateURIOrExit($resourceURI, NO_FAILURE_HEADER);
+$shortName = $urlInfo["shortName"];
+$hexDigits = $urlInfo["hexDigits"];
+$uriSpecifiedLength = $urlInfo["length"];
 
 $content = base64_decode($encodedContent);
 $contentLength = strlen($content);
 
 if ($uriSpecifiedLength != $contentLength) {
-  die('{"status": "FAIL", "message": "Lengths do not agree from URI: ' . $uriSpecifiedLength . ' derived from: \'' . $lengthAndRest[0] . '\' and from content: \'' . $contentLength . '\'"}');
+    exitWithJSONStatusMessage('Lengths do not agree from URI: ' . $uriSpecifiedLength . ' and from content: ' . $contentLength, NO_FAILURE_HEADER, 0);
 }
 
-// TODO: Verify SHA256 of content
-
-$d1 = substr($hexDigits, 0, 2);
-$d2 = substr($hexDigits, 2, 2);
-$d3 = substr($hexDigits, 4, 2);
-$d4 = substr($hexDigits, 6, 2);
-
-$dotPosition = strpos($shortName, '.');
-if ($dotPosition === false) {
-  $extension = "_no_extension_";
-} else {
-  // TODO: escape extension
-  $extension = substr($shortName, $dotPosition + 1);
-}
-
-// TODO: sanitize extension
-
-$fullName = $directory . "/" . $d1 . "/" . $d2 . "/" . $d3 . "/" . $d4 . "/" . $shortName;
+$createSubdirectories = true;
+$storagePath = calculateStoragePath($pointrelResourcesDirectory, $hexDigits, RESOURCE_STORAGE_LEVEL_COUNT, RESOURCE_STORAGE_SEGMENT_LENGTH, $createSubdirectories);
+$fullName = $storagePath . $shortName;
 
 if (file_exists($fullName)) {
-  die('{"status": "OK", "message": "File already exists: ' . $fullName . '"}');
+  exitWithJSONStatusMessage('File already exists: "' . $fullName . '"', NO_FAILURE_HEADER, 0);
 }
-
-// Make the directories if needed
-quiet_mkdir($directory . "/" . $d1);
-quiet_mkdir($directory . "/" . $d1 . "/" . $d2);
-quiet_mkdir($directory . "/" . $d1 . "/" . $d2 . "/" . $d3);
-quiet_mkdir($directory . "/" . $d1 . "/" . $d2 . "/" . $d3 . "/" . $d4);
 
 $fp = fopen($fullName, 'w');
 
 if (!$fp) {
-  die('{"status": "FAIL", "message": "File could not be opened for writing: \'' . $fullName . '\'"}');
+  exitWithJSONStatusMessage('File could not be opened for writing: "' . $fullName . '"', NO_FAILURE_HEADER, 0);
 }
 
 fwrite($fp, $content);
