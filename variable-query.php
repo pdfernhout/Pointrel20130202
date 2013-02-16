@@ -62,22 +62,28 @@ if (empty($userID)) {
 }
 
 if (empty($variableName)) {
-    // TODO: Inconsistent that this sends failure header???
-    exitWithJSONStatusMessage("No variableName was specified", SEND_FAILURE_HEADER, 400);
+    exitWithJSONStatusMessage("No variableName was specified", NO_FAILURE_HEADER, 400);
 }
 
-// TODO: maybe better sanitize variable name perhaps by making it into hash and then can store many of them in nested directories similar to resources? 
-// But then could nto easily see variable name (pros and cons)?
+if (strlen($variableName) > 100) {
+    exitWithJSONStatusMessage("Variable name is too long (maximum 100 characters)", NO_FAILURE_HEADER, 400);
+}
+
 // From: http://stackoverflow.com/questions/2668854/sanitizing-strings-to-make-them-url-and-filename-safe
 // but changed to change dots to underscores
 $shortFileNameForVariableName = preg_replace(array('/\s/', '/\.[\.]+/', '/[^\w_\.\-]/'), array('_', '_', '_'), $variableName);
 
-$fullVariableFileName = $pointrelVariablesDirectory . 'variable_' . $shortFileNameForVariableName . '.txt';
+$hexDigits = md5($shortFileNameForVariableName);
+
+$createSubdirectories = ($operation == "new") || ($operation == "set" && $currentValue === "");
+$storagePath = calculateStoragePath($pointrelVariablesDirectory, $hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, $createSubdirectories);
+
+$fullVariableFileName = $storagePath . "variable_" . $hexDigits . "_" . $shortFileNameForVariableName . '.txt';
 $variableValueAfterOperation = "ERROR";
 
 if ($operation == "exists") {
     if (file_exists($fullVariableFileName)) {
-        // TODO: Can't replace this one becaues it has OK
+        // TODO: Can't replace this one because it has OK
         exit('{"status": "OK", "message": "Variable file exists: ' . $fullVariableFileName . '"}');
     }
     exitWithJSONStatusMessage("Variable file does not exist: '" . $fullVariableFileName . "'", NO_FAILURE_HEADER, 0);

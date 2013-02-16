@@ -3,6 +3,16 @@
 $pointrelResourcesDirectory = "../pointrel-data/resources/";
 $pointrelVariablesDirectory = "../pointrel-data/variables/";
 
+// These four constants used to figure out where to put resources and variables
+// The defaults here should support about a trillion resources and a billion variables
+// If you change these after you have started using the system, previously stored resources and variables
+// won't be found unless you move them into the new expected places somehow --
+// unless you make other changes to look first in the old locations
+define("RESOURCE_STORAGE_LEVEL_COUNT", 4);
+define("RESOURCE_STORAGE_SEGMENT_LENGTH", 2);
+define("VARIABLE_STORAGE_LEVEL_COUNT", 3);
+define("VARIABLE_STORAGE_SEGMENT_LENGTH", 2);
+
 // Calculate today's log file name
 $fullLogFileName = "../pointrel-data/logs/" . gmdate("Y-m-d") . ".log";
 
@@ -24,6 +34,9 @@ if (get_magic_quotes_gpc()) {
     $_REQUEST = stripslashes_recursive($_REQUEST);
 }
 
+function startsWith($haystack, $needle) {
+    return !strncmp($haystack, $needle, strlen($needle));
+}
 
 define("SEND_FAILURE_HEADER", TRUE);
 define("NO_FAILURE_HEADER", FALSE);
@@ -111,12 +124,6 @@ function validateURIOrExit($pointrelURI, $sendHeader=NO_FAILURE_HEADER) {
         "length" => $length,
     );
 }
-
-// Defaults picked to support billions of resources and millions of variables
-define("RESOURCE_STORAGE_LEVEL_COUNT", 4);
-define("RESOURCE_STORAGE_SEGMENT_LENGTH", 2);
-define("VARIABLE_STORAGE_LEVEL_COUNT", 2);
-define("VARIABLE_STORAGE_SEGMENT_LENGTH", 2);
 
 // Returns the path where this file would go
 function calculateStoragePath($baseDirectory, $hexDigits, $levelCount, $segmentLength, $createSubdirectories) {

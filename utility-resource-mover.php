@@ -8,11 +8,7 @@ $needingToBeMovedDirectoryFullPath = $pointrelResourcesDirectory . "NeedingToBeM
 
 echo "moving all pointrel resources from: $needingToBeMovedDirectoryFullPath\n\n";
 
-if (!file_exists($needingToBeMovedDirectoryFullPath)) exit("No NeedingToBeMoved directory");
-
-function startsWith($haystack, $needle) {
-    return !strncmp($haystack, $needle, strlen($needle));
-}
+if (!file_exists($needingToBeMovedDirectoryFullPath)) exit("No such directory: $needingToBeMovedDirectoryFullPath");
 
 function move($entry, $urlInfo) {
     echo "going to move resource file from: $entry\n";
@@ -46,7 +42,7 @@ if ($handle = opendir($needingToBeMovedDirectoryFullPath)) {
             $urlInfo = validateURIOrExit("pointrel://" . $entry);
             echo "validates OK\n";
             $moveResult = move($needingToBeMovedDirectoryFullPath . $entry, $urlInfo);
-            if ($moveResult) $moveResult++;
+            if ($moveResult) $moveCount++;
         }
     }
     closedir($handle);
