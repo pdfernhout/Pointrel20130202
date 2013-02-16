@@ -207,27 +207,27 @@
     </script>
 </head>
 <body>
-<h3>Test versioned text editor</h3>
+<b>Test versioned text editor</b>
 This tests Pointrel functionality for keeping track of a list (or tree) of versions of a piece of text.
 Add some later versions by typing text in the box and then clicking "Store".
 Click the "Latest" button to get the latest version of a text document for some variable name.
-Then click "Previous" to get previous versions. JavaScript must be enabled for this page for this test to work.
-<p>
-    To add a new variable, change the variable name and clear the current version field by hand and then store text for
-    it.
-    Or you can click "Latest" after changing the name, and ignore the error message there about a missing variable file.
-    Otherwise, if there is any text in the version field, you will get an error later when you go to store text for a
-    new variable.
-</p>
+Then click "Previous" to get previous versions.
+To add a new variable, change the variable name and clear the current version field by hand and then store text for it.
+Or you can click "Latest" after changing the name, and ignore the error message there about a missing variable file.
+Otherwise, if there is any text in the version field, you will get an error later when you go to store text for a
+new variable.
+JavaScript must be enabled for this page for this test to work.
+<br/><br/>
 
 <form accept-charset="UTF-8">
     <label for="variableName">Variable: </label><input type="text" id="variableName" style="width:300px;" value="editor-test"/><input type="button" onclick="latest()" value="Latest"/><a id="editorLink" href="">editor</a> <a id="viewerLink" href="">viewer</a><br/>
-    <label for="timestamp">Time: </label><input type="text" id="timestamp" style="width:200px;"/><br/>
+    <label for="timestamp">Time: </label><input type="text" id="timestamp" style="width:200px;" readonly/><br/>
     <label for="userID">User: </label><input type="text" id="userID" style="width:200px;" readonly/><br/>
     <label for="versionURI">Version: </label><input type="text" id="versionURI" style="width:700px;"/><input type="button" onclick="previous()" value="Previous"/><br/>
     <label for="textURI">Text resource URI: </label><input type="text" id="textURI" style="width:700px;"/><input type="button" onclick="fetch()" value="Fetch"/><br/>
-    <input type="button" onclick="store()" value="Store new version of text below"/>  <span id="form_loginStatus">Not logged in</span> <a href="login.html">login page</a><br/>
     <label for="editor">Content:<br/></label><textarea id="editor" style="width:800px; height:500px; overflow: auto;"></textarea><br/>
+    <a href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span>  <input type="button" onclick="store()" value="Store new version of text"/><br/>
+
 </form>
 </body>
 </html>
