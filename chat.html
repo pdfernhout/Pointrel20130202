@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>Chat</title>
+    <script type="text/javascript" src="../jquery-1.9.1.js"></script>
+</head>
+<body>
+Chat program<br/>
+<!--suppress HtmlFormInputWithoutLabel -->
+<input type="text" id="message_to_send" size="63"/>
+<input type="button" id="button_send" onClick="send();" value="Send"/>
+<input type="button" id="button_history" onClick="history();" value="History"/>
+<input type="button" id="button_forwards" onClick="forward();" value="Forward"/>
+<!-- <input type="button" id="button_forwards" onClick="addTestData();" value="Add Test Data" /> -->
+
+<div id="div_messages">Welcome (messages go here)</div>
+
+<script type="text/javascript">
+
+    var messages = [];
+    var lastHistory = 0;
+
+    function send() {
+        const $message_to_send = $("#message_to_send");
+        var message = $message_to_send.val();
+        console.log("send pressed", message);
+        $message_to_send.val("");
+        messages.push(message);
+        console.log(messages);
+        lastHistory = messages.length;
+        console.log("lastHistory", lastHistory);
+
+        // Put all the messages int to the component that displays them
+        var output = "";
+        var messagesReversed = messages.slice(0);
+        messagesReversed.reverse();
+        for (var i in messagesReversed) {
+            //noinspection JSUnfilteredForInLoop
+            var oldMessage = messagesReversed[i];
+            output = output + oldMessage + "<br/>";
+        }
+        $("#div_messages").html(output);
+    }
+
+    function history() {
+        console.log("history pressed");
+        console.log("lastHistory before history", lastHistory);
+        // var pastElement = messages.slice(-1)[0];
+        lastHistory = lastHistory - 1;
+        if (lastHistory < 0) {
+            lastHistory = 0;
+            alert("at bottom of history");
+        }
+        var pastElement = messages[lastHistory];
+        console.log(pastElement);
+        $("#message_to_send").val(pastElement);
+        console.log("lastHistory after history", lastHistory);
+    }
+
+    function forward() {
+        console.log("forward pressed");
+        console.log("lastHistory before forward", lastHistory);
+        lastHistory = lastHistory + 1;
+        if (lastHistory > messages.length - 1) {
+            lastHistory = messages.length - 1;
+            alert("at top of history");
+        }
+        var pastElement = messages[lastHistory];
+        console.log("pastElement to put in message", pastElement);
+        $("#message_to_send").val(pastElement);
+        pastElement = messages[lastHistory];
+        console.log("pastElement at new position", pastElement);
+        console.log("lastHistory after forward", lastHistory);
+    }
+
+    //   function addTestData() {
+    //      messages = ["a", "b", "c"];
+    //      lastHistory = 3;
+    //      console.log("test data loaded messages:", messages, "lastHistory:" , lastHistory);
+    //   }
+
+    // jQuery Document
+    $(document).ready(function () {
+        console.log("Hello");
+    });
+</script>
+</body>
+</html>
