@@ -54,6 +54,9 @@
                 newURI = newURI.replace("test-editor.html", "viewer.html");
                 console.log("Updating viewerLink URI to:", newURI);
                 $("a#viewerLink").prop("href", newURI);
+                newURI = newURI.replace("viewer.html", "versions.html");
+                console.log("Updating versionsLink URI to:", newURI);
+                $("a#versionsLink").prop("href", newURI);
                 // window.history.replaceState("object or string", "Pointrel In JavaScript test-editor for: " + variableName, "/new-url");
             // }
         }
@@ -220,7 +223,9 @@ JavaScript must be enabled for this page for this test to work.
 <br/><br/>
 
 <form accept-charset="UTF-8">
-    <label for="variableName">Variable: </label><input type="text" id="variableName" style="width:300px;" value="editor-test"/><input type="button" onclick="latest()" value="Latest"/><a id="editorLink" href="">editor</a> <a id="viewerLink" href="">viewer</a><br/>
+    <label for="variableName">Variable: </label><input type="text" id="variableName" style="width:300px;" value="editor-test"/>
+    <input type="button" onclick="latest()" value="Latest"/>
+    <a id="editorLink" href="">editor</a> <a id="viewerLink" href="">viewer</a> <a id="versionsLink" href="">versions</a><br/>
     <label for="timestamp">Time: </label><input type="text" id="timestamp" style="width:200px;" readonly/><br/>
     <label for="userID">User: </label><input type="text" id="userID" style="width:200px;" readonly/><br/>
     <label for="versionURI">Version: </label><input type="text" id="versionURI" style="width:700px;"/><input type="button" onclick="previous()" value="Previous"/><br/>

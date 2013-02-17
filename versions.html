@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset='utf-8'>
+    <title>Pointrel In JavaScript viewer</title>
+    <script type="text/javascript" src="../jquery-1.9.1.js"></script>
+    <script type="text/javascript" src="javascript-libs/sha256.js"></script>
+    <script type="text/javascript" src="javascript-libs/jstorage.js"></script>
+    <script type="text/javascript" src="javascript-libs/mustache.js"></script>
+    <script type="text/javascript" src="javascript-libs/pointrel_authentication.js"></script>
+    <script type="text/javascript" src="javascript-libs/pointrel20130202ForJQuery.js"></script>
+
+    <style type="text/css">
+        table.myTable { border-collapse:collapse; }
+        table.myTable td, table.myTable th { border:1px solid black;padding:5px; }
+    </style>
+
+    <script type="html/text" id="template">
+        <table class="myTable">
+            <th>view</th><th>size</th><th>timestamp</th><th>user</th>
+        {{#versions}}
+        <tr>
+        <td><a href="viewer.html?documentName={{value}}">view</a></td>
+        <td>{{size}}</td>
+        <td>{{timestamp}}</td>
+        <td>{{userID}}</td>
+        </tr>
+        {{/versions}}
+        </table>
+    </script>
+
+    <script type="text/javascript">
+        var currentVersionURI = "";
+        var variableName = "editor-test";
+        var itemTemplate;
+
+        $(document).ready(loadLatestFromParameter);
+
+        function getParameter(paramName) {
+            var searchString = window.location.search.substring(1);
+            var i;
+            var val;
+            var params = searchString.split("&");
+
+            for (i = 0; i < params.length; i++) {
+                val = params[i].split("=");
+                if (val[0] == paramName) {
+                    return decodeURI(val[1]);
+                }
+            }
+            return null;
+        }
+
+        function loadLatestFromParameter() {
+            // Save the initial template -- does not work
+            itemTemplate = $("#template").html();
+            console.log("itemTemplate read", itemTemplate);
+            var chosenVariable = getParameter("documentName");
+            if (chosenVariable) {
+                console.log("Read document from: " + chosenVariable);
+                variableName = chosenVariable;
+                latest();
+                var url = document.URL;
+                // var tempArray = url.split("?");
+                // var baseURL = tempArray[0];
+                var baseURL = "viewer.html";
+                baseURL = baseURL.replace("viewer.html", "test-editor.html");
+                var newURI = baseURL + "?documentName=" + encodeURI(variableName);
+                console.log("Updating editor link URI to:", newURI);
+                $("a#editLink").prop("href", newURI);
+                newURI = newURI.replace("test-editor.html", "viewer.html");
+                $("a#viewerLink").prop("href", newURI);
+            }
+        }
+
+        function latest() {
+            $("#documentName").text(variableName);
+            pointrel_variable_get(variableName, function (error, variableGetResult) {
+                console.log("pointrel_variable_get");
+                if (error) {
+                    currentVersionURI = "";
+                    $("#timestamp").text("unknown");
+                    $("#userID").text("unknown");
+                    // $("#documentContent").text("");
+                    $("#documentContent").text("Could not retrieve document -- maybe you need to create it?");
+                    // alert("Error happened on variable get; variable name may be new? Result: " + variableGetResult.message);
+                    return;
+                }
+                var versionURI = variableGetResult.currentValue;
+                var versions = [];
+                get_versions_recursively(versionURI, versions, null, displayVersions);
+            });
+        }
+
+        function get_versions_recursively(versionURI, versions, callbackForNextVersion, callbackForAllVersions) {
+            if (!versionURI) {
+                if (typeof(callbackForAllVersions) == "function") callbackForAllVersions(versions);
+                return versions;
+            }
+            pointrel_resource_get(versionURI, function (error, versionContents) {
+                console.log("pointrel_resource_get", versionURI);
+                if (error) {
+                    alert("Error happened on versionContents get");
+                    return versions;
+                }
+                console.log("versionContents:", versionContents);
+                var version = JSON.parse(versionContents);
+                console.log("version read", version);
+                versions.push(version);
+                var previousVersion = version.previousVersion;
+                if (typeof(callbackForNextVersion) == "function") callbackForNextVersion(versionURI, version);
+                return get_versions_recursively(previousVersion, versions, callbackForNextVersion, callbackForAllVersions);
+            });
+            return versions;
+        }
+
+        function displayVersions(versions) {
+            //var newContent = JSON.stringify(versions);
+            //newContent = "<pre>" + newContent + "</pre>";
+//            var newContent = "";
+//            for (version in versions) {
+//                // newContent = newContent + "<p><pre>" + JSON.stringify(versions[version]) + "</pre></p>"
+//                var values = {};
+//                values.timestamp = version.timestamp;
+//                values.userID = version.userID;
+//                values.size = version.value.split("_")[2].split(".")[0];
+//                values.value = version.value;
+//                var versionContent = Mustache.render(itemTemplate, values);
+//            }
+           // Modify the results to have a size field
+           for (var i in versions) {
+               //noinspection JSUnfilteredForInLoop
+               var version = versions[i];
+               version.size = version.value.split("_")[2].split(".")[0];
+               version.timestamp = version.timestamp.replace("Z", " GMT").replace("T", " ");
+            }
+            var values = {};
+            values.versions = versions;
+            console.log("itemTemplate", itemTemplate);
+            var newContent = Mustache.render(itemTemplate, values);
+            console.log("newContent", newContent);
+            $("#documentVersions").html(newContent);
+        }
+    </script>
+</head>
+<body>
+Document: <b id="documentName">documentName</b><br/>
+<input type="button" onclick="latest()" value="Refresh"/> <a id="editLink" href="test-editor.html?documentName=test">edit</a> <a id="viewerLink" href="">viewer</a><br/>
+<hr/>
+<div id="documentVersions">
+</div>
+</body>
+</html>

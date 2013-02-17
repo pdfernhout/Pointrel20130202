@@ -42,6 +42,9 @@
                 var newURI = baseURL + "?documentName=" + encodeURI(variableName);
                 console.log("Updating editor link URI to:", newURI);
                 $("a#editLink").prop("href", newURI);
+                newURI = newURI.replace("test-editor.html", "versions.html");
+                console.log("Updating versionsLink URI to:", newURI);
+                $("a#versionsLink").prop("href", newURI);
             }
         }
 
@@ -60,8 +63,21 @@
             return text;
         }
 
+        function startsWith(data, start) {
+            return data.substring(0, start.length) === start;
+        }
+
         function latest() {
             $("#documentName").text(variableName);
+            // Special handling if it is a resource instead of a variable
+            if (startsWith(variableName, "pointrel://")) {
+                $("#timestamp").text("???");
+                $("#userID").text("???");
+                $("#refreshAndEdit").hide();
+                loadResource(variableName);
+                return
+            }
+            $("#refreshAndEdit").show();
             pointrel_variable_get(variableName, function (error, variableGetResult) {
                 console.log("pointrel_variable_get");
                 if (error) {
@@ -74,37 +90,46 @@
                     return;
                 }
                 var versionURI = variableGetResult.currentValue;
-                pointrel_resource_get(versionURI, function (error, versionContents) {
-                    console.log("pointrel_resource_get");
-                    if (error) {
-                        alert("Error happened on versionContents get");
-                        return;
-                    }
-                    console.log("versionContents:", versionContents);
-                    var version = JSON.parse(versionContents);
-                    var textURI = version.value;
-                    pointrel_resource_get(textURI, function (error, text) {
-                        console.log("pointrel_resource_get2 ");
-                        if (error) {
-                            alert("Error happened when getting text of version");
-                            return;
-                        }
-                        console.log("latest updating before:", versionURI);
-                        $("#timestamp").text(version.timestamp);
-                        $("#userID").text(version.userID);
-                        $("#documentContent").html(process(text));
-                        console.log("latest updating after:", versionURI);
-                        currentVersionURI = versionURI;
-                    });
-                });
+                loadVersion(versionURI);
+            });
+        }
+
+        function loadVersion(versionURI) {
+            pointrel_resource_get(versionURI, function (error, versionContents) {
+                console.log("pointrel_resource_get");
+                if (error) {
+                    alert("Error happened on versionContents get");
+                    return;
+                }
+                console.log("versionContents:", versionContents);
+                var version = JSON.parse(versionContents);
+                var textURI = version.value;
+                $("#timestamp").text(version.timestamp);
+                $("#userID").text(version.userID);
+                currentVersionURI = versionURI;
+                loadResource(textURI, version);
+            });
+        }
+
+        function loadResource(textURI) {
+            pointrel_resource_get(textURI, function (error, text) {
+                console.log("pointrel_resource_get2 ");
+                if (error) {
+                    alert("Error happened when getting text of version");
+                    $("#documentContent").html("<b>Problem getting text for: " + textURI + "</b>");
+                    return;
+                }
+                $("#documentContent").html(process(text));
             });
         }
     </script>
 </head>
 <body>
 Document: <b id="documentName">documentName</b> Time: <b id="timestamp">Timestamp</b> User: <b id="userID">userID</b><br/>
-<input type="button" onclick="latest()" value="Refresh"/> <a id="editLink" href="test-editor.html?documentName=test">edit</a><br/>
+<div id="refreshAndEdit">
+<input type="button" onclick="latest()" value="Refresh"/> <a id="editLink" href="test-editor.html?documentName=test">edit</a> <a id="versionsLink" href="">versions</a><br/>
+</div>
 <hr/>
-<div id="documentContent">Document content</div>
+<div id="documentContent"></div>
 </body>
 </html>
