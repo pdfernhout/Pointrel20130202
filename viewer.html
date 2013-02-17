@@ -13,6 +13,8 @@
         var currentVersionURI = "";
         var variableName = "editor-test";
 
+        // TODO: Have some way of passing in the userID, timestamp, and document separately for a resource
+
         function getParameter(paramName) {
             var searchString = window.location.search.substring(1);
             var i;
@@ -77,6 +79,7 @@
                 loadResource(variableName);
                 return
             }
+            //noinspection JSJQueryEfficiency
             $("#refreshAndEdit").show();
             pointrel_variable_get(variableName, function (error, variableGetResult) {
                 console.log("pointrel_variable_get");
@@ -107,7 +110,7 @@
                 $("#timestamp").text(version.timestamp);
                 $("#userID").text(version.userID);
                 currentVersionURI = versionURI;
-                loadResource(textURI, version);
+                loadResource(textURI);
             });
         }
 
@@ -119,6 +122,7 @@
                     $("#documentContent").html("<b>Problem getting text for: " + textURI + "</b>");
                     return;
                 }
+                //noinspection JSJQueryEfficiency
                 $("#documentContent").html(process(text));
             });
         }
