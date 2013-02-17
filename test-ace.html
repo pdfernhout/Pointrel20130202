@@ -45,7 +45,6 @@ console.log("Test");
 
     editor.setTheme("ace/theme/chrome");
     editor.getSession().setMode("ace/mode/javascript");
-    editor.setSelectionRange();
 
     // use a hidden field to save editor content
     var editorSaved = document.getElementById("editorSaved");
@@ -53,6 +52,10 @@ console.log("Test");
     if (editorSaved.value.length > 0) {
         editor.setValue(editorSaved.value);
     }
+
+    editor.clearSelection();
+
+    editor.moveCursorTo(0, 0);
 
     function saveInput() {
         var allTheCode = editor.getValue();
