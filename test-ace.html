@@ -14,7 +14,7 @@
     </style>
 </head>
 <body>
-DOES THIS SHOW UP AT THE TOP?
+<b>Test of Ace editor</b>
 <input type="button" id="button_run_main" onclick="control_run_main()" value="Run main"/>
 <input type="button" id="button_run_selected" onclick="control_run_selected()" value="Evaluate selected"/>
 <input type="button" id="button_undo" onclick="control_undo()" value="Undo"/>
@@ -45,6 +45,7 @@ console.log("Test");
 
     editor.setTheme("ace/theme/chrome");
     editor.getSession().setMode("ace/mode/javascript");
+    editor.setSelectionRange();
 
     // use a hidden field to save editor content
     var editorSaved = document.getElementById("editorSaved");
@@ -104,8 +105,6 @@ console.log("Test");
     //});
 
 </script>
-
-DOES THIS SHOW UP?
 </body>
 
 
