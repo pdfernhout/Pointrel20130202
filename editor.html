@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>Pointrel simple editor</title>
+    <script type="text/javascript" src="../jquery-1.9.1.js"></script>
+    <script type="text/javascript" src="javascript-libs/sha256.js"></script>
+    <script type="text/javascript" src="javascript-libs/jstorage.js"></script>
+    <script type="text/javascript" src="javascript-libs/pointrel_authentication.js"></script>
+    <script type="text/javascript" src="javascript-libs/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript">
+        var currentVersionURI = "";
+        var variableName = "editor-test";
+
+        $(document).ready(loadLatestFromParameter);
+        $($.pointrel_authentication.loginPageLoaded);
+
+        function getParameter(paramName) {
+            var searchString = window.location.search.substring(1);
+            var i;
+            var val;
+            var params = searchString.split("&");
+
+            for (i = 0; i < params.length; i++) {
+                val = params[i].split("=");
+                if (val[0] == paramName) {
+                    return decodeURI(val[1]);
+                }
+            }
+            return null;
+        }
+
+        function loadLatestFromParameter() {
+            var chosenVariable = getParameter("documentName");
+            if (chosenVariable) {
+                console.log("Read document from: " + chosenVariable);
+                variableName = chosenVariable;
+                $("#variableName").val(chosenVariable);
+                latest("ignoreMissing");
+            }
+            updateURI();
+        }
+
+        function updateURI() {
+            var chosenVariable = getParameter("documentName");
+            // if (chosenVariable != variableName) {
+                var url = document.URL;
+                // var tempArray = url.split("?");
+                // var baseURL = tempArray[0];
+                var baseURL = "editor.html";
+                var newURI = baseURL + "?documentName=" + encodeURI(variableName);
+                console.log("Updating permalink URI to:", newURI);
+                $("a#editorLink").prop("href", newURI);
+                newURI = newURI.replace("editor.html", "viewer.html");
+                console.log("Updating viewerLink URI to:", newURI);
+                $("a#viewerLink").prop("href", newURI);
+                newURI = newURI.replace("viewer.html", "versions.html");
+                console.log("Updating versionsLink URI to:", newURI);
+                $("a#versionsLink").prop("href", newURI);
+                // window.history.replaceState("object or string", "Pointrel In JavaScript editor for: " + variableName, "/new-url");
+            // }
+        }
+
+        function process(text) {
+            // Seems like jQuery is handling this anyway, to restore from utf-8?
+            // return $('<div/>').text(text).html();
+            // return decodeFromUTF8(text);
+            return text;
+        }
+
+        function latest(ignoreMissing) {
+            variableName = $("#variableName").val();
+            updateURI();
+            pointrel_variable_get(variableName, function (error, variableGetResult) {
+                console.log("pointrel_variable_get");
+                if (error) {
+                    currentVersionURI = "";
+                    $("#timestamp").val("");
+                    $("#userID").val("");
+                    $("#versionURI").val("");
+                    // $("#textURI").val("");
+                    $("#editor").val("");
+                    var errorMessage = "Error happened on variable get; variable name may be new? Result: " + variableGetResult.message;
+                    console.log(errorMessage);
+                    if (!ignoreMissing) alert(errorMessage);
+                    return;
+                }
+                var versionURI = variableGetResult.currentValue;
+                pointrel_resource_get(versionURI, function (error, versionContents) {
+                    console.log("pointrel_resource_get");
+                    if (error) {
+                        alert("Error happened on versionContents get");
+                        return;
+                    }
+                    console.log("versionContents:", versionContents);
+                    var version = JSON.parse(versionContents);
+                    var textURI = version.value;
+                    pointrel_resource_get(textURI, function (error, text) {
+                        console.log("pointrel_resource_get");
+                        if (error) {
+                            alert("Error happened when getting text of version");
+                            return;
+                        }
+                        console.log("latest updating before:", versionURI);
+                        $("#timestamp").val(version.timestamp);
+                        $("#userID").val(version.userID);
+                        $("#versionURI").val(versionURI);
+                        $("#textURI").val(textURI);
+                        $("#editor").val(process(text));
+                        console.log("latest updating after:", versionURI);
+                        currentVersionURI = versionURI;
+                    });
+                });
+            });
+        }
+        function previous() {
+            var versionURI = $("#versionURI").val();
+            pointrel_resource_get(versionURI, function (error, versionContents) {
+                console.log("pointrel_resource_get");
+                if (error) {
+                    alert("Error happened on versionContents get");
+                    return;
+                }
+                console.log("versionContents:", versionContents);
+                var version = JSON.parse(versionContents);
+
+                var previousVersionURI = version.previousVersion;
+                if (previousVersionURI === "") {
+                    alert("No previous version");
+                    return;
+                }
+                pointrel_resource_get(previousVersionURI, function (error, previousVersionContents) {
+                    console.log("pointrel_resource_get");
+                    if (error) {
+                        alert("Error happened on previousVersionContents get");
+                        return;
+                    }
+                    console.log("previousVersionContents:", previousVersionContents);
+                    var previousVersion = JSON.parse(previousVersionContents);
+
+                    var textURI = previousVersion.value;
+                    pointrel_resource_get(textURI, function (error, text) {
+                        console.log("pointrel_resource_get");
+                        if (error) {
+                            alert("Error happened when getting text of previous version");
+                            return;
+                        }
+                        console.log("previousVersion:", previousVersion);
+                        $("#timestamp").val(previousVersion.timestamp);
+                        $("#userID").val(previousVersion.userID);
+                        $("#versionURI").val(previousVersionURI);
+                        $("#textURI").val(textURI);
+                        $("#editor").val(process(text));
+                        console.log("latest updating after:", previousVersion);
+                        currentVersionURI = previousVersionURI;
+                    });
+                });
+            });
+        }
+        function store() {
+            variableName = $("#variableName").val();
+            updateURI();
+            var editorText = $("#editor").val();
+            console.log("editorText", editorText.length, editorText);
+            var editorTextAsUTF8 = encodeAsUTF8(editorText);
+            console.log("editorTextAsUTF8", editorTextAsUTF8.length, editorTextAsUTF8);
+            var textURI = pointrel_resource_add(editorTextAsUTF8, "txt", function(error, status) {
+                if (error) { alert("could not write resource: " + JSON.stringify(status) + " error: " + error); return }
+                console.log("wrote", textURI);
+                var timestamp = new Date().toISOString();
+                var userID = $.pointrel_authentication.getUserIDOrAnonymous();
+                var previousVersionURI = currentVersionURI;
+                var version = {timestamp: timestamp, userID: userID, previousVersion: previousVersionURI, value: textURI};
+                console.log("version:", version);
+                var versionAsString = JSON.stringify(version);
+                console.log("versionAsString:", versionAsString);
+                var newVersionURI = pointrel_resource_add(encodeAsUTF8(versionAsString), "Version.json", function(error, status) {
+                    if (error) { alert("could not write new version: " + JSON.stringify(status)); return }
+                    console.log("wrote newVersionURI:", newVersionURI);
+                    pointrel_variable_set(variableName, currentVersionURI, newVersionURI, function (error, status) {
+                        if (error) {
+                            alert("Error happened when trying to set variable: " + JSON.stringify(status));
+                            return;
+                        }
+                        console.log("store updating before:", currentVersionURI);
+                        $("#timestamp").val(timestamp);
+                        $("#userID").val(userID);
+                        $("#versionURI").val(newVersionURI);
+                        $("#textURI").val(textURI);
+                        console.log("store updating after:", newVersionURI);
+                        currentVersionURI = newVersionURI;
+                    });
+                });
+                // alert("tried to write: " + textURI);
+            });
+        }
+        function fetch() {
+            var textURI = $("#textURI").val();
+            // alert(textURI);
+            // TODO: Must be asynchronous
+            pointrel_resource_get(textURI, function (error, text) {
+                if (error) {
+                    alert("Error when fetching:" + JSON.stringify(text));
+                    return;
+                }
+                // alert(text);
+                $("#editor").val(process(text));
+            });
+        }
+    </script>
+</head>
+<body>
+<b>Pointrel simple versioned text editor</b>
+<form accept-charset="UTF-8">
+    <label for="variableName">Variable: </label><input type="text" id="variableName" style="width:300px;" value="editor-test"/>
+    <input type="button" onclick="latest()" value="Latest"/>
+    <a id="editorLink" href="">editor</a> <a id="viewerLink" href="">viewer</a> <a id="versionsLink" href="">versions</a><br/>
+    <label for="timestamp">Time: </label><input type="text" id="timestamp" style="width:200px;" readonly/><br/>
+    <label for="userID">User: </label><input type="text" id="userID" style="width:200px;" readonly/><br/>
+    <label for="versionURI">Version: </label><input type="text" id="versionURI" style="width:700px;"/><input type="button" onclick="previous()" value="Previous"/><br/>
+    <label for="textURI">Text resource URI: </label><input type="text" id="textURI" style="width:700px;"/><input type="button" onclick="fetch()" value="Fetch"/><br/>
+    <label for="editor">Content:<br/></label><textarea id="editor" style="width:800px; height:500px; overflow: auto;"></textarea><br/>
+    <a href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span>  <input type="button" onclick="store()" value="Store new version of text"/><br/>
+</form>
+</body>
+</html>

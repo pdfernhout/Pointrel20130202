@@ -40,11 +40,11 @@
                 // var tempArray = url.split("?");
                 // var baseURL = tempArray[0];
                 var baseURL = "viewer.html";
-                baseURL = baseURL.replace("viewer.html", "test-editor.html");
+                baseURL = baseURL.replace("viewer.html", "editor.html");
                 var newURI = baseURL + "?documentName=" + encodeURI(variableName);
                 console.log("Updating editor link URI to:", newURI);
                 $("a#editLink").prop("href", newURI);
-                newURI = newURI.replace("test-editor.html", "versions.html");
+                newURI = newURI.replace("editor.html", "versions.html");
                 console.log("Updating versionsLink URI to:", newURI);
                 $("a#versionsLink").prop("href", newURI);
             }
@@ -131,7 +131,7 @@
 <body>
 Document: <b id="documentName">documentName</b> Time: <b id="timestamp">Timestamp</b> User: <b id="userID">userID</b><br/>
 <div id="refreshAndEdit">
-<input type="button" onclick="latest()" value="Refresh"/> <a id="editLink" href="test-editor.html?documentName=test">edit</a> <a id="versionsLink" href="">versions</a><br/>
+<input type="button" onclick="latest()" value="Refresh"/> <a id="editLink" href="editor.html?documentName=test">edit</a> <a id="versionsLink" href="">versions</a><br/>
 </div>
 <hr/>
 <div id="documentContent"></div>

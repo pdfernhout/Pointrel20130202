@@ -64,11 +64,11 @@
                 // var tempArray = url.split("?");
                 // var baseURL = tempArray[0];
                 var baseURL = "viewer.html";
-                baseURL = baseURL.replace("viewer.html", "test-editor.html");
+                baseURL = baseURL.replace("viewer.html", "editor.html");
                 var newURI = baseURL + "?documentName=" + encodeURI(variableName);
                 console.log("Updating editor link URI to:", newURI);
                 $("a#editLink").prop("href", newURI);
-                newURI = newURI.replace("test-editor.html", "viewer.html");
+                newURI = newURI.replace("editor.html", "viewer.html");
                 $("a#viewerLink").prop("href", newURI);
             }
         }
@@ -145,7 +145,7 @@
 </head>
 <body>
 Document: <b id="documentName">documentName</b><br/>
-<input type="button" onclick="latest()" value="Refresh"/> <a id="editLink" href="test-editor.html?documentName=test">edit</a> <a id="viewerLink" href="">viewer</a><br/>
+<input type="button" onclick="latest()" value="Refresh"/> <a id="editLink" href="editor.html?documentName=test">edit</a> <a id="viewerLink" href="">viewer</a><br/>
 <hr/>
 <div id="documentVersions">
 </div>
