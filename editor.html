@@ -11,17 +11,8 @@
     <script type="text/javascript" src="javascript-libs/pointrel20130202ForJQuery.js"></script>
 
     <script type="text/javascript">
-        function Pointer(variable) {
-            this.variable = variable;
-            this.latestVersionURI = null;
-            this.latestVersion = null;
-
-        }
-
         var currentVersionURI = "";
         var variableName = "editor-test";
-
-        // var pointer = new Variable("editor-test");
 
         $(document).ready(loadLatestFromParameter);
         $($.pointrel_authentication.loginPageLoaded);

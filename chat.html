@@ -17,6 +17,40 @@ Chat program<br/>
 <div id="div_messages">Welcome (messages go here)</div>
 
 <script type="text/javascript">
+    function PointrelVariable(variableName) {
+        this.variableName = variableName;
+        this.latestVersionURI = null;
+        this.latestVersion = null;
+
+        this.getLatestVersion = function(callback) {
+            pointrel_variable_get(this.variableName, function (error, variableGetResult) {
+                console.log("pointrel_variable_get");
+                if (error) {
+                    alert("Error happened on variable get");
+                    this.latestVersionURI = null;
+                    this.latestVersion = null;
+                    callback(error, null);
+                    return;
+                }
+                this.latestVersionURI = variableGetResult.currentValue;
+                pointrel_resource_get(this.latestVersionURI, function (error, versionContents) {
+                    console.log("pointrel_resource_get");
+                    if (error) {
+                        alert("Error happened on versionContents get");
+                        this.latestVersionURI = null;
+                        this.latestVersion = null;
+                        callback(error, null);
+                        return;
+                    }
+                    console.log("versionContents:", versionContents);
+                    this.latestVersion  = JSON.parse(versionContents);
+                    callback(null, this.latestVersion);
+                });
+            });
+        }
+
+        // TODO: Getting previous versions back to last looked at...
+    }
 
     var messages = [];
     var lastHistory = 0;
