@@ -1,8 +1,20 @@
 //////////////////////// Utility functions ///////////////////////////
 
-// Can't decide between jQuery and dojo 
+// Get the value of a parameter in the query string
+function getParameter(paramName) {
+    var searchString = window.location.search.substring(1);
+    var params = searchString.split("&");
 
-//////////////////
+    for (var i = 0; i < params.length; i++) {
+        var val = params[i].split("=");
+        if (val[0] == paramName) {
+            return decodeURI(val[1]);
+        }
+    }
+    return null;
+}
+
+/////
 
 function newStandardDocument(type, context, user, title, contentsType, contentsValue, parents, signature) {
 	return { 

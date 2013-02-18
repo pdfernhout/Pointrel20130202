@@ -6,6 +6,7 @@
     <script type="text/javascript" src="../jquery-1.9.1.js"></script>
     <script type="text/javascript" src="javascript-libs/sha256.js"></script>
     <script type="text/javascript" src="javascript-libs/jstorage.js"></script>
+    <script type="text/javascript" src="javascript-libs/utils_common.js"></script>
     <script type="text/javascript" src="javascript-libs/pointrel_authentication.js"></script>
     <script type="text/javascript" src="javascript-libs/pointrel20130202ForJQuery.js"></script>
     <script type="text/javascript">
@@ -14,21 +15,6 @@
 
         $(document).ready(loadLatestFromParameter);
         $($.pointrel_authentication.loginPageLoaded);
-
-        function getParameter(paramName) {
-            var searchString = window.location.search.substring(1);
-            var i;
-            var val;
-            var params = searchString.split("&");
-
-            for (i = 0; i < params.length; i++) {
-                val = params[i].split("=");
-                if (val[0] == paramName) {
-                    return decodeURI(val[1]);
-                }
-            }
-            return null;
-        }
 
         function loadLatestFromParameter() {
             var chosenVariable = getParameter("documentName");
@@ -42,30 +28,13 @@
         }
 
         function updateURI() {
-            var chosenVariable = getParameter("documentName");
-            // if (chosenVariable != variableName) {
-                var url = document.URL;
-                // var tempArray = url.split("?");
-                // var baseURL = tempArray[0];
-                var baseURL = "test-editor.html";
-                var newURI = baseURL + "?documentName=" + encodeURI(variableName);
-                console.log("Updating permalink URI to:", newURI);
-                $("a#editorLink").prop("href", newURI);
-                newURI = newURI.replace("test-editor.html", "viewer.html");
-                console.log("Updating viewerLink URI to:", newURI);
-                $("a#viewerLink").prop("href", newURI);
-                newURI = newURI.replace("viewer.html", "versions.html");
-                console.log("Updating versionsLink URI to:", newURI);
-                $("a#versionsLink").prop("href", newURI);
-                // window.history.replaceState("object or string", "Pointrel In JavaScript test-editor for: " + variableName, "/new-url");
-            // }
-        }
-
-        function process(text) {
-            // Seems like jQuery is handling this anyway, to restore from utf-8?
-            // return $('<div/>').text(text).html();
-            // return decodeFromUTF8(text);
-            return text;
+            var editorAppBaseURL = "editor.html";
+            var viewerAppBaseURL = "viewer.html";
+            var versionsAppBaseURL = "versions.html";
+            var queryPart = "?documentName=" + encodeURI(variableName);
+            $("a#editorLink").prop("href", editorAppBaseURL + queryPart);
+            $("a#viewerLink").prop("href", viewerAppBaseURL + queryPart);
+            $("a#versionsLink").prop("href", versionsAppBaseURL + queryPart);
         }
 
         function latest(ignoreMissing) {
@@ -106,7 +75,7 @@
                         $("#userID").val(version.userID);
                         $("#versionURI").val(versionURI);
                         $("#textURI").val(textURI);
-                        $("#editor").val(process(text));
+                        $("#editor").val(text);
                         console.log("latest updating after:", versionURI);
                         currentVersionURI = versionURI;
                     });
@@ -150,7 +119,7 @@
                         $("#userID").val(previousVersion.userID);
                         $("#versionURI").val(previousVersionURI);
                         $("#textURI").val(textURI);
-                        $("#editor").val(process(text));
+                        $("#editor").val(text);
                         console.log("latest updating after:", previousVersion);
                         currentVersionURI = previousVersionURI;
                     });
@@ -204,7 +173,7 @@
                     return;
                 }
                 // alert(text);
-                $("#editor").val(process(text));
+                $("#editor").val(text);
             });
         }
     </script>

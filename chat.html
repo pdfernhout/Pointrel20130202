@@ -21,6 +21,10 @@ Chat program<br/>
     var messages = [];
     var lastHistory = 0;
 
+    function store(message) {
+        console.log("TODO -- store message", message);
+    }
+
     function send() {
         const $message_to_send = $("#message_to_send");
         var message = $message_to_send.val();
@@ -41,6 +45,7 @@ Chat program<br/>
             output = output + oldMessage + "<br/>";
         }
         $("#div_messages").html(output);
+        store(message);
     }
 
     function history() {
