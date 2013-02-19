@@ -26,6 +26,11 @@
 
 <script type="text/javascript">
     $($.pointrel_authentication.loginPageLoaded);
+    $(setupTimer);
+
+    function setupTimer() {
+        window.setInterval(refresh, 5000);
+    }
 
     // A single use class to do a recursive search for versions in a linked list
     // Recursively go through a linked list of versions, up to but not including the stopAtVersionURI
@@ -217,9 +222,10 @@
         console.log("newVersionsDone: ", endingStatus, error, versions);
         if (error) { alert("error"); return; }
         if (versions) {
-            for (var i in versions) {
+            var versionsReversed = versions.slice(0).reverse();
+            for (var i in versionsReversed) {
                 //noinspection JSUnfilteredForInLoop
-                var version = versions[i];
+                var version = versionsReversed[i];
                 // messages.push(version.timestamp + " " + version.message);
                 messages.push(version);
             }
@@ -296,7 +302,7 @@
         }
         var pastElement = messages[lastHistory];
         console.log(pastElement);
-        $("#message_to_send").val(pastElement);
+        $("#message_to_send").val(pastElement.message);
         console.log("lastHistory after history", lastHistory);
     }
 
@@ -310,7 +316,7 @@
         }
         var pastElement = messages[lastHistory];
         console.log("pastElement to put in message", pastElement);
-        $("#message_to_send").val(pastElement);
+        $("#message_to_send").val(pastElement.message);
         pastElement = messages[lastHistory];
         console.log("pastElement at new position", pastElement);
         console.log("lastHistory after forward", lastHistory);
