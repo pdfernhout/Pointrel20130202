@@ -288,6 +288,8 @@
         lastHistory = messages.length;
         console.log("lastHistory", lastHistory);
         // updateMessagesList();
+        // TODO: This position may be off depending on what others are doing with the list...
+        lastHistory = messages.length + 1;
         store(message);
     }
 
@@ -331,6 +333,13 @@
     // jQuery Document
     $(document).ready(function () {
         console.log("Hello");
+
+        // Send message if enter is pressed in that input field
+        $("#message_to_send").keyup(function(event){
+            if(event.keyCode == 13) {
+                $("#button_send").click();
+            }
+        });
     });
 </script>
 </body>
