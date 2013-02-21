@@ -1,7 +1,5 @@
 <?php
-// Note the need for a trailing slash for these directory names
-$pointrelResourcesDirectory = "../pointrel-data/resources/";
-$pointrelVariablesDirectory = "../pointrel-data/variables/";
+include "pointrel_config.php";
 
 // These four constants used to figure out where to put resources and variables
 // The defaults here should support about a trillion resources and a billion variables
@@ -14,7 +12,7 @@ define("VARIABLE_STORAGE_LEVEL_COUNT", 3);
 define("VARIABLE_STORAGE_SEGMENT_LENGTH", 2);
 
 // Calculate today's log file name
-$fullLogFileName = "../pointrel-data/logs/" . gmdate("Y-m-d") . ".log";
+$fullLogFileName = $pointrelLogsDirectory . gmdate("Y-m-d") . ".log";
 
 // recursively strip slashes from an array to deal with "magic quotes"
 function stripslashes_recursive($array) {
