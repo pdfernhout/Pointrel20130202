@@ -6,9 +6,12 @@ To use this software, copy it to a web server supporting PHP. You also need to m
   /yoursite
   /yoursite/pointrel-app
   /yoursite/pointrel-data
+  /yoursite/pointrel-data/logs
+  /yoursite/pointrel-data/resources
+  /yoursite/pointrel-data/variables
   /yoursite/pointrel-www
 
-Make sure the "pointrel-data" directory is writeable by your web server process.  Making that directory writeable generally requires using a "chown" command to change ownership such as:
+Make sure the "pointrel-data" and the "pointrel-www" directory is writeable by your web server process.  Making directories writeable generally requires using a "chown" command to change ownership such as:
 
   chown -R www pointrel-data
 
