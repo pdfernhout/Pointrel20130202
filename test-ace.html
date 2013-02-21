@@ -36,8 +36,11 @@ console.log("Test");
 10 + 20;
 </div>
 
-<script src="../ace-src/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="http://d1n0x3qji82z53.cloudfront.net/src-min-noconflict/ace.js"></script>
 <script>
+    var path = "js/ace-worker";
+    ace.config.set("workerPath", path);
+
     // Ace editor source available from: https://github.com/ajaxorg/ace-builds/
     var editor = ace.edit("editor");
 
