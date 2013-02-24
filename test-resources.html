@@ -4,13 +4,13 @@
     <meta charset='utf-8'>
     <title>Pointrel In JavaScript test-resources</title>
     <!-- <script src="js/dojo_1.8.3_base_compressed.js"></script> -->
-    <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="js/dojo_1.8.3_base_compressed.js"></script>
 
     <script type="text/javascript" src="js/sha256.js"></script>
     <script type="text/javascript" src="js/utils_common.js"></script>
     <script type="text/javascript" src="js/jstorage.js"></script>
     <script type="text/javascript" src="js/pointrel_authentication.js"></script>
-    <script type="text/javascript" src="js/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="js/pointrel20130202ForDojo.js"></script>
 </head>
 
 <body>
@@ -21,7 +21,7 @@ JavaScript must be enabled for this page for this test to work.
 Click here to test the back-end script with no data:
 <a href="server/resource-add.php">test upload</a>.
 <p></p>
-ERROR (It's OK if it already exist...)
+ERROR (It's OK if it already exists.)
 <div id="errorcontainer"></div>
 <BR>
 QUERY
@@ -35,13 +35,13 @@ RETRIEVE
 <BR>
 
 <script type="text/javascript">
-    //require(["dojo/domReady!"], function(){
-    //    addTest();
-    //});
-    $(addTest);
 
-    const originalDataString = "this is a test";
-    const resourceURIShouldBe = "pointrel://sha256_2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c_14.txt";
+const originalDataString = "this is a test";
+const resourceURIShouldBe = "pointrel://sha256_2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c_14.txt";
+
+require(["pointrel", "dojo/domReady!"], function(pointrel, ready) {
+
+    addTest();
 
     function addTest() {
 
@@ -58,7 +58,7 @@ RETRIEVE
             return;
         }
 
-        var calculatedURI = pointrel_resource_add(dataStringAsUTF8, "txt", function(error, status) {
+        var calculatedURI = pointrel.resource_add(dataStringAsUTF8, "txt", function(error, status) {
             document.getElementById("response").innerHTML = status;
             if (error) {
                 console.log("could not write resource: " + JSON.stringify(status) + " error: " + error);
@@ -81,7 +81,7 @@ RETRIEVE
     }
 
     function retrieveTest(textURI) {
-        pointrel_resource_get(textURI, function (error, text) {
+        pointrel.resource_get(textURI, function (error, text) {
             document.getElementById("response").innerHTML = error;
             if (error) {
                 alert("Error when fetching: " + JSON.stringify(text));
@@ -92,6 +92,8 @@ RETRIEVE
 
         document.getElementById("query").innerHTML = "Waiting... on getting: " + textURI;
     }
+
+});
 
 </script>
 
