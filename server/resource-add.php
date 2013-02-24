@@ -34,7 +34,9 @@ $content = base64_decode($encodedContent);
 $contentLength = strlen($content);
 
 if ($uriSpecifiedLength != $contentLength) {
-    exitWithJSONStatusMessage('Lengths do not agree from URI: ' . $uriSpecifiedLength . ' and from content: ' . $contentLength, NO_FAILURE_HEADER, 0);
+    // for debugging -- send back content
+    // exitWithJSONStatusMessage("Lengths do not agree from URI: $uriSpecifiedLength and from content: $contentLength with content: '$content''", NO_FAILURE_HEADER, 0);
+    exitWithJSONStatusMessage("Lengths do not agree from URI: $uriSpecifiedLength and from content: $contentLength", NO_FAILURE_HEADER, 0);
 }
 
 $createSubdirectories = true;
