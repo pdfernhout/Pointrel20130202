@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>Pointrel In JavaScript test-publish</title>
+    <script type="text/javascript" src="../libs/dojo_1.8.3_base_compressed.js"></script>
+
+    <script type="text/javascript" src="../libs/sha256.js"></script>
+    <script type="text/javascript" src="../js/utils_common.js"></script>
+    <script type="text/javascript" src="../libs/jstorage.js"></script>
+    <script type="text/javascript" src="../js/pointrel_authentication.js"></script>
+    <script type="text/javascript" src="../js/pointrel20130202ForDojo.js"></script>
+    <script type="text/javascript" src="../js/pointrel_utility_classes.js"></script>
+</head>
+
+<body>
+<h3>Test resources</h3>
+This automatically tests Pointrel functionality for publishing a resource.
+JavaScript must be enabled for this page for this test to work.
+Click here to test the back-end script with no data:
+<a href="../server/resource-publish.php">test upload</a>.
+<p></p>
+ERROR
+<div id="errorcontainer"></div>
+<BR>
+QUERY
+<div id="query"></div>
+<BR>
+RESPONSE
+<div id="response"></div>
+<BR>
+RETRIEVE
+<div id="retrieve"></div>
+<BR>
+
+<script type="text/javascript">
+
+const originalDataString = "this is a test";
+const resourceURIShouldBe = "pointrel://sha256_2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c_14.txt";
+const publishToURL = "test.txt";
+
+require(["dojo/ready", "Pointrel"], function(ready, Pointrel) {
+
+    ready(openArchive);
+
+    function openArchive() {
+        console.log("about to call newArchiver");
+        var archiveURL = "../server/";
+        var credentials = pointrel_authentication.getUserIDOrAnonymous();
+        var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
+        //, function (error, archiver) {
+        //    console.log("in callback from newArchiver", error, archiver);
+        //    if (error) {
+        //        console.log("could not open archive: " + JSON.stringify(status) + " error: " + error);
+        //        document.getElementById("errorcontainer").innerHTML = "could not open archive";
+        //        return;
+        //    }
+        publishTest(archiver);
+    }
+
+    function publishTest(archiver) {
+        console.log("attempting to publish:", resourceURIShouldBe, "to:", publishToURL);
+        archiver.resource_publish(resourceURIShouldBe, publishToURL, function(error, status) {
+            document.getElementById("response").innerHTML = JSON.stringify(status);
+            if (error || status.status !== "OK") {
+                console.log("could not publish resource: " + JSON.stringify(status) + " error: " + error);
+                document.getElementById("errorcontainer").innerHTML = status.message;
+            } else {
+                console.log("published", resourceURIShouldBe, publishToURL);
+            }
+        });
+
+        // alert("sent request: " + JSON.stringify(request));
+        document.getElementById("query").innerHTML = "Waiting... on publishing: " + publishToURL;
+    }
+});
+
+</script>
+
+</body>
+</html>

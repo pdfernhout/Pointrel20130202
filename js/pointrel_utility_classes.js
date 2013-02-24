@@ -198,6 +198,10 @@ function PointrelArchiver(Pointrel, serverURL, credentials) {
 
     };
 
+    this.resource_publish = function (resourceURI, destinationURL, callback) {
+        return Pointrel.resource_publish(this.serverURL, this.credentials, resourceURI, destinationURL, callback);
+    };
+
     this.variable_new = function (variableName, newVersionURI, callback) {
         return Pointrel.variable_new(this.serverURL, this.credentials, variableName, newVersionURI, callback);
 

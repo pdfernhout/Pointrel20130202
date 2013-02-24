@@ -4,3 +4,4 @@
 $pointrelResourcesDirectory = "../../pointrel-data/resources/";
 $pointrelVariablesDirectory = "../../pointrel-data/variables/";
 $pointrelLogsDirectory = "../../pointrel-data/logs/";
+$pointrelPublishingDirectory = "../../pointrel-www/";

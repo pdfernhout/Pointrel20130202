@@ -93,6 +93,34 @@ var Pointrel = (function () {
         // document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request);
     }
 
+    function pointrel_resource_publish(serverURL, credentials, resourceURI, destinationURL, callback) {
+        console.log("pointrel_resource_publish: " + resourceURI + " to: " + destinationURL);
+        var request = {
+            type: "POST",
+            url: serverURL + "resource-publish.php",
+            data: {"resourceURI": resourceURI, "destinationURL": destinationURL, "userID": pointrel_authentication.userIDFromCredentials(credentials)},
+            dataType: "json",
+            success: function (data) {
+                // Guessing this is done by dojo??? data = DecodeFromUTF8(data);
+                //alert("GET result: '" + data + "'");
+                // document.getElementById("retrieve").innerHTML = data;
+                if (typeof(callback) == "function") callback(null, data);
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert("GET xhr.status: " + xhr.status);
+                // alert("GET xhr: " + xhr);
+                alert("GET thrownError : " + thrownError);
+                // TODO: improve error reporting
+                if (typeof(callback) == "function") callback("ERROR", xhr);
+            }
+        };
+
+        $.ajax(request);
+
+        // alert("sent request: " + JSON.stringify(request));
+        // document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request);
+    }
+
     //////// VARIABLES
 
     function pointrel_variable_new(serverURL, credentials, variableName, newValue, callback) {
@@ -231,6 +259,7 @@ var Pointrel = (function () {
 
     pointrel.resource_add = pointrel_resource_add;
     pointrel.resource_get = pointrel_resource_get;
+    pointrel.resource_publish = pointrel_resource_publish;
     pointrel.variable_new = pointrel_variable_new;
     pointrel.variable_get = pointrel_variable_get;
     pointrel.variable_set = pointrel_variable_set;

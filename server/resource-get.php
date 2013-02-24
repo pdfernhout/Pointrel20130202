@@ -37,7 +37,7 @@ $storagePath = calculateStoragePath($pointrelResourcesDirectory, $hexDigits, RES
 $fullName = $storagePath . $shortName;
 
 if (!file_exists($fullName)) {
-    exitWithJSONStatusMessage('File does not exists: "' . $fullName . '"', SEND_FAILURE_HEADER, 404);
+    exitWithJSONStatusMessage('File does not exist: "' . $fullName . '"', SEND_FAILURE_HEADER, 404);
 }
 
 header("Content-type: " . $contentType . "; charset=" . $charset);

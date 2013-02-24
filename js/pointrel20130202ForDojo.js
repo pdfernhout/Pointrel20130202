@@ -79,6 +79,32 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
         // document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request);
     }
 
+    function pointrel_resource_publish(serverURL, credentials, resourceURI, destinationURL, callback) {
+        console.log("pointrel_resource_publish: " + resourceURI + " to: " + destinationURL);
+        var request = {
+            url: serverURL + "resource-publish.php",
+            content: {"resourceURI": resourceURI, "destinationURL": destinationURL, "userID": pointrel_authentication.userIDFromCredentials(credentials)},
+            handleAs: "json",
+            load: function (data) {
+                // Guessing this is done by dojo??? data = DecodeFromUTF8(data);
+                //alert("GET result: '" + data + "'");
+                // document.getElementById("retrieve").innerHTML = data;
+                if (typeof(callback) == "function") callback(null, data);
+            },
+            error: function (error, other) {
+                console.log("error", error, other);
+                alert("GET resource publish error: " + error);
+                // TODO: improve error reporting
+                if (typeof(callback) == "function") callback("ERROR", error, other);
+            }
+        };
+
+        xhr.post(request);
+
+        // alert("sent request: " + JSON.stringify(request));
+        // document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request);
+    }
+
     function pointrel_variable_new(serverURL, credentials, variableName, newVersionURI, callback) {
         console.log("pointrel_resource_new: " + variableName + "new: " + newVersionURI);
         // var encodedVariableName = encodeAsUTF8(variableName);
@@ -201,6 +227,7 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
 
     pointrel.resource_add = pointrel_resource_add;
     pointrel.resource_get = pointrel_resource_get;
+    pointrel.resource_publish = pointrel_resource_publish;
     pointrel.variable_new = pointrel_variable_new;
     pointrel.variable_get = pointrel_variable_get;
     pointrel.variable_set = pointrel_variable_set;
