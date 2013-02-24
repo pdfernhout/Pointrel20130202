@@ -3,13 +3,13 @@
 <head>
     <meta charset='utf-8'>
     <title>Pointrel In JavaScript text-variables</title>
-    <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="js/dojo_1.8.3_base_compressed.js"></script>
 
     <script type="text/javascript" src="js/sha256.js"></script>
     <script type="text/javascript" src="js/utils_common.js"></script>
     <script type="text/javascript" src="js/jstorage.js"></script>
     <script type="text/javascript" src="js/pointrel_authentication.js"></script>
-    <script type="text/javascript" src="js/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="js/pointrel20130202ForDojo.js"></script>
 </head>
 <body>
 <h3>Test resources</h3>
@@ -33,17 +33,18 @@ RETRIEVE
 <BR>
 
 <script type="text/javascript">
-    var variableName = "test-of-variable-changes";
 
-    var sampleURI1 = "pointrel://sha256_2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c_14.txt";
-    var sampleURI2 = "pointrel://sha256_2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c_14.dat";
+var variableName = "test-of-variable-changes";
 
-    $(document).ready(function () {
-        newTest();
-    });
+var sampleURI1 = "pointrel://sha256_2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c_14.txt";
+var sampleURI2 = "pointrel://sha256_2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c_14.dat";
+
+require(["dojo/ready", "pointrel"], function(ready, pointrel) {
+
+    ready(newTest);
 
     function newTest() {
-        pointrel_variable_new(variableName, sampleURI1, function (error, data) {
+        pointrel.variable_new(variableName, sampleURI1, function (error, data) {
             document.getElementById("errorcontainer").innerHTML = JSON.stringify(error);
             document.getElementById("response").innerHTML = JSON.stringify(data);
             if (data.status == "OK") retrieveTest();
@@ -53,7 +54,7 @@ RETRIEVE
     }
 
     function retrieveTest() {
-        pointrel_variable_get(variableName, function (error, data) {
+        pointrel.variable_get(variableName, function (error, data) {
             document.getElementById("errorcontainer").innerHTML = JSON.stringify(error);
             document.getElementById("response").innerHTML = JSON.stringify(data);
             if (data.status == "OK") updateTest();
@@ -64,7 +65,7 @@ RETRIEVE
 
 
     function updateTest() {
-        pointrel_variable_set(variableName, sampleURI1, sampleURI2, function (error, data) {
+        pointrel.variable_set(variableName, sampleURI1, sampleURI2, function (error, data) {
             document.getElementById("errorcontainer").innerHTML = JSON.stringify(error);
             document.getElementById("response").innerHTML = JSON.stringify(data);
             if (data.status == "OK") deleteTest();
@@ -74,7 +75,7 @@ RETRIEVE
     }
 
     function deleteTest() {
-        pointrel_variable_delete(variableName, sampleURI2, function (error, data) {
+        pointrel.variable_delete(variableName, sampleURI2, function (error, data) {
             document.getElementById("errorcontainer").innerHTML = JSON.stringify(error);
             document.getElementById("response").innerHTML = JSON.stringify(data);
            if (data.status == "OK") done();
@@ -86,6 +87,8 @@ RETRIEVE
     function done() {
         document.getElementById("query").innerHTML = "Done";
     }
+
+});
 
 </script>
 

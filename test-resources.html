@@ -3,7 +3,6 @@
 <head>
     <meta charset='utf-8'>
     <title>Pointrel In JavaScript test-resources</title>
-    <!-- <script src="js/dojo_1.8.3_base_compressed.js"></script> -->
     <script type="text/javascript" src="js/dojo_1.8.3_base_compressed.js"></script>
 
     <script type="text/javascript" src="js/sha256.js"></script>
@@ -39,9 +38,9 @@ RETRIEVE
 const originalDataString = "this is a test";
 const resourceURIShouldBe = "pointrel://sha256_2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c_14.txt";
 
-require(["pointrel", "dojo/domReady!"], function(pointrel, ready) {
+require(["dojo/ready", "pointrel"], function(ready, pointrel) {
 
-    addTest();
+    ready(addTest);
 
     function addTest() {
 
