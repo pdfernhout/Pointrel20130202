@@ -33,14 +33,13 @@ function pointrel_resource_add(originalDataString, extension, callback) {
         url: "server/resource-add.php",
         // Need to pass original data string as it will be utf-8 encoded by jQuery
         data: {"resourceURI": uri, "resourceContent": base64_encode(originalDataString), "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
-        dataType: "text",
+        dataType: "json",
         // cache: false,
         success: function (data) {
             // alert("POST success status: " + statusThing);
             //alert("POST result: '" + data + "'");
-            // document.getElementById("response").innerHTML = data; // JSON.stringify(data);
-            var parsedData = JSON.parse(data);
-            if (parsedData.status == "OK") {
+            // document.getElementById("response").innerHTML = JSON.stringify(data);
+            if (data.status == "OK") {
                 if (typeof(callback) == "function") callback(null, parsedData);
             } else {
                 if (typeof(callback) == "function") callback("FAILED", parsedData);
@@ -100,17 +99,16 @@ function pointrel_variable_new(variableName, newValue, callback) {
         type: "POST",
         url: "server/variable-query.php",
         data: {"variableName": variableName, "operation": "new", "newValue": newValue, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
-        dataType: "text",
+        dataType: "json",
         // cache: false,
         success: function (data) {
             // alert("GET success status: " + statusThing);
             // alert("GET result: '" + data + "'");
             // document.getElementById("retrieve").innerHTML = data;
-            var parsedData = JSON.parse(data);
-            if (parsedData.status == "OK") {
-                if (typeof(callback) == "function") callback(null, parsedData);
+            if (data.status == "OK") {
+                if (typeof(callback) == "function") callback(null, data);
             } else {
-                if (typeof(callback) == "function") callback("FAILED", parsedData);
+                if (typeof(callback) == "function") callback("FAILED", data);
             }
         },
         error: function (xhr, ajaxOptions, thrownError) {
@@ -135,17 +133,15 @@ function pointrel_variable_get(variableName, callback) {
         type: "POST",
         url: "server/variable-query.php",
         data: {"variableName": variableName, "operation": "get", "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
-        dataType: "text",
+        dataType: "json",
         // cache: false,
         success: function (data) {
             // alert("GET success status: " + statusThing);
             // alert("GET result: '" + data + "'");
-            // document.getElementById("retrieve").innerHTML = data;
-            var parsedData = JSON.parse(data);
-            if (parsedData.status == "OK") {
-                if (typeof(callback) == "function") callback(null, parsedData);
+            if (data.status == "OK") {
+                if (typeof(callback) == "function") callback(null, data);
             } else {
-                if (typeof(callback) == "function") callback("FAILED", parsedData);
+                if (typeof(callback) == "function") callback("FAILED", data);
             }
         },
         error: function (xhr, ajaxOptions, thrownError) {
@@ -170,17 +166,16 @@ function pointrel_variable_set(variableName, oldVersionURI, newVersionURI, callb
         type: "POST",
         url: "server/variable-query.php",
         data: {"variableName": variableName, "operation": "set", "currentValue": oldVersionURI, "newValue": newVersionURI, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
-        dataType: "text",
+        dataType: "json",
         // cache: false,
         success: function (data) {
             // alert("GET success status: " + statusThing);
             // alert("GET result: '" + data + "'");
             // document.getElementById("retrieve").innerHTML = data;
-            var parsedData = JSON.parse(data);
-            if (parsedData.status == "OK") {
-                if (typeof(callback) == "function") callback(null, parsedData);
+            if (data.status == "OK") {
+                if (typeof(callback) == "function") callback(null, data);
             } else {
-                if (typeof(callback) == "function") callback("FAILED", parsedData);
+                if (typeof(callback) == "function") callback("FAILED", data);
             }
         },
         error: function (xhr, ajaxOptions, thrownError) {
@@ -204,17 +199,16 @@ function pointrel_variable_delete(variableName, currentValue, callback) {
         type: "POST",
         url: "server/variable-query.php",
         data: {"variableName": variableName, "operation": "delete", currentValue: currentValue, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
-        dataType: "text",
+        dataType: "json",
         // cache: false,
         success: function (data) {
             // alert("GET success status: " + statusThing);
             // alert("GET result: '" + data + "'");
             // document.getElementById("retrieve").innerHTML = data;
-            var parsedData = JSON.parse(data);
-            if (parsedData.status == "OK") {
-                if (typeof(callback) == "function") callback(null, parsedData);
+            if (data.status == "OK") {
+                if (typeof(callback) == "function") callback(null, data);
             } else {
-                if (typeof(callback) == "function") callback("FAILED", parsedData);
+                if (typeof(callback) == "function") callback("FAILED", data);
             }
         },
         error: function (xhr, ajaxOptions, thrownError) {
