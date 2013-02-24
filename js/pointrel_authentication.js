@@ -19,6 +19,7 @@
     }
 
     function isLoggedIn() {
+        //noinspection RedundantIfStatementJS
         if (LocalStorage_get(login_userIDKey)) return true;
         return false;
     }
@@ -37,7 +38,7 @@
     }
 
     function updateStatus(userID) {
-        console.log("updateStatus userID", userID)
+        console.log("updateStatus userID", userID);
         if (userID) {
             $("#form_loginStatus").text("Logged in as: \"" + userID + "\"");
             $("#form_loginButton").attr("disabled", true);
