@@ -19,7 +19,7 @@ JavaScript must be enabled for this page for this test to work.
 Click here to test the back-end script with no data:
 <a href="server/resource-add.php">test upload</a>.
 <p></p>
-ERROR
+ERROR (It's OK if it already exist...)
 <div id="errorcontainer"></div>
 <BR>
 QUERY
@@ -37,12 +37,6 @@ RETRIEVE
     //    beginTest();
     //});
     $(beginTest);
-
-    // TODO: A no-op for now...
-    function EncodeAsUTF8(text) {
-        return text;
-    }
-
 
     const originalDataString = "this is a test";
     const resourceURIShouldBe = "pointrel://sha256_2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c_14.txt";
