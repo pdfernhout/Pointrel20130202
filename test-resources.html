@@ -36,14 +36,14 @@ RETRIEVE
 
 <script type="text/javascript">
     //require(["dojo/domReady!"], function(){
-    //    beginTest();
+    //    addTest();
     //});
-    $(beginTest);
+    $(addTest);
 
     const originalDataString = "this is a test";
     const resourceURIShouldBe = "pointrel://sha256_2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c_14.txt";
 
-    function beginTest() {
+    function addTest() {
 
         console.log("originalDataString", originalDataString.length, originalDataString);
         var dataStringAsUTF8 = encodeAsUTF8(originalDataString);
