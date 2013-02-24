@@ -2,7 +2,7 @@
 <head>
     <meta charset='utf-8'>
     <title>Twirlip: Login</title>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="js/jquery-1.9.1.min.js"></script>
     <script type="text/javascript" src="js/jstorage.js"></script>
     <script type="text/javascript" src="js/pointrel_authentication.js"></script>
     <script>
@@ -14,7 +14,7 @@
 <h3>Twirlip login page</h3>
 <div id="form_loginStatus">Not logged in</div>
 Please enter a user ID (you can make one up for now as there is no authentication yet).<br/><br/>
-User ID <input type='text' id='form_userID'>
+<label for="form_userID">User ID </label><input type='text' id='form_userID'>
 <button name="loginButton" id="form_loginButton" onClick="document.clickedLogin();">Login</button>
 <button name="logoutButton" id="form_logoutButton" onClick="document.clickedLogout();">Logout</button>
 </body>
