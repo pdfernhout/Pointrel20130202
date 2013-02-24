@@ -193,7 +193,7 @@ define("conceptMap", [
         // });
 
         logoutButton = newButton("logoutButton", "Logout", function () {
-            $.pointrel_authentication.setUserID("");
+            pointrel_authentication.setUserID("");
             updateDisplayedAccountInformation();
         });
 
@@ -201,7 +201,7 @@ define("conceptMap", [
     }
 
     function updateDisplayedAccountInformation() {
-        var userID = $.pointrel_authentication.getUserID();
+        var userID = pointrel_authentication.getUserID();
         console.log("user name", userID);
         if (userID) {
             loginButton.domNode.style.display = "none";
@@ -330,7 +330,7 @@ define("conceptMap", [
         console.log("login data", data);
         // setFieldValue("loginPassword", "");
         //noinspection JSUnresolvedVariable
-        $.pointrel_authentication.setUserID(data.loginName);
+        pointrel_authentication.setUserID(data.loginName);
         updateDisplayedAccountInformation();
         loginDialog.hide();
     }
@@ -446,7 +446,7 @@ define("conceptMap", [
     }
 
     function saveChanges() {
-        if (!$.pointrel_authentication.isLoggedIn()) { alert ("Please login first"); return;}
+        if (!pointrel_authentication.isLoggedIn()) { alert ("Please login first"); return;}
         // Try to get old value to update it...
         // Although maybe you should not, as it is a conflict?
         // Could warn?
@@ -467,7 +467,7 @@ define("conceptMap", [
         console.log(textURI);
         var timestamp = new Date().toISOString();
         var previousVersionURI = currentVersionURI;
-        var version = {timestamp: timestamp, userID: $.pointrel_authentication.getUserID(), previousVersion: previousVersionURI, value: textURI};
+        var version = {timestamp: timestamp, userID: pointrel_authentication.getUserID(), previousVersion: previousVersionURI, value: textURI};
         console.log("version:", version);
         var versionAsString = JSON.stringify(version);
         console.log("versionAsString:", versionAsString);

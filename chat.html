@@ -27,7 +27,7 @@
 <div id="div_messages">Welcome (messages go here)</div>
 
 <script type="text/javascript">
-    $($.pointrel_authentication.loginPageLoaded);
+    $(pointrel_authentication.loginPageLoaded);
     $(setupTimer);
 
     function setupTimer() {
@@ -83,8 +83,8 @@
             } else {
                 // JavaScript has "this" refer to the object a function is called on, or the global object
                 var self = this;
-                pointrel_resource_get(versionURI, function (error, versionContents) {
-                    console.log("callback from pointrel_resource_get", versionURI);
+                pointrel.resource_get(versionURI, function (error, versionContents) {
+                    console.log("callback from pointrel.resource_get", versionURI);
                     if (error) {
                         var message = "Error happened on versionContents get";
                         alert(message);
@@ -121,8 +121,8 @@
 
 //        this.getLatestVersionX = function(callback) {
 //            var self = this;
-//            pointrel_variable_get(this.variableName, function (error, variableGetResult) {
-//                console.log("pointrel_variable_get");
+//            pointrel.variable_get(this.variableName, function (error, variableGetResult) {
+//                console.log("pointrel.variable_get");
 //                if (error) {
 //                    alert("Error happened on variable get");
 //                    self.latestVersionURI = null;
@@ -131,8 +131,8 @@
 //                    return;
 //                }
 //                self.latestVersionURI = variableGetResult.currentValue;
-//                pointrel_resource_get(self.latestVersionURI, function (error, versionContents) {
-//                    console.log("pointrel_resource_get");
+//                pointrel.resource_get(self.latestVersionURI, function (error, versionContents) {
+//                    console.log("pointrel.resource_get");
 //                    if (error) {
 //                        alert("Error happened on versionContents get");
 //                        self.latestVersionURI = null;
@@ -153,8 +153,8 @@
         this.getLatestVariableVersionURI = function(callback) {
             console.log("getLatestVariableVersionURI -- callback", callback);
             var self = this;
-            pointrel_variable_get(this.variableName, function (error, variableGetResult) {
-                console.log("callback for pointrel_variable_get in getLatestVariableVersionURI");
+            pointrel.variable_get(this.variableName, function (error, variableGetResult) {
+                console.log("callback for pointrel.variable_get in getLatestVariableVersionURI");
                 if (error) {
                     alert("Error happened on variable get");
                     // self.latestVariableVersionURI = null;
@@ -204,7 +204,7 @@
 
         this.setNewVersionURI = function (newVersionURI, callback) {
             var self = this;
-            pointrel_variable_set(this.variableName, this.latestVariableVersionURI, newVersionURI, function (error, status) {
+            pointrel.variable_set(this.variableName, this.latestVariableVersionURI, newVersionURI, function (error, status) {
                 if (error) {
                     alert("Error happened when trying to set variable: " + JSON.stringify(status));
                     return;
@@ -247,12 +247,12 @@
             // TODO: Better handling for creating a variable
             if (error) { alert("Error updating variable -- ignoring in case it is new"); }
             var timestamp = new Date().toISOString();
-            var userID = $.pointrel_authentication.getUserIDOrAnonymous();
+            var userID = pointrel_authentication.getUserIDOrAnonymous();
             var version = {timestamp: timestamp, userID: userID, previousVersion: latestVariableVersionURI, message: message};
             console.log("version:", version);
             var versionAsString = JSON.stringify(version);
             console.log("versionAsString:", versionAsString);
-            var newVersionURI = pointrel_resource_add(encodeAsUTF8(versionAsString), "Version.json", function(error, status) {
+            var newVersionURI = pointrel.resource_add(encodeAsUTF8(versionAsString), "Version.json", function(error, status) {
                 if (error) { alert("could not write new version: " + JSON.stringify(status)); return }
                 console.log("wrote newVersionURI:", newVersionURI);
                 console.log("about to update variable");

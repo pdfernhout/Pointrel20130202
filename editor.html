@@ -16,7 +16,7 @@
         var variableName = "editor-test";
 
         $(document).ready(loadLatestFromParameter);
-        $($.pointrel_authentication.loginPageLoaded);
+        $(pointrel_authentication.loginPageLoaded);
 
         function loadLatestFromParameter() {
             var chosenVariable = getParameter("documentName");
@@ -42,8 +42,8 @@
         function latest(ignoreMissing) {
             variableName = $("#variableName").val();
             updateURI();
-            pointrel_variable_get(variableName, function (error, variableGetResult) {
-                console.log("pointrel_variable_get");
+            pointrel.variable_get(variableName, function (error, variableGetResult) {
+                console.log("pointrel.variable_get");
                 if (error) {
                     currentVersionURI = "";
                     $("#timestamp").val("");
@@ -57,8 +57,8 @@
                     return;
                 }
                 var versionURI = variableGetResult.currentValue;
-                pointrel_resource_get(versionURI, function (error, versionContents) {
-                    console.log("pointrel_resource_get");
+                pointrel.resource_get(versionURI, function (error, versionContents) {
+                    console.log("pointrel.resource_get");
                     if (error) {
                         alert("Error happened on versionContents get");
                         return;
@@ -66,8 +66,8 @@
                     console.log("versionContents:", versionContents);
                     var version = JSON.parse(versionContents);
                     var textURI = version.value;
-                    pointrel_resource_get(textURI, function (error, text) {
-                        console.log("pointrel_resource_get");
+                    pointrel.resource_get(textURI, function (error, text) {
+                        console.log("pointrel.resource_get");
                         if (error) {
                             alert("Error happened when getting text of version");
                             return;
@@ -86,8 +86,8 @@
         }
         function previous() {
             var versionURI = $("#versionURI").val();
-            pointrel_resource_get(versionURI, function (error, versionContents) {
-                console.log("pointrel_resource_get");
+            pointrel.resource_get(versionURI, function (error, versionContents) {
+                console.log("pointrel.resource_get");
                 if (error) {
                     alert("Error happened on versionContents get");
                     return;
@@ -100,8 +100,8 @@
                     alert("No previous version");
                     return;
                 }
-                pointrel_resource_get(previousVersionURI, function (error, previousVersionContents) {
-                    console.log("pointrel_resource_get");
+                pointrel.resource_get(previousVersionURI, function (error, previousVersionContents) {
+                    console.log("pointrel.resource_get");
                     if (error) {
                         alert("Error happened on previousVersionContents get");
                         return;
@@ -110,8 +110,8 @@
                     var previousVersion = JSON.parse(previousVersionContents);
 
                     var textURI = previousVersion.value;
-                    pointrel_resource_get(textURI, function (error, text) {
-                        console.log("pointrel_resource_get");
+                    pointrel.resource_get(textURI, function (error, text) {
+                        console.log("pointrel.resource_get");
                         if (error) {
                             alert("Error happened when getting text of previous version");
                             return;
@@ -135,20 +135,20 @@
             console.log("editorText", editorText.length, editorText);
             var editorTextAsUTF8 = encodeAsUTF8(editorText);
             console.log("editorTextAsUTF8", editorTextAsUTF8.length, editorTextAsUTF8);
-            var textURI = pointrel_resource_add(editorTextAsUTF8, "txt", function(error, status) {
+            var textURI = pointrel.resource_add(editorTextAsUTF8, "txt", function(error, status) {
                 if (error) { alert("could not write resource: " + JSON.stringify(status) + " error: " + error); return }
                 console.log("wrote", textURI);
                 var timestamp = new Date().toISOString();
-                var userID = $.pointrel_authentication.getUserIDOrAnonymous();
+                var userID = pointrel_authentication.getUserIDOrAnonymous();
                 var previousVersionURI = currentVersionURI;
                 var version = {timestamp: timestamp, userID: userID, previousVersion: previousVersionURI, value: textURI};
                 console.log("version:", version);
                 var versionAsString = JSON.stringify(version);
                 console.log("versionAsString:", versionAsString);
-                var newVersionURI = pointrel_resource_add(encodeAsUTF8(versionAsString), "Version.json", function(error, status) {
+                var newVersionURI = pointrel.resource_add(encodeAsUTF8(versionAsString), "Version.json", function(error, status) {
                     if (error) { alert("could not write new version: " + JSON.stringify(status)); return }
                     console.log("wrote newVersionURI:", newVersionURI);
-                    pointrel_variable_set(variableName, currentVersionURI, newVersionURI, function (error, status) {
+                    pointrel.variable_set(variableName, currentVersionURI, newVersionURI, function (error, status) {
                         if (error) {
                             alert("Error happened when trying to set variable: " + JSON.stringify(status));
                             return;
@@ -167,7 +167,7 @@
         function fetch() {
             var textURI = $("#textURI").val();
             // TODO: Must be asynchronous
-            pointrel_resource_get(textURI, function (error, text) {
+            pointrel.resource_get(textURI, function (error, text) {
                 if (error) {
                     alert("Error when fetching:" + JSON.stringify(text));
                     return;

@@ -27,7 +27,7 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
         var request = {
             url: "server/resource-add.php",
             // Need to pass original data string as it will be utf-8 encoded by dojo
-            content: {"resourceURI": uri, "resourceContent": base64_encode(originalDataString), "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
+            content: {"resourceURI": uri, "resourceContent": base64_encode(originalDataString), "userID": pointrel_authentication.getUserIDOrAnonymous()},
             headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
             handleAs: "json",
             load: function (data) {
@@ -57,7 +57,7 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
         console.log("pointrel_resource_get: " + uri);
         var request = {
             url: "server/resource-get.php",
-            content: {"resourceURI": uri, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
+            content: {"resourceURI": uri, "userID": pointrel_authentication.getUserIDOrAnonymous()},
             handleAs: "text",
             load: function (data) {
                 // Guessing this is done by dojo??? data = DecodeFromUTF8(data);
@@ -84,7 +84,7 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
         // var encodedVariableName = encodeAsUTF8(variableName);
         var request = {
             url: "server/variable-query.php",
-            content: {"variableName": variableName, "operation": "new", "newValue": newVersionURI, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
+            content: {"variableName": variableName, "operation": "new", "newValue": newVersionURI, "userID": pointrel_authentication.getUserIDOrAnonymous()},
             handleAs: "json",
             load: function (data) {
                 // alert("GET result: '" + data + "'");
@@ -114,7 +114,7 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
         // var encodedVariableName = encodeAsUTF8(variableName);
         var request = {
             url: "server/variable-query.php",
-            content: {"variableName": variableName, "operation": "get", "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
+            content: {"variableName": variableName, "operation": "get", "userID": pointrel_authentication.getUserIDOrAnonymous()},
             handleAs: "json",
             load: function (data) {
                 // alert("GET result: '" + data + "'");
@@ -144,7 +144,7 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
         // var encodedVariableName = encodeAsUTF8(variableName);
         var request = {
             url: "server/variable-query.php",
-            content: {"variableName": variableName, "operation": "set", "currentValue": oldVersionURI, "newValue": newVersionURI, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
+            content: {"variableName": variableName, "operation": "set", "currentValue": oldVersionURI, "newValue": newVersionURI, "userID": pointrel_authentication.getUserIDOrAnonymous()},
             handleAs: "json",
             load: function (data) {
                 // alert("GET result: '" + data + "'");
@@ -174,7 +174,7 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
         // var encodedVariableName = encodeAsUTF8(variableName);
         var request = {
             url: "server/variable-query.php",
-            content: {"variableName": variableName, "operation": "delete", "currentValue": oldVersionURI, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
+            content: {"variableName": variableName, "operation": "delete", "currentValue": oldVersionURI, "userID": pointrel_authentication.getUserIDOrAnonymous()},
             handleAs: "json",
             load: function (data) {
                 // alert("GET result: '" + data + "'");

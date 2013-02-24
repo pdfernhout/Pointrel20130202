@@ -1,4 +1,4 @@
-(function () {
+var pointrel_authentication = (function () {
     var login_userIDKey = "login_userID";
 
     function loginPageLoaded() {
@@ -78,6 +78,6 @@
     pointrel_authentication.loginPageLoaded = loginPageLoaded;
     pointrel_authentication.getUserIDOrAnonymous = getUserIDOrAnonymous;
 
-    $.pointrel_authentication = pointrel_authentication;
+    return pointrel_authentication;
 
 })();

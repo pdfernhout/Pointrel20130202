@@ -12,7 +12,7 @@
     <script type="text/javascript" src="js/pointrel20130202ForJQuery.js"></script>
 
     <script type="text/javascript">
-        $($.pointrel_authentication.loginPageLoaded);
+        $(pointrel_authentication.loginPageLoaded);
 
         function storeButtonPressed() {
             console.log("Store button pressed");
@@ -27,11 +27,11 @@
             reader.onload = function (event) {
                 var contents = event.target.result;
                 console.log("loaded contents",  contents.length, contents.substring(0, 50));
-                var pointrelURI = pointrel_resource_add(contents, extension, function(error, status) {
+                var pointrelURI = pointrel.resource_add(contents, extension, function(error, status) {
                     if (error) { alert("could not write resource: " + JSON.stringify(status)); return }
                     console.log("wrote", pointrelURI);
                     $("#form_uri").text("URI: " + pointrelURI);
-                    var url = "resource-get.php?userID=" + $.pointrel_authentication.getUserIDOrAnonymous()
+                    var url = "resource-get.php?userID=" + pointrel_authentication.getUserIDOrAnonymous()
                             + "&resourceURI=" + pointrelURI
                             + "&contentType=" + file.type
                             + "&$attachmentName=" + file.name

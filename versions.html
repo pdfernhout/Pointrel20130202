@@ -78,8 +78,8 @@
 
         function latest() {
             $("#documentName").text(variableName);
-            pointrel_variable_get(variableName, function (error, variableGetResult) {
-                console.log("pointrel_variable_get");
+            pointrel.variable_get(variableName, function (error, variableGetResult) {
+                console.log("pointrel.variable_get");
                 if (error) {
                     currentVersionURI = "";
                     $("#timestamp").text("unknown");
@@ -100,8 +100,8 @@
                 if (typeof(callbackForAllVersions) == "function") callbackForAllVersions(versions);
                 return versions;
             }
-            pointrel_resource_get(versionURI, function (error, versionContents) {
-                console.log("pointrel_resource_get", versionURI);
+            pointrel.resource_get(versionURI, function (error, versionContents) {
+                console.log("pointrel.resource_get", versionURI);
                 if (error) {
                     alert("Error happened on versionContents get");
                     return versions;
