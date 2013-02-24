@@ -80,7 +80,7 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
         var uri = "pointrel://sha256_" + hash + "_" + originalDataString.length + extensionSeperator + encodedExtension;
 
         var request = {
-            url: "resource-add.php",
+            url: "server/resource-add.php",
             // Need to pass original data string as it will be utf-8 encoded by dojo
             content: {"resourceURI": uri, "resourceContent": base64_encode(originalDataString), "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
             headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
@@ -112,7 +112,7 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
     function pointrel_resource_get(uri, callback) {
         console.log("pointrel_resource_get: " + uri);
         var request = {
-            url: "resource-get.php",
+            url: "server/resource-get.php",
             content: {"resourceURI": uri, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
             handleAs: "text",
             load: function (data) {
@@ -139,7 +139,7 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
         console.log("pointrel_variable_get: " + variableName);
         // var encodedVariableName = encodeAsUTF8(variableName);
         var request = {
-            url: "variable-query.php",
+            url: "server/variable-query.php",
             content: {"variableName": variableName, "operation": "get", "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
             handleAs: "text",
             load: function (data) {
@@ -170,7 +170,7 @@ define("pointrel", ["dojo/_base/xhr"], function (xhr) {
         console.log("pointrel_resource_set: " + variableName + " old: " + oldVersionURI + "new: " + newVersionURI);
         // var encodedVariableName = encodeAsUTF8(variableName);
         var request = {
-            url: "variable-query.php",
+            url: "server/variable-query.php",
             content: {"variableName": variableName, "operation": "set", "currentValue": oldVersionURI, "newValue": newVersionURI, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
             handleAs: "text",
             load: function (data) {

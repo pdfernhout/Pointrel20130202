@@ -100,7 +100,7 @@ function pointrel_resource_add(originalDataString, extension, callback) {
 
     var request = {
         type: "POST",
-        url: "resource-add.php",
+        url: "server/resource-add.php",
         // Need to pass original data string as it will be utf-8 encoded by jQuery
         data: {"resourceURI": uri, "resourceContent": base64_encode(originalDataString), "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
         dataType: "text",
@@ -135,7 +135,7 @@ function pointrel_resource_get(uri, callback) {
     console.log("pointrel_resource_get: " + uri);
     var request = {
         type: "GET",
-        url: "resource-get.php",
+        url: "server/resource-get.php",
         data: {"resourceURI": uri, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
         dataType: "text",
         // cache: false,
@@ -166,7 +166,7 @@ function pointrel_variable_get(variableName, callback) {
     // var encodedVariableName = EncodeAsUTF8(variableName);
     var request = {
         type: "POST",
-        url: "variable-query.php",
+        url: "server/variable-query.php",
         data: {"variableName": variableName, "operation": "get", "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
         dataType: "text",
         // cache: false,
@@ -201,7 +201,7 @@ function pointrel_variable_set(variableName, oldVersionURI, newVersionURI, callb
     // var encodedVariableName = EncodeAsUTF8(variableName);
     var request = {
         type: "POST",
-        url: "variable-query.php",
+        url: "server/variable-query.php",
         data: {"variableName": variableName, "operation": "set", "currentValue": oldVersionURI, "newValue": newVersionURI, "userID": $.pointrel_authentication.getUserIDOrAnonymous()},
         dataType: "text",
         // cache: false,

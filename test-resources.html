@@ -13,7 +13,7 @@ This automatically tests Pointrel functionality for storing and retrieving a res
 JavaScript.
 JavaScript must be enabled for this page for this test to work.
 Click here to test the back-end script with no data:
-<a href="resource-add.php">test upload</a>.
+<a href="server/resource-add.php">test upload</a>.
 <p></p>
 ERROR
 <div id="errorcontainer"></div>
@@ -74,7 +74,7 @@ RETRIEVE
 
         var request = {
             type: "POST",
-            url: "resource-add.php",
+            url: "server/resource-add.php",
             data: {"resourceURI": myName, "resourceContent": myContent, "userID": "anonymous"},
             dataType: "text",
             // cache: false,
@@ -107,7 +107,7 @@ RETRIEVE
     function retrieveTest() {
         var request = {
             type: "GET",
-            url: "resource-get.php",
+            url: "server/resource-get.php",
             data: {"resourceURI": fileToGet, "userID": "anonymous"},
             dataType: "text",
             // cache: false,
