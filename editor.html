@@ -189,5 +189,17 @@
     <label for="editor">Content:<br/></label><textarea id="editor" style="width:800px; height:500px; overflow: auto;"></textarea><br/>
     <a href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span>  <input type="button" onclick="store()" value="Store new version of text"/><br/>
 </form>
+
+<b>Help</b>
+This tests Pointrel functionality for keeping track of a list (or tree) of versions of a piece of text.
+Add some later versions by typing text in the box and then clicking "Store".
+Click the "Latest" button to get the latest version of a text document for some variable name.
+Then click "Previous" to get previous versions.
+To add a new variable, change the variable name and clear the current version field by hand and then store text for it.
+Or you can click "Latest" after changing the name, and ignore the error message there about a missing variable file.
+Otherwise, if there is any text in the version field, you will get an error later when you go to store text for a
+new variable.
+JavaScript must be enabled for this page for this test to work.
+<br/><br/>
 </body>
 </html>
