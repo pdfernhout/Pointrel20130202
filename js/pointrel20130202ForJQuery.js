@@ -1,6 +1,6 @@
 // Need to load jstorage, pointrel_authentication, and utils_common. first
 
-var pointrel = (function () {
+var Pointrel = (function () {
     var pointrel = {};
 
     //////// RESOURCES
@@ -10,7 +10,7 @@ var pointrel = (function () {
     // TODO: Add callback for success and errors
     // Data passed to this needs to be only characters in the range 0-255 (byte)
     // That means you should encode and decode text using the UTF8 functions above if needed
-    function pointrel_resource_add(originalDataString, extension, callback) {
+    function pointrel_resource_add(serverURL, credentials, originalDataString, extension, callback) {
         console.log("pointrel_resource_add extension: " + extension);
         // special validation for now
         if (!validateBinaryData(originalDataString)) { callback("FAILED Not Binary Data", null); return ""; }
@@ -33,9 +33,9 @@ var pointrel = (function () {
 
         var request = {
             type: "POST",
-            url: "server/resource-add.php",
+            url: serverURL + "resource-add.php",
             // Need to pass original data string as it will be utf-8 encoded by jQuery
-            data: {"resourceURI": uri, "resourceContent": base64_encode(originalDataString), "userID": pointrel_authentication.getUserIDOrAnonymous()},
+            data: {"resourceURI": uri, "resourceContent": base64_encode(originalDataString), "userID": pointrel_authentication.userIDFromCredentials(credentials)},
             dataType: "json",
             // cache: false,
             success: function (data) {
@@ -63,12 +63,12 @@ var pointrel = (function () {
         return uri;
     }
 
-    function pointrel_resource_get(uri, callback) {
+    function pointrel_resource_get(serverURL, credentials, uri, callback) {
         console.log("pointrel_resource_get: " + uri);
         var request = {
             type: "GET",
-            url: "server/resource-get.php",
-            data: {"resourceURI": uri, "userID": pointrel_authentication.getUserIDOrAnonymous()},
+            url: serverURL + "resource-get.php",
+            data: {"resourceURI": uri, "userID": pointrel_authentication.userIDFromCredentials(credentials)},
             dataType: "text",
             // cache: false,
             success: function (data) {
@@ -95,13 +95,13 @@ var pointrel = (function () {
 
     //////// VARIABLES
 
-    function pointrel_variable_new(variableName, newValue, callback) {
+    function pointrel_variable_new(serverURL, credentials, variableName, newValue, callback) {
         console.log("pointrel_variable_new: " + variableName);
         // var encodedVariableName = EncodeAsUTF8(variableName);
         var request = {
             type: "POST",
-            url: "server/variable-query.php",
-            data: {"variableName": variableName, "operation": "new", "newValue": newValue, "userID": pointrel_authentication.getUserIDOrAnonymous()},
+            url: serverURL + "variable-query.php",
+            data: {"variableName": variableName, "operation": "new", "newValue": newValue, "userID": pointrel_authentication.userIDFromCredentials(credentials)},
             dataType: "json",
             // cache: false,
             success: function (data) {
@@ -129,13 +129,13 @@ var pointrel = (function () {
         // document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request);
     }
 
-    function pointrel_variable_get(variableName, callback) {
+    function pointrel_variable_get(serverURL, credentials, variableName, callback) {
         console.log("pointrel_variable_get: " + variableName);
         // var encodedVariableName = EncodeAsUTF8(variableName);
         var request = {
             type: "POST",
-            url: "server/variable-query.php",
-            data: {"variableName": variableName, "operation": "get", "userID": pointrel_authentication.getUserIDOrAnonymous()},
+            url: serverURL + "variable-query.php",
+            data: {"variableName": variableName, "operation": "get", "userID": pointrel_authentication.userIDFromCredentials(credentials)},
             dataType: "json",
             // cache: false,
             success: function (data) {
@@ -162,13 +162,13 @@ var pointrel = (function () {
         // document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request);
     }
 
-    function pointrel_variable_set(variableName, oldVersionURI, newVersionURI, callback) {
+    function pointrel_variable_set(serverURL, credentials, variableName, oldVersionURI, newVersionURI, callback) {
         console.log("pointrel_resource_set: " + variableName + " old: " + oldVersionURI + "new: " + newVersionURI);
         // var encodedVariableName = EncodeAsUTF8(variableName);
         var request = {
             type: "POST",
-            url: "server/variable-query.php",
-            data: {"variableName": variableName, "operation": "set", "currentValue": oldVersionURI, "newValue": newVersionURI, "userID": pointrel_authentication.getUserIDOrAnonymous()},
+            url: serverURL + "variable-query.php",
+            data: {"variableName": variableName, "operation": "set", "currentValue": oldVersionURI, "newValue": newVersionURI, "userID": pointrel_authentication.userIDFromCredentials(credentials)},
             dataType: "json",
             // cache: false,
             success: function (data) {
@@ -195,13 +195,13 @@ var pointrel = (function () {
         // document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request);
     }
 
-    function pointrel_variable_delete(variableName, currentValue, callback) {
+    function pointrel_variable_delete(serverURL, credentials, variableName, currentValue, callback) {
         console.log("pointrel_variable_delete: " + variableName);
         // var encodedVariableName = EncodeAsUTF8(variableName);
         var request = {
             type: "POST",
-            url: "server/variable-query.php",
-            data: {"variableName": variableName, "operation": "delete", currentValue: currentValue, "userID": pointrel_authentication.getUserIDOrAnonymous()},
+            url: serverURL + "variable-query.php",
+            data: {"variableName": variableName, "operation": "delete", currentValue: currentValue, "userID": pointrel_authentication.userIDFromCredentials(credentials)},
             dataType: "json",
             // cache: false,
             success: function (data) {

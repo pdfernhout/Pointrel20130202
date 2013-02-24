@@ -11,12 +11,16 @@ define("conceptMap", [
     "dijit/form/Textarea",
     "dijit/Dialog",
     "dojo/touch",
-    "pointrel"], function (ready, domAttr, ioQuery, registry, gfx, move, Moveable, TextBox, Button, Textarea, Dialog, touch, pointrel) {
+    "Pointrel"], function (ready, domAttr, ioQuery, registry, gfx, move, Moveable, TextBox, Button, Textarea, Dialog, touch, Pointrel) {
 
     ready(conceptMapPageLoaded);
 
    // Resources:
    // # http://dojotdg.zaffra.com/2009/03/dojo-now-with-drawing-tools-linux-journal-reprint/
+
+    var archiveURL = "../server/";
+    var credentials = pointrel_authentication.getUserIDOrAnonymous();
+    var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
 
     var textBox = null;
     var urlBox = null;
@@ -333,6 +337,9 @@ define("conceptMap", [
         pointrel_authentication.setUserID(data.loginName);
         updateDisplayedAccountInformation();
         loginDialog.hide();
+
+        credentials = pointrel_authentication.getUserIDOrAnonymous();
+        archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
     }
 
 //    function clickedSignup(event) {
@@ -414,15 +421,15 @@ define("conceptMap", [
         //  }
         // }, function(error) {console.log("error", error);});
 
-        pointrel.variable_get(diagramName, function (error, variableGetResult) {
-            console.log("pointrel.variable_get");
+        archiver.variable_get(diagramName, function (error, variableGetResult) {
+            console.log("in callback from variable_get");
             if (error) {
                 alert("Error happened on variable get; variable name may be new? Result: " + variableGetResult.message);
                 return;
             }
             var versionURI = variableGetResult.currentValue;
-            pointrel.resource_get(versionURI, function (error, versionContents) {
-                console.log("pointrel.resource_get");
+            archiver.resource_get(versionURI, function (error, versionContents) {
+                console.log("in callback from resource_get");
                 if (error) {
                     alert("Error happened on versionContents get");
                     return;
@@ -430,8 +437,8 @@ define("conceptMap", [
                 console.log("versionContents:", versionContents);
                 var version = JSON.parse(versionContents);
                 var textURI = version.value;
-                pointrel.resource_get(textURI, function (error, text) {
-                    console.log("pointrel.resource_get");
+                archiver.resource_get(textURI, function (error, text) {
+                    console.log("in callback from resource_get");
                     if (error) {
                         alert("Error happened when getting text of version");
                         return;
@@ -463,7 +470,7 @@ define("conceptMap", [
         // TODO: Does not deal with editing conflicts except by failing
 
         var newItemsDocumentText = JSON.stringify(newItemsDocument);
-        var textURI = pointrel.resource_add(encodeAsUTF8(newItemsDocumentText), "ConceptMapItems.json");
+        var textURI = archiver.resource_add(encodeAsUTF8(newItemsDocumentText), "ConceptMapItems.json");
         console.log(textURI);
         var timestamp = new Date().toISOString();
         var previousVersionURI = currentVersionURI;
@@ -471,10 +478,10 @@ define("conceptMap", [
         console.log("version:", version);
         var versionAsString = JSON.stringify(version);
         console.log("versionAsString:", versionAsString);
-        var newVersionURI = pointrel.resource_add(encodeAsUTF8(versionAsString), "Version.json");
+        var newVersionURI = archiver.resource_add(encodeAsUTF8(versionAsString), "Version.json");
         console.log("newVersionURI:", newVersionURI);
         //noinspection JSUnusedLocalSymbols
-        pointrel.variable_set(diagramName, currentVersionURI, newVersionURI, function (error, result) {
+        archiver.variable_set(diagramName, currentVersionURI, newVersionURI, function (error, result) {
             if (error) {
                 alert("Error happened when trying to set variable");
                 return;

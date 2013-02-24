@@ -3,15 +3,20 @@
 <head>
     <meta charset='utf-8'>
     <title>Pointrel simple editor</title>
-    <script type="text/javascript" src="libs/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="../libs/jquery-1.9.1.min.js"></script>
 
-    <script type="text/javascript" src="libs/sha256.js"></script>
-    <script type="text/javascript" src="js/utils_common.js"></script>
-    <script type="text/javascript" src="libs/jstorage.js"></script>
-    <script type="text/javascript" src="js/pointrel_authentication.js"></script>
-    <script type="text/javascript" src="js/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="../libs/sha256.js"></script>
+    <script type="text/javascript" src="../js/utils_common.js"></script>
+    <script type="text/javascript" src="../libs/jstorage.js"></script>
+    <script type="text/javascript" src="../js/pointrel_authentication.js"></script>
+    <script type="text/javascript" src="../js/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="../js/pointrel_utility_classes.js"></script>
 
     <script type="text/javascript">
+        var archiveURL = "../server/";
+        var credentials = pointrel_authentication.getUserIDOrAnonymous();
+        var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
+
         var currentVersionURI = "";
         var variableName = "editor-test";
 
@@ -42,8 +47,8 @@
         function latest(ignoreMissing) {
             variableName = $("#variableName").val();
             updateURI();
-            pointrel.variable_get(variableName, function (error, variableGetResult) {
-                console.log("pointrel.variable_get");
+            archiver.variable_get(variableName, function (error, variableGetResult) {
+                console.log("in callback from variable_get");
                 if (error) {
                     currentVersionURI = "";
                     $("#timestamp").val("");
@@ -57,8 +62,8 @@
                     return;
                 }
                 var versionURI = variableGetResult.currentValue;
-                pointrel.resource_get(versionURI, function (error, versionContents) {
-                    console.log("pointrel.resource_get");
+                archiver.resource_get(versionURI, function (error, versionContents) {
+                    console.log("in callback from resource_get");
                     if (error) {
                         alert("Error happened on versionContents get");
                         return;
@@ -66,8 +71,8 @@
                     console.log("versionContents:", versionContents);
                     var version = JSON.parse(versionContents);
                     var textURI = version.value;
-                    pointrel.resource_get(textURI, function (error, text) {
-                        console.log("pointrel.resource_get");
+                    archiver.resource_get(textURI, function (error, text) {
+                        console.log("in callback from resource_get");
                         if (error) {
                             alert("Error happened when getting text of version");
                             return;
@@ -86,8 +91,8 @@
         }
         function previous() {
             var versionURI = $("#versionURI").val();
-            pointrel.resource_get(versionURI, function (error, versionContents) {
-                console.log("pointrel.resource_get");
+            archiver.resource_get(versionURI, function (error, versionContents) {
+                console.log("in callback from resource_get");
                 if (error) {
                     alert("Error happened on versionContents get");
                     return;
@@ -100,8 +105,8 @@
                     alert("No previous version");
                     return;
                 }
-                pointrel.resource_get(previousVersionURI, function (error, previousVersionContents) {
-                    console.log("pointrel.resource_get");
+                archiver.resource_get(previousVersionURI, function (error, previousVersionContents) {
+                    console.log("in callback from resource_get");
                     if (error) {
                         alert("Error happened on previousVersionContents get");
                         return;
@@ -110,8 +115,8 @@
                     var previousVersion = JSON.parse(previousVersionContents);
 
                     var textURI = previousVersion.value;
-                    pointrel.resource_get(textURI, function (error, text) {
-                        console.log("pointrel.resource_get");
+                    archiver.resource_get(textURI, function (error, text) {
+                        console.log("in callback from resource_get");
                         if (error) {
                             alert("Error happened when getting text of previous version");
                             return;
@@ -135,7 +140,7 @@
             console.log("editorText", editorText.length, editorText);
             var editorTextAsUTF8 = encodeAsUTF8(editorText);
             console.log("editorTextAsUTF8", editorTextAsUTF8.length, editorTextAsUTF8);
-            var textURI = pointrel.resource_add(editorTextAsUTF8, "txt", function(error, status) {
+            var textURI = archiver.resource_add(editorTextAsUTF8, "txt", function(error, status) {
                 if (error) { alert("could not write resource: " + JSON.stringify(status) + " error: " + error); return }
                 console.log("wrote", textURI);
                 var timestamp = new Date().toISOString();
@@ -145,10 +150,10 @@
                 console.log("version:", version);
                 var versionAsString = JSON.stringify(version);
                 console.log("versionAsString:", versionAsString);
-                var newVersionURI = pointrel.resource_add(encodeAsUTF8(versionAsString), "Version.json", function(error, status) {
+                var newVersionURI = archiver.resource_add(encodeAsUTF8(versionAsString), "Version.json", function(error, status) {
                     if (error) { alert("could not write new version: " + JSON.stringify(status)); return }
                     console.log("wrote newVersionURI:", newVersionURI);
-                    pointrel.variable_set(variableName, currentVersionURI, newVersionURI, function (error, status) {
+                    archiver.variable_set(variableName, currentVersionURI, newVersionURI, function (error, status) {
                         if (error) {
                             alert("Error happened when trying to set variable: " + JSON.stringify(status));
                             return;
@@ -167,7 +172,7 @@
         function fetch() {
             var textURI = $("#textURI").val();
             // TODO: Must be asynchronous
-            pointrel.resource_get(textURI, function (error, text) {
+            archiver.resource_get(textURI, function (error, text) {
                 if (error) {
                     alert("Error when fetching:" + JSON.stringify(text));
                     return;

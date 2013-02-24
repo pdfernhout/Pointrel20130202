@@ -3,13 +3,14 @@
 <head>
     <meta charset='utf-8'>
     <title>Pointrel In JavaScript test-resources</title>
-    <script type="text/javascript" src="libs/dojo_1.8.3_base_compressed.js"></script>
+    <script type="text/javascript" src="../libs/dojo_1.8.3_base_compressed.js"></script>
 
-    <script type="text/javascript" src="libs/sha256.js"></script>
-    <script type="text/javascript" src="js/utils_common.js"></script>
-    <script type="text/javascript" src="libs/jstorage.js"></script>
-    <script type="text/javascript" src="js/pointrel_authentication.js"></script>
-    <script type="text/javascript" src="js/pointrel20130202ForDojo.js"></script>
+    <script type="text/javascript" src="../libs/sha256.js"></script>
+    <script type="text/javascript" src="../js/utils_common.js"></script>
+    <script type="text/javascript" src="../libs/jstorage.js"></script>
+    <script type="text/javascript" src="../js/pointrel_authentication.js"></script>
+    <script type="text/javascript" src="../js/pointrel20130202ForDojo.js"></script>
+    <script type="text/javascript" src="../js/pointrel_utility_classes.js"></script>
 </head>
 
 <body>
@@ -18,7 +19,7 @@ This automatically tests Pointrel functionality for storing and retrieving a res
 JavaScript.
 JavaScript must be enabled for this page for this test to work.
 Click here to test the back-end script with no data:
-<a href="server/resource-add.php">test upload</a>.
+<a href="../server/resource-add.php">test upload</a>.
 <p></p>
 ERROR (It's OK if it already exists.)
 <div id="errorcontainer"></div>
@@ -38,12 +39,26 @@ RETRIEVE
 const originalDataString = "this is a test";
 const resourceURIShouldBe = "pointrel://sha256_2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c_14.txt";
 
-require(["dojo/ready", "pointrel"], function(ready, pointrel) {
+require(["dojo/ready", "Pointrel"], function(ready, Pointrel) {
 
-    ready(addTest);
+    ready(openArchive);
 
-    function addTest() {
+    function openArchive() {
+        console.log("about to call newArchiver");
+        var archiveURL = "../server/";
+        var credentials = pointrel_authentication.getUserIDOrAnonymous();
+        var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
+        //, function (error, archiver) {
+        //    console.log("in callback from newArchiver", error, archiver);
+        //    if (error) {
+        //        console.log("could not open archive: " + JSON.stringify(status) + " error: " + error);
+        //        document.getElementById("errorcontainer").innerHTML = "could not open archive";
+        //        return;
+        //    }
+        addTest(archiver);
+    }
 
+    function addTest(archiver) {
         console.log("originalDataString", originalDataString.length, originalDataString);
         var dataStringAsUTF8 = encodeAsUTF8(originalDataString);
         console.log("dataStringAsUTF8", dataStringAsUTF8.length, dataStringAsUTF8);
@@ -57,16 +72,15 @@ require(["dojo/ready", "pointrel"], function(ready, pointrel) {
             return;
         }
 
-        var calculatedURI = pointrel.resource_add(dataStringAsUTF8, "txt", function(error, status) {
+        var calculatedURI = archiver.resource_add(dataStringAsUTF8, "txt", function(error, status) {
             document.getElementById("response").innerHTML = status;
             if (error) {
                 console.log("could not write resource: " + JSON.stringify(status) + " error: " + error);
                 document.getElementById("errorcontainer").innerHTML = JSON.stringify(status);
-
             } else {
                 console.log("wrote", calculatedURI);
             }
-            retrieveTest(calculatedURI);
+            retrieveTest(archiver, calculatedURI);
         });
 
         console.log("Calculated URI: ", calculatedURI);
@@ -79,9 +93,10 @@ require(["dojo/ready", "pointrel"], function(ready, pointrel) {
         document.getElementById("query").innerHTML = "Waiting... on adding: " + calculatedURI;
     }
 
-    function retrieveTest(textURI) {
-        pointrel.resource_get(textURI, function (error, text) {
+    function retrieveTest(archiver, textURI) {
+        archiver.resource_get(textURI, function (error, text) {
             document.getElementById("response").innerHTML = error;
+            document.getElementById("errorcontainer").innerHTML = JSON.stringify(error);
             if (error) {
                 alert("Error when fetching: " + JSON.stringify(text));
                 return;

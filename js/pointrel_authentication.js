@@ -70,6 +70,10 @@ var pointrel_authentication = (function () {
         updateStatus(userID);
     }
 
+    function userIDFromCredentials(credentials) {
+        return credentials;
+    }
+
     // Public API
     var pointrel_authentication = {};
     pointrel_authentication.isLoggedIn = isLoggedIn;
@@ -77,6 +81,7 @@ var pointrel_authentication = (function () {
     pointrel_authentication.setUserID = setUserID;
     pointrel_authentication.loginPageLoaded = loginPageLoaded;
     pointrel_authentication.getUserIDOrAnonymous = getUserIDOrAnonymous;
+    pointrel_authentication.userIDFromCredentials = userIDFromCredentials;
 
     return pointrel_authentication;
 

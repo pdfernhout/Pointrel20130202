@@ -6,8 +6,8 @@
 // the search depth can be limited by specifying a maximumSearchDepth as a positive integer, otherwise use null
 // has a endingStatus of "end" if reached the end, "more" if there are more not searched due to maximum search limits,
 // "match" if stopped because reach matching URI, or "error" if something went wrong
-function PointrelVersionFollower(pointrelReference, startingVersionURI, stopAtVersionURI, maximumSearchDepth, callbackForAllVersions, callbackForNextVersion) {
-    var pointrel = pointrelReference;
+function PointrelVersionFollower(archiver, startingVersionURI, stopAtVersionURI, maximumSearchDepth, callbackForAllVersions, callbackForNextVersion) {
+    this.archiver = archiver;
     this.startingVersionURI = startingVersionURI;
     this.stopAtVersionURI = stopAtVersionURI;
     this.maximumSearchDepth = maximumSearchDepth;
@@ -50,8 +50,8 @@ function PointrelVersionFollower(pointrelReference, startingVersionURI, stopAtVe
         } else {
             // JavaScript has "this" refer to the object a function is called on, or the global object
             var self = this;
-            pointrel.resource_get(versionURI, function (error, versionContents) {
-                console.log("callback from pointrel.resource_get", versionURI);
+            this.archiver.resource_get(versionURI, function (error, versionContents) {
+                console.log("callback from archiver.resource_get", versionURI);
                 if (error) {
                     var message = "Error happened on versionContents get";
                     alert(message);
@@ -78,8 +78,8 @@ function PointrelVersionFollower(pointrelReference, startingVersionURI, stopAtVe
     };
 }
 
-function PointrelVariable(pointrelReference, variableName) {
-    var pointrel = pointrelReference;
+function PointrelVariable(archiver, variableName) {
+    this.archiver = archiver;
     this.variableName = variableName;
     this.latestVariableVersionURI = null;
     this.mostRecentlyLoadedVersionURI = null;
@@ -89,8 +89,8 @@ function PointrelVariable(pointrelReference, variableName) {
 
 //        this.getLatestVersionX = function(callback) {
 //            var self = this;
-//            pointrel.variable_get(this.variableName, function (error, variableGetResult) {
-//                console.log("pointrel.variable_get");
+//            this.archiver.variable_get(this.variableName, function (error, variableGetResult) {
+//                console.log("in callback from variable_get");
 //                if (error) {
 //                    alert("Error happened on variable get");
 //                    self.latestVersionURI = null;
@@ -99,8 +99,8 @@ function PointrelVariable(pointrelReference, variableName) {
 //                    return;
 //                }
 //                self.latestVersionURI = variableGetResult.currentValue;
-//                pointrel.resource_get(self.latestVersionURI, function (error, versionContents) {
-//                    console.log("pointrel.resource_get");
+//                this.archiver.resource_get(self.latestVersionURI, function (error, versionContents) {
+//                    console.log("in callback from resource_get");
 //                    if (error) {
 //                        alert("Error happened on versionContents get");
 //                        self.latestVersionURI = null;
@@ -121,8 +121,8 @@ function PointrelVariable(pointrelReference, variableName) {
     this.getLatestVariableVersionURI = function(callback) {
         console.log("getLatestVariableVersionURI -- callback", callback);
         var self = this;
-        pointrel.variable_get(this.variableName, function (error, variableGetResult) {
-            console.log("callback for pointrel.variable_get in getLatestVariableVersionURI");
+        this.archiver.variable_get(this.variableName, function (error, variableGetResult) {
+            console.log("callback for archiver.variable_get in getLatestVariableVersionURI");
             if (error) {
                 alert("Error happened on variable get");
                 // self.latestVariableVersionURI = null;
@@ -164,7 +164,7 @@ function PointrelVariable(pointrelReference, variableName) {
                 // TODO: No callback for this situation?
                 return;
             }
-            self.follower = new PointrelVersionFollower(pointrel, self.latestVariableVersionURI, self.mostRecentlyLoadedVersionURI, 100, self.newVersionsDone.bind(self), null);
+            self.follower = new PointrelVersionFollower(this.archiver, self.latestVariableVersionURI, self.mostRecentlyLoadedVersionURI, 100, self.newVersionsDone.bind(self), null);
             console.log("about to do follower.search");
             self.follower.search();
         });
@@ -172,7 +172,7 @@ function PointrelVariable(pointrelReference, variableName) {
 
     this.setNewVersionURI = function (newVersionURI, callback) {
         var self = this;
-        pointrel.variable_set(this.variableName, this.latestVariableVersionURI, newVersionURI, function (error, status) {
+        this.archiver.variable_set(this.variableName, this.latestVariableVersionURI, newVersionURI, function (error, status) {
             if (error) {
                 alert("Error happened when trying to set variable: " + JSON.stringify(status));
                 return;
@@ -181,5 +181,39 @@ function PointrelVariable(pointrelReference, variableName) {
             self.latestVariableVersionURI = newVersionURI;
             if (typeof(callback) == "function") callback(error, status, newVersionURI);
         });
+    };
+}
+
+function PointrelArchiver(Pointrel, serverURL, credentials) {
+    this.serverURL = serverURL;
+    this.credentials = credentials;
+
+    this.resource_add = function (originalDataString, extension, callback) {
+        return Pointrel.resource_add(this.serverURL, this.credentials, originalDataString, extension, callback);
+
+    };
+
+    this.resource_get = function (uri, callback) {
+        return Pointrel.resource_get(this.serverURL, this.credentials, uri, callback);
+
+    };
+
+    this.variable_new = function (variableName, newVersionURI, callback) {
+        return Pointrel.variable_new(this.serverURL, this.credentials, variableName, newVersionURI, callback);
+
+    };
+
+    this.variable_get = function (variableName, callback) {
+        return Pointrel.variable_get(this.serverURL, this.credentials, variableName, callback);
+
+    };
+
+    this.variable_set = function (variableName, oldVersionURI, newVersionURI, callback) {
+        return Pointrel.variable_set(this.serverURL, this.credentials, variableName, oldVersionURI, newVersionURI, callback);
+
+    };
+
+    this.variable_delete = function (variableName, oldVersionURI, callback) {
+        return Pointrel.variable_delete(this.serverURL, this.credentials, variableName, oldVersionURI, callback);
     };
 }

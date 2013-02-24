@@ -3,16 +3,21 @@
 <head>
     <meta charset='utf-8'>
     <title>Pointrel In JavaScript test-uploader</title>
-    <script type="text/javascript" src="libs/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="../libs/jquery-1.9.1.min.js"></script>
 
-    <script type="text/javascript" src="libs/sha256.js"></script>
-    <script type="text/javascript" src="js/utils_common.js"></script>
-    <script type="text/javascript" src="libs/jstorage.js"></script>
-    <script type="text/javascript" src="js/pointrel_authentication.js"></script>
-    <script type="text/javascript" src="js/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="../libs/sha256.js"></script>
+    <script type="text/javascript" src="../js/utils_common.js"></script>
+    <script type="text/javascript" src="../libs/jstorage.js"></script>
+    <script type="text/javascript" src="../js/pointrel_authentication.js"></script>
+    <script type="text/javascript" src="../js/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="../js/pointrel_utility_classes.js"></script>
 
     <script type="text/javascript">
         $(pointrel_authentication.loginPageLoaded);
+
+        var archiveURL = "../server/";
+        var credentials = pointrel_authentication.getUserIDOrAnonymous();
+        var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
 
         function storeButtonPressed() {
             console.log("Store button pressed");
@@ -27,7 +32,7 @@
             reader.onload = function (event) {
                 var contents = event.target.result;
                 console.log("loaded contents",  contents.length, contents.substring(0, 50));
-                var pointrelURI = pointrel.resource_add(contents, extension, function(error, status) {
+                var pointrelURI = archiver.resource_add(contents, extension, function(error, status) {
                     if (error) { alert("could not write resource: " + JSON.stringify(status)); return }
                     console.log("wrote", pointrelURI);
                     $("#form_uri").text("URI: " + pointrelURI);

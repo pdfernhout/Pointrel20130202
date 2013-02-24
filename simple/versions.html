@@ -3,15 +3,16 @@
 <head>
     <meta charset='utf-8'>
     <title>Pointrel In JavaScript viewer</title>
-    <script type="text/javascript" src="libs/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="../libs/jquery-1.9.1.min.js"></script>
 
-    <script type="text/javascript" src="libs/mustache.js"></script>
+    <script type="text/javascript" src="../libs/mustache.js"></script>
 
-    <script type="text/javascript" src="libs/sha256.js"></script>
-    <script type="text/javascript" src="js/utils_common.js"></script>
-    <script type="text/javascript" src="libs/jstorage.js"></script>
-    <script type="text/javascript" src="js/pointrel_authentication.js"></script>
-    <script type="text/javascript" src="js/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="../libs/sha256.js"></script>
+    <script type="text/javascript" src="../js/utils_common.js"></script>
+    <script type="text/javascript" src="../libs/jstorage.js"></script>
+    <script type="text/javascript" src="../js/pointrel_authentication.js"></script>
+    <script type="text/javascript" src="../js/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="../js/pointrel_utility_classes.js"></script>
 
     <style type="text/css">
         table.myTable { border-collapse:collapse; }
@@ -33,6 +34,10 @@
     </script>
 
     <script type="text/javascript">
+        var archiveURL = "../server/";
+        var credentials = pointrel_authentication.getUserIDOrAnonymous();
+        var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
+
         var currentVersionURI = "";
         var variableName = "editor-test";
         var itemTemplate;
@@ -78,8 +83,8 @@
 
         function latest() {
             $("#documentName").text(variableName);
-            pointrel.variable_get(variableName, function (error, variableGetResult) {
-                console.log("pointrel.variable_get");
+            archiver.variable_get(variableName, function (error, variableGetResult) {
+                console.log("in callback from variable_get");
                 if (error) {
                     currentVersionURI = "";
                     $("#timestamp").text("unknown");
@@ -100,8 +105,8 @@
                 if (typeof(callbackForAllVersions) == "function") callbackForAllVersions(versions);
                 return versions;
             }
-            pointrel.resource_get(versionURI, function (error, versionContents) {
-                console.log("pointrel.resource_get", versionURI);
+            archiver.resource_get(versionURI, function (error, versionContents) {
+                console.log("in callback from resource_get", versionURI);
                 if (error) {
                     alert("Error happened on versionContents get");
                     return versions;

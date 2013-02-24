@@ -3,16 +3,16 @@
 <head>
     <meta charset='utf-8'>
     <title>Chat</title>
-    <script type="text/javascript" src="libs/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="../libs/jquery-1.9.1.min.js"></script>
 
-    <script type="text/javascript" src="libs/mustache.js"></script>
+    <script type="text/javascript" src="../libs/mustache.js"></script>
 
-    <script type="text/javascript" src="libs/sha256.js"></script>
-    <script type="text/javascript" src="js/utils_common.js"></script>
-    <script type="text/javascript" src="libs/jstorage.js"></script>
-    <script type="text/javascript" src="js/pointrel_authentication.js"></script>
-    <script type="text/javascript" src="js/pointrel20130202ForJQuery.js"></script>
-    <script type="text/javascript" src="js/pointrel_utility_classes.js"></script>
+    <script type="text/javascript" src="../libs/sha256.js"></script>
+    <script type="text/javascript" src="../js/utils_common.js"></script>
+    <script type="text/javascript" src="../libs/jstorage.js"></script>
+    <script type="text/javascript" src="../js/pointrel_authentication.js"></script>
+    <script type="text/javascript" src="../js/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="../js/pointrel_utility_classes.js"></script>
 </head>
 <body>
 <b>Chat program</b> <a href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span><br/>
@@ -31,11 +31,15 @@
     $(pointrel_authentication.loginPageLoaded);
     $(setupTimer);
 
+    var archiveURL = "../server/";
+    var credentials = pointrel_authentication.getUserIDOrAnonymous();
+    var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
+
     function setupTimer() {
         window.setInterval(refresh, 5000);
     }
 
-    var variable = new PointrelVariable(pointrel, "chat-test-001");
+    var variable = new PointrelVariable(archiver, "chat-test-001");
     var messages = [];
     var lastHistory = 0;
 
@@ -71,7 +75,7 @@
             console.log("version:", version);
             var versionAsString = JSON.stringify(version);
             console.log("versionAsString:", versionAsString);
-            var newVersionURI = pointrel.resource_add(encodeAsUTF8(versionAsString), "Version.json", function(error, status) {
+            var newVersionURI = archiver.resource_add(encodeAsUTF8(versionAsString), "Version.json", function(error, status) {
                 if (error) { alert("could not write new version: " + JSON.stringify(status)); return }
                 console.log("wrote newVersionURI:", newVersionURI);
                 console.log("about to update variable");

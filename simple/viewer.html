@@ -3,17 +3,22 @@
 <head>
     <meta charset='utf-8'>
     <title>Pointrel In JavaScript viewer</title>
-    <script type="text/javascript" src="libs/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="../libs/jquery-1.9.1.min.js"></script>
 
-    <script type="text/javascript" src="libs/markdown.js"></script>
+    <script type="text/javascript" src="../libs/markdown.js"></script>
 
-    <script type="text/javascript" src="libs/sha256.js"></script>
-    <script type="text/javascript" src="js/utils_common.js"></script>
-    <script type="text/javascript" src="libs/jstorage.js"></script>
-    <script type="text/javascript" src="js/pointrel_authentication.js"></script>
-    <script type="text/javascript" src="js/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="../libs/sha256.js"></script>
+    <script type="text/javascript" src="../js/utils_common.js"></script>
+    <script type="text/javascript" src="../libs/jstorage.js"></script>
+    <script type="text/javascript" src="../js/pointrel_authentication.js"></script>
+    <script type="text/javascript" src="../js/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="../js/pointrel_utility_classes.js"></script>
 
     <script type="text/javascript">
+        var archiveURL = "../server/";
+        var credentials = pointrel_authentication.getUserIDOrAnonymous();
+        var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
+
         var currentVersionURI = "";
         var variableName = "editor-test";
 
@@ -85,8 +90,8 @@
             }
             //noinspection JSJQueryEfficiency
             $("#refreshAndEdit").show();
-            pointrel.variable_get(variableName, function (error, variableGetResult) {
-                console.log("pointrel.variable_get");
+            archiver.variable_get(variableName, function (error, variableGetResult) {
+                console.log("in callback from variable_get");
                 if (error) {
                     currentVersionURI = "";
                     $("#timestamp").text("unknown");
@@ -102,8 +107,8 @@
         }
 
         function loadVersion(versionURI) {
-            pointrel.resource_get(versionURI, function (error, versionContents) {
-                console.log("pointrel.resource_get");
+            archiver.resource_get(versionURI, function (error, versionContents) {
+                console.log("in callback from resource_get");
                 if (error) {
                     alert("Error happened on versionContents get");
                     return;
@@ -119,8 +124,8 @@
         }
 
         function loadResource(textURI) {
-            pointrel.resource_get(textURI, function (error, text) {
-                console.log("pointrel.resource_get2 ");
+            archiver.resource_get(textURI, function (error, text) {
+                console.log("in callback from resource_get2 ");
                 if (error) {
                     alert("Error happened when getting text of version");
                     $("#documentContent").html("<b>Problem getting text for: " + textURI + "</b>");
