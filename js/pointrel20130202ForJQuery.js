@@ -40,9 +40,9 @@ function pointrel_resource_add(originalDataString, extension, callback) {
             //alert("POST result: '" + data + "'");
             // document.getElementById("response").innerHTML = JSON.stringify(data);
             if (data.status == "OK") {
-                if (typeof(callback) == "function") callback(null, parsedData);
+                if (typeof(callback) == "function") callback(null, data);
             } else {
-                if (typeof(callback) == "function") callback("FAILED", parsedData);
+                if (typeof(callback) == "function") callback("FAILED", data);
             }
         },
         error: function (xhr, ajaxOptions, thrownError) {
