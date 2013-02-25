@@ -22,6 +22,8 @@
         var currentVersionURI = "";
         var variableName = "editor-test";
 
+        var lastProcessedText = "";
+
         // TODO: Have some way of passing in the userID, timestamp, and document separately for a resource
 
         function getParameter(paramName) {
@@ -71,6 +73,7 @@
             // text = text.replace(new RegExp("[A-Z]([A-Z0-9]*[a-z][a-z0-9]*[A-Z]|[a-z0-9]*[A-Z][A-Z0-9]*[a-z])[A-Za-z0-9]*", "g"), function (match) {
             //  return '<a href="viewer.html?documentName=' + match + '">' + match + '</a>';
             //});
+            lastProcessedText = text;
             return text;
         }
 
@@ -135,12 +138,35 @@
                 $("#documentContent").html(process(text));
             });
         }
+
+        function publish() {
+            var answer = confirm("Publish resource? " + variableName);
+            if (!answer) return;
+
+            console.log("about to publish:", variableName);
+            var contentToPublish = '<html>\n<head>\n<meta http-equiv="Content-Type" content="text/html; charset=utf-8">\n</head>\n<body>\n' + lastProcessedText + "\n</body>\n</html>";
+
+            var newResourceURI = archiver.resource_add(encodeAsUTF8(contentToPublish), "html", function(error, status) {
+                // TODO: Ignoring error for now as may already exist
+                // if (error) { alert("could not write new resource: " + JSON.stringify(status)); return }
+                console.log("wrote newResourceURI:", newResourceURI);
+                var output = variableName.substr(0, variableName.lastIndexOf('.')) || variableName;
+                var destinationURL = output + ".html";
+                archiver.resource_publish(newResourceURI, destinationURL, function (error, status) {
+                    if (error) {
+                        alert("Error happened when trying to publish resource: " + JSON.stringify(status));
+                        return;
+                    }
+                    console.log("published resource:", destinationURL);
+                });
+            });
+        }
     </script>
 </head>
 <body>
 Document: <b id="documentName">documentName</b> Time: <b id="timestamp">Timestamp</b> User: <b id="userID">userID</b><br/>
 <div id="refreshAndEdit">
-<input type="button" onclick="latest()" value="Refresh"/> <a id="editLink" href="editor.html?documentName=test">edit</a> <a id="versionsLink" href="">versions</a><br/>
+<input type="button" onclick="latest()" value="Refresh"/> <a id="editLink" href="editor.html?documentName=test">edit</a> <a id="versionsLink" href="">versions</a> <input type="button" onclick="publish()" value="Publish"/> <br/>
 </div>
 <hr/>
 <div id="documentContent"></div>
