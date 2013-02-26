@@ -19,6 +19,11 @@
         var credentials = pointrel_authentication.getUserIDOrAnonymous();
         var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
 
+        // Only supported in FireFox and maybe issues in Chrome and no others? So hard to become dependent on it, even though eventually a useful idea
+        // See: https://developer.mozilla.org/en-US/docs/Web-based_protocol_handlers
+        // var baseURL = "http://localhost/pointrel-app/twirlip_0.1/";
+        // navigator.registerProtocolHandler("pointrel", baseURL + archiveURL + "resource-get.php?userID=anonymous&resourceURI=%s", "Pointrel resource");
+
         var currentVersionURI = "";
         var variableName = "editor-test";
 
@@ -63,6 +68,22 @@
 
         $(document).ready(loadLatestFromParameter);
 
+        function resolvePointrelURL(pointrelURL) {
+            return archiveURL + "resource-get.php?userID=anonymous&resourceURI=" + pointrelURL;
+        }
+
+        // From: http://stackoverflow.com/questions/37684/how-to-replace-plain-urls-with-links
+        //function replaceURLWithHTMLLinks(text) {
+        //    var exp = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+        //    return text.replace(exp, "<a href='$1'>$1</a>");
+        //}
+
+        // TODO: Improve this so only replaces references in parentheses
+        function replacePointrelReferences(text) {
+            var exp = /(\b(pointrel):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+            return text.replace(exp, resolvePointrelURL);
+        }
+
         function process(text) {
             // Seems like jQuery is handling this anyway?
             // return $('<div/>').text(text).html();
@@ -73,6 +94,7 @@
             // text = text.replace(new RegExp("[A-Z]([A-Z0-9]*[a-z][a-z0-9]*[A-Z]|[a-z0-9]*[A-Z][A-Z0-9]*[a-z])[A-Za-z0-9]*", "g"), function (match) {
             //  return '<a href="viewer.html?documentName=' + match + '">' + match + '</a>';
             //});
+            text = replacePointrelReferences(text);
             lastProcessedText = text;
             return text;
         }
@@ -139,6 +161,7 @@
             });
         }
 
+        // TODO: Need to deal with embedded image resources somehow, because they can't be fetched from the server code as position is wrong, and want them to be static anyway
         function publish() {
             var answer = confirm("Publish resource? " + variableName);
             if (!answer) return;
