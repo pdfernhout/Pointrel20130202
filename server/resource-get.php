@@ -9,9 +9,6 @@ $contentType = $_GET['contentType'];
 $charset = $_GET['charset'];
 $attachmentName = $_GET['attachmentName'];
 
-if (empty($contentType)) $contentType = "text/plain";
-if (empty($charset)) $charset = "utf-8";
-
 // For later use
 $session = $_POST['session'];
 $authentication = $_POST['authentication'];
@@ -39,6 +36,11 @@ $fullName = $storagePath . $shortName;
 if (!file_exists($fullName)) {
     exitWithJSONStatusMessage('File does not exist: "' . $fullName . '"', SEND_FAILURE_HEADER, 404);
 }
+
+// TODO: mime_content_type has been deprecated for later versions of PHP -- check and use replacement?
+if (empty($contentType)) $contentType = mime_content_type($fullName);
+if (empty($contentType)) $contentType = "text/plain";
+if (empty($charset)) $charset = "utf-8";
 
 header("Content-type: " . $contentType . "; charset=" . $charset);
 if ($attachmentName) header('Content-Disposition: attachment; filename="' . $attachmentName . '"');
