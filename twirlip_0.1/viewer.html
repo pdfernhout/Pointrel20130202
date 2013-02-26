@@ -69,7 +69,10 @@
         $(document).ready(loadLatestFromParameter);
 
         function resolvePointrelURL(pointrelURL) {
-            return archiveURL + "resource-get.php?userID=anonymous&resourceURI=" + pointrelURL;
+            // Remove leading and trailing parentheses
+            pointrelURL = pointrelURL.substr(1, pointrelURL.length - 2);
+            // Convert to local url and put parens back
+            return "(" + archiveURL + "resource-get.php?userID=anonymous&resourceURI=" + pointrelURL + ")";
         }
 
         // From: http://stackoverflow.com/questions/37684/how-to-replace-plain-urls-with-links
@@ -78,9 +81,8 @@
         //    return text.replace(exp, "<a href='$1'>$1</a>");
         //}
 
-        // TODO: Improve this so only replaces references in parentheses
         function replacePointrelReferences(text) {
-            var exp = /(\b(pointrel):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+            var exp = /\(((pointrel):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])\)/ig;
             return text.replace(exp, resolvePointrelURL);
         }
 
@@ -88,13 +90,13 @@
             // Seems like jQuery is handling this anyway?
             // return $('<div/>').text(text).html();
             // text = text.replace(/\n/g, '<br />');
+            text = replacePointrelReferences(text);
             text = markdown.toHTML(text);
             console.log("about to convert using marked");
             // text = marked(text);
             // text = text.replace(new RegExp("[A-Z]([A-Z0-9]*[a-z][a-z0-9]*[A-Z]|[a-z0-9]*[A-Z][A-Z0-9]*[a-z])[A-Za-z0-9]*", "g"), function (match) {
             //  return '<a href="viewer.html?documentName=' + match + '">' + match + '</a>';
             //});
-            text = replacePointrelReferences(text);
             lastProcessedText = text;
             return text;
         }
