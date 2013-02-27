@@ -5,7 +5,7 @@
     <title>Pointrel In JavaScript viewer</title>
     <script type="text/javascript" src="../libs/jquery-1.9.1.min.js"></script>
 
-    <script type="text/javascript" src="../libs/markdown.js"></script>
+    <script type="text/javascript" src="../libs/marked.js"></script>
 
     <script type="text/javascript" src="../libs/sha256.js"></script>
     <script type="text/javascript" src="../js/utils_common.js"></script>
@@ -91,7 +91,25 @@
             // return $('<div/>').text(text).html();
             // text = text.replace(/\n/g, '<br />');
             text = replacePointrelReferences(text);
-            text = markdown.toHTML(text);
+            // text = markdown.toHTML(text);
+
+            marked.setOptions({
+                gfm: true,
+                tables: true,
+                breaks: false,
+                pedantic: false,
+                sanitize: true,
+                smartLists: true,
+                langPrefix: 'language-',
+                highlight: function(code, lang) {
+                    if (lang === 'js') {
+                        return highlighter.javascript(code);
+                    }
+                    return code;
+                }
+            });
+            text = marked(text);
+
             console.log("about to convert using marked");
             // text = marked(text);
             // text = text.replace(new RegExp("[A-Z]([A-Z0-9]*[a-z][a-z0-9]*[A-Z]|[a-z0-9]*[A-Z][A-Z0-9]*[a-z])[A-Za-z0-9]*", "g"), function (match) {
