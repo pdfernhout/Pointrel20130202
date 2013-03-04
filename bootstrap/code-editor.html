@@ -98,8 +98,7 @@
                         $("#userID").val(version.userID);
                         $("#versionURI").val(versionURI);
                         $("#textURI").val(textURI);
-                        editor.setValue(text);
-                        resetEditorForLoadedData();
+                        resetEditorForLoadedData(text);
                         console.log("latest updating after:", versionURI);
                         currentVersionURI = versionURI;
                     });
@@ -144,8 +143,7 @@
                         $("#userID").val(previousVersion.userID);
                         $("#versionURI").val(previousVersionURI);
                         $("#textURI").val(textURI);
-                        editor.setValue(text);
-                        resetEditorForLoadedData();
+                        resetEditorForLoadedData(text);
                         console.log("latest updating after:", previousVersion);
                         currentVersionURI = previousVersionURI;
                     });
@@ -161,7 +159,11 @@
             var editorTextAsUTF8 = encodeAsUTF8(editorText);
             console.log("editorTextAsUTF8", editorTextAsUTF8.length, editorTextAsUTF8);
             var textURI = archiver.resource_add(editorTextAsUTF8, "txt", function(error, status) {
-                if (error) { alert("could not write resource: " + JSON.stringify(status) + " error: " + error); return }
+                // TODO: Improve the handling so PHP returns a better status
+                if (error && !startsWith(status.message, "File already exists:")) {
+                    alert("could not write resource: " + JSON.stringify(status) + " error: " + error);
+                    return
+                }
                 console.log("wrote", textURI);
                 var timestamp = new Date().toISOString();
                 var userID = pointrel_authentication.getUserIDOrAnonymous();
@@ -197,15 +199,15 @@
                     alert("Error when fetching:" + JSON.stringify(text));
                     return;
                 }
-                editor.setValue(text);
-                resetEditorForLoadedData();
+                resetEditorForLoadedData(text);
             });
         }
 
 
         /////////////////// Code editor part
 
-        function resetEditorForLoadedData() {
+        function resetEditorForLoadedData(text) {
+            editor.setValue(text);
             editor.clearSelection();
             editor.moveCursorTo(0, 0);
         }
@@ -227,9 +229,10 @@
             editorSaved = document.getElementById("editorSaved");
 
             if (editorSaved.value.length > 0) {
-                editor.setValue(editorSaved.value);
+                resetEditorForLoadedData(editorSaved.value);
+            } else {
+                resetEditorForLoadedData("");
             }
-            resetEditorForLoadedData();
         }
 
         function saveInput() {
@@ -284,8 +287,7 @@
 
     function loadSampleData() {
         if (window.confirm('Load example code?')) {
-            editor.setValue($('#sampleData').text());
-            resetEditorForLoadedData();
+            resetEditorForLoadedData($('#sampleData').text());
         }
     }
 

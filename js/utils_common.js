@@ -186,3 +186,8 @@ function validateBinaryData(dataString) {
     }
     return true;
 }
+
+
+function startsWith(data, start) {
+    return data.substring(0, start.length) === start;
+}

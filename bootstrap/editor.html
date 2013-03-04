@@ -143,7 +143,11 @@
             var editorTextAsUTF8 = encodeAsUTF8(editorText);
             console.log("editorTextAsUTF8", editorTextAsUTF8.length, editorTextAsUTF8);
             var textURI = archiver.resource_add(editorTextAsUTF8, "txt", function(error, status) {
-                if (error) { alert("could not write resource: " + JSON.stringify(status) + " error: " + error); return }
+                // TODO: Improve the handling so PHP returns a better status
+                if (error && !startsWith(status.message("File already exists:"))) {
+                    alert("could not write resource: " + JSON.stringify(status) + " error: " + error);
+                    return
+                }
                 console.log("wrote", textURI);
                 var timestamp = new Date().toISOString();
                 var userID = pointrel_authentication.getUserIDOrAnonymous();
