@@ -89,6 +89,7 @@
                 });
             });
         }
+
         function previous() {
             var versionURI = $("#versionURI").val();
             archiver.resource_get(versionURI, function (error, versionContents) {
@@ -133,6 +134,7 @@
                 });
             });
         }
+
         function store() {
             variableName = $("#variableName").val();
             updateURI();
@@ -169,9 +171,9 @@
                 });
             });
         }
+
         function fetch() {
             var textURI = $("#textURI").val();
-            // TODO: Must be asynchronous
             archiver.resource_get(textURI, function (error, text) {
                 if (error) {
                     alert("Error when fetching:" + JSON.stringify(text));
