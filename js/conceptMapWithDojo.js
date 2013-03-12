@@ -11,7 +11,7 @@ define("conceptMap", [
     "dijit/form/Textarea",
     "dijit/Dialog",
     "dojo/touch",
-    "Pointrel"], function (ready, domAttr, ioQuery, registry, gfx, move, Moveable, TextBox, Button, Textarea, Dialog, touch, Pointrel) {
+    "Pointrel"], function (ready, domAttr, ioQuery, registry, gfx, move, Moveable, TextBox, Button, SimpleTextarea, Dialog, touch, Pointrel) {
 
     ready(conceptMapPageLoaded);
 
@@ -238,8 +238,8 @@ define("conceptMap", [
         sourceDialog = new Dialog({
             title: "Diagram source",
             id: "sourceDialog",
-            style: {width: "400px", height: "400px", overflow: "auto"},
-            content: "source: <input data-dojo-type='dijit/form/Textarea' type='text' name='sourceTextArea' id='sourceTextArea'>" +
+            style: {width: "800px", height: "600px", overflow: "auto"},
+            content: "source: <input data-dojo-type='dijit/form/SimpleTextarea' type='text' name='sourceTextArea' rows='30' id='sourceTextArea'>" +
                 '<br/><button data-dojo-type="dijit/form/Button" type="submit" onClick="document.updateSource();">Update</button>' +
                 '<button data-dojo-type="dijit/form/Button" type="submit">Cancel</button>'
         });
