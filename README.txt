@@ -1,8 +1,9 @@
-NOTE: This is still an alpha-level exploratory work in progress...
+NOTE: This version of the Pointrel system is still an alpha-level exploratory work in progress...
 
-The biggest "to do" item is some form of authentication. But after that are:
+Major "to do" items:
+* some form of authentication (other than just the always possible .htpasswd).
 * creating better base apps for general content creation for a semantic web (inspired by Ward's-Wiki discussions, Drupal, Squeak, PataPata, Augment, Memex, and more);
-* creating better community-oriented issue-focused discussion apps (including ones with ideas inspired by Compendium/Cohere, ProCon, Slashdot, Rakontu, Angler, SEAS, RAHS, PhiBetaIota, Analyst, and more, as well as educational simulations especially on socioeconomic policy topics, like discussed in SimulChaord),
+* creating better "Twirlip" community-oriented issue-focused discussion apps (including ones with ideas inspired by Compendium/Cohere, ProCon, Slashdot, Rakontu, Angler, SEAS, RAHS, PhiBetaIota, Analyst, and more, as well as educational simulations especially on socioeconomic policy topics, like discussed in SimulChaord),
 * adding server-side indexing and querying of stored data in an archive (like CouchDB and Map/Reduce),
 * improving server-side versioning support for variables and related logging,
 * rethinking what a "pointrel:" URL means and what its format is,
@@ -30,7 +31,7 @@ Note that some files under the "libs" directory are covered by other FOSS licens
 To use this software, copy it to a web server supporting PHP. You also need to make a few directories to get a directory structure that looks like this (unless you make changes to pointrel_config.php). Note that "yoursite" is located somewhere on your webserver directory.
 
   /yoursite
-  /yoursite/pointrel-app
+  /yoursite/pointrel-app (the contents of this project go here)
   /yoursite/pointrel-data
   /yoursite/pointrel-data/logs
   /yoursite/pointrel-data/resources
