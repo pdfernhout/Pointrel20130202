@@ -1,5 +1,30 @@
+NOTE: This is still an alpha-level exploratory work in progress...
+
+The biggest "to do" item is some form of authentication. But after that are:
+* creating better apps,
+* adding indexing and querying of stored data in an archive (like CouchDB and Map/Reduce),
+* improving server-side versioning support,
+* rethinking what a "pointrel:" URL means and what its format is,
+* figuring out how a bunch of repositories can form a "federation",
+* figuring out how to copy just a small part of a repository from one to another,
+* push notifications,
+* thinking through better what publishing to HTML means,
+* lots of other things.
+
+--Paul Fernhout
+http://www.pdfernhout.net/
+====
+The biggest challenge of the 21st century is the irony of technologies of abundance in the hands of those thinking in terms of scarcity.
+
+------
+
+The Pointrel System is Copyright 1983-2013 by Paul D. Fernhout and contributors.
+Please note that "Pointrel" is a trademark of Paul D. Fernhout and the trademark's use is covered by usage guidelines.
+
 This version of the Pointrel System is released under the GNU Lesser General Public License (LGPL) version 3 (or any later version). See this link for the license details:
 http://www.gnu.org/copyleft/lesser.html
+
+Note that some files under the "libs" directory are covered by other FOSS licenses.
 
 To use this software, copy it to a web server supporting PHP. You also need to make a few directories to get a directory structure that looks like this (unless you make changes to pointrel_config.php). Note that "yoursite" is located somewhere on your webserver directory.
 
@@ -24,8 +49,4 @@ You should also make sure there is a .htaccess file in the pointrel-data directo
 
 That .htaccess file is needed to prevent people from reading resources directly or running any uploaded scripts like .php files. You may need a different sort of file if you are running a different sort of web server like lighttpd.
 
-You must also enable JavaScript in your web browser to use the applications. An initial starter set of test data is provided. That data is provided under a Creative Commons CC-BY-SA license.
-
-Please note that "Pointrel" is a trademark of Paul Fernhout and the trademark's use is covered by useage guidelines.
-
-Note that some files under the "js" directory may be covered by other licenses.
+You must also enable JavaScript in your web browser to use the applications. An initial starter set of test data may be provided; if so, it is under a Creative Commons CC-BY-SA license.
