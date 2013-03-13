@@ -1,7 +1,7 @@
 NOTE: This version of the Pointrel system is still an alpha-level exploratory work in progress...
 
 Major "to do" items:
-* some form of authentication (other than just the always possible .htpasswd).
+* some form of authentication (other than just the always possible .htaccess).
 * creating better base apps for general content creation for a semantic web (inspired by Ward's-Wiki discussions, Drupal, Squeak, PataPata, Augment, Memex, and more);
 * creating better "Twirlip" community-oriented issue-focused discussion apps (including ones with ideas inspired by Compendium/Cohere, ProCon, Slashdot, Rakontu, Angler, SEAS, RAHS, PhiBetaIota, Analyst, and more, as well as educational simulations especially on socioeconomic policy topics, like discussed in SimulChaord),
 * adding server-side indexing and querying of stored data in an archive (like CouchDB and Map/Reduce),
