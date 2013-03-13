@@ -1,9 +1,10 @@
 NOTE: This is still an alpha-level exploratory work in progress...
 
 The biggest "to do" item is some form of authentication. But after that are:
-* creating better apps,
-* adding indexing and querying of stored data in an archive (like CouchDB and Map/Reduce),
-* improving server-side versioning support,
+* creating better base apps for general content creation for a semantic web (inspired by Ward's-Wiki discussions, Drupal, Squeak, PataPata, Augment, Memex, and more);
+* creating better community-oriented issue-focused discussion apps (including ones with ideas inspired by Compendium/Cohere, ProCon, Slashdot, Rakontu, Angler, SEAS, RAHS, PhiBetaIota, Analyst, and more, as well as educational simulations especially on socioeconomic policy topics, like discussed in SimulChaord),
+* adding server-side indexing and querying of stored data in an archive (like CouchDB and Map/Reduce),
+* improving server-side versioning support for variables and related logging,
 * rethinking what a "pointrel:" URL means and what its format is,
 * figuring out how a bunch of repositories can form a "federation",
 * figuring out how to copy just a small part of a repository from one to another,
@@ -49,4 +50,4 @@ You should also make sure there is a .htaccess file in the pointrel-data directo
 
 That .htaccess file is needed to prevent people from reading resources directly or running any uploaded scripts like .php files. You may need a different sort of file if you are running a different sort of web server like lighttpd.
 
-You must also enable JavaScript in your web browser to use the applications. An initial starter set of test data may be provided; if so, it is under a Creative Commons CC-BY-SA license.
+You must also enable JavaScript in your web browser to use the applications.
