@@ -28,8 +28,10 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
 
         var request = {
             url: serverURL + "resource-add.php",
+            // TODO: Is this comment out of date?
             // Need to pass original data string as it will be utf-8 encoded by dojo
             content: {"resourceURI": uri, "resourceContent": base64_encode(originalDataString), "userID": pointrel_authentication.userIDFromCredentials(credentials)},
+            // TODO: Are these headers really needed? They are not used in the other requests, although this one has encoded data
             headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
             handleAs: "json",
             load: function (data) {
@@ -231,12 +233,17 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
     
     ///// JOURNALS
     
-    function pointrel_journal_create(serverURL, credentials, journalName, callback) {
-        console.log("pointrel_journal_create: " + journalName);
+    function pointrel_journal_ajax(operation, serverURL, credentials, journalName, callback, extra) {
+        console.log("pointrel_journal_" + operation + ": " + journalName);
         // var encodedJournalName = encodeAsUTF8(journalName);
+        
+        // Build merged content with extra fields if needed
+        var content = {"journalName": journalName, "operation": operation, "userID": pointrel_authentication.userIDFromCredentials(credentials)};
+        for (var attributeName in extra) {content[attributeName] = extra[attributeName]; }
+        
         var request = {
             url: serverURL + "journal-store.php",
-            content: {"journalName": journalName, "operation": "create", "userID": pointrel_authentication.userIDFromCredentials(credentials)},
+            content: content,
             handleAs: "json",
             load: function (data) {
                 // alert("GET result: '" + data + "'");
@@ -249,7 +256,7 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
             },
             error: function (error, other) {
                 console.log("error", error, other);
-                alert("POST journal create error: " + error);
+                alert("POST journal " + operation + " error: " + error);
                 // TODO: improve error reporting
                 if (typeof(callback) == "function") callback("ERROR", error, other);
             }
@@ -261,17 +268,49 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
         // document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request);
     }
     
+    function pointrel_journal_exists(serverURL, credentials, journalName, callback) {
+    	pointrel_journal_ajax("exist", serverURL, credentials, journalName, callback, {});
+    }
     
+    function pointrel_journal_create(serverURL, credentials, journalName, callback) {
+    	pointrel_journal_ajax("create", serverURL, credentials, journalName, callback, {});
+    }
+    
+    function pointrel_journal_delete(serverURL, credentials, journalName, callback, info, size) {
+    	pointrel_journal_ajax("delete", serverURL, credentials, journalName, callback, {userSuppliedInfo: info, userSuppliedSize: size});
+    }
+    
+    function pointrel_journal_info(serverURL, credentials, journalName, callback) {
+    	pointrel_journal_ajax("info", serverURL, credentials, journalName, callback, {});
+    }
+    
+    function pointrel_journal_get(serverURL, credentials, journalName, callback, start, length) {
+    	pointrel_journal_ajax("get", serverURL, credentials, journalName, callback, {start: start, length: length});
+    }
+    
+    function pointrel_journal_put(serverURL, credentials, journalName, callback, contentString) {
+    	var encodedContent = base64_encode(contentString);
+    	// Maybe needed: headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
+    	pointrel_journal_ajax("put", serverURL, credentials, journalName, callback, {encodedContent: encodedContent});
+    }
     
     /// EXPORT
 
     pointrel.resource_add = pointrel_resource_add;
     pointrel.resource_get = pointrel_resource_get;
     pointrel.resource_publish = pointrel_resource_publish;
+    
     pointrel.variable_new = pointrel_variable_new;
     pointrel.variable_get = pointrel_variable_get;
     pointrel.variable_set = pointrel_variable_set;
     pointrel.variable_delete = pointrel_variable_delete;
-
+    
+    pointrel.journal_exists = pointrel_journal_exists;
+    pointrel.journal_create = pointrel_journal_create;
+    pointrel.journal_delete = pointrel_journal_delete;
+    pointrel.journal_info = pointrel_journal_info;
+    pointrel.journal_get = pointrel_journal_get;
+    pointrel.journal_put = pointrel_journal_put;
+    
     return pointrel;
 });
