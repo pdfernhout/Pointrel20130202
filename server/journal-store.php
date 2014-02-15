@@ -1,10 +1,8 @@
 <?php
-// Configuration: Override this if needed by creating a config.php file in the same directory
-$logsDirectory = "./";
+// Support creating an append-only journal under a specific name;
+// the journal ideally should be mergable with other journals of the same name on other systems
 
-if (file_exists('config.php')) {
-	include('config.php');
-}
+include "pointrel_utils.php";
 
 /////////////////
 
@@ -14,89 +12,55 @@ if (file_exists('config.php')) {
 // PHP uses advisory locking on many platforms, so this locking may only be adequate if the file  is only accessed by this script
 // There could be concurrency issues in between the time a check for existency is done for a file and when it is modified?
 
-// Calculate today's log file name
-$fullLogFileName = $logsDirectory . gmdate("Y-m-d") . ".log";
-
-define("SEND_FAILURE_HEADER", TRUE);
-define("NO_FAILURE_HEADER", FALSE);
-
-function exitWithJSONStatusMessage($message, $sendHeader = NO_FAILURE_HEADER, $errorNumberForHeader = 400) {
-	$messageWithQuotesEscaped = str_replace('"', '\\"', $message);
-	if ($sendHeader) header("HTTP/1.1 " . $errorNumberForHeader . " " . $message);
-	exit('{"status": "FAIL", "message": "' . $messageWithQuotesEscaped . '"}');
-}
-
-function currentTimeStamp() {
-	return gmdate('Y-m-d\TH:i:s\Z');
-}
-
-function validateFileExistsOrDie($fileName) {
-    if (!file_exists($fileName)) {
+function validateFileExistsOrDie($fullJournalFileName) {
+    if (!file_exists($fullJournalFileName)) {
         // TODO: Can't replace with exitWithJSONStatusMessage because has extra value
-        // header("HTTP/1.1 400 Archive file does not exist: " . $fileName);
-        exit('{"status": "FAIL", "message": "File does not exist: ' . $fileName . '", "currentValue": null}');
+        // header("HTTP/1.1 400 Journal file does not exist: " . $fullJournalFileName);
+        exit('{"status": "FAIL", "message": "Journal file does not exist: ' . $fullJournalFileName . '", "currentValue": null}');
     }
 }
 
-function writeArchiveToNewFile($fullArchiveFileName, $contents) {
-	$fh = fopen($fullArchiveFileName, 'xb');
+function createJournalFile($fullJournalFileName, $contents) {
+	$fh = fopen($fullJournalFileName, 'xb');
 	if (!$fh) {
-		exitWithJSONStatusMessage("Could not create archive file: '$fullArchiveFileName'", NO_FAILURE_HEADER, 500);
+		exitWithJSONStatusMessage("Could not create journal file: '$fullJournalFileName'", NO_FAILURE_HEADER, 500);
 	}
 	if (flock($fh, LOCK_EX)) {
 		fwrite($fh, $contents);
 		flock($fh, LOCK_UN);
 	} else {
-		exitWithJSONStatusMessage("Could not lock the archive file for creating: '$fullArchiveFileName'", NO_FAILURE_HEADER, 500);
+		exitWithJSONStatusMessage("Could not lock the journal file for creating: '$fullJournalFileName'", NO_FAILURE_HEADER, 500);
 	}
 	fclose($fh);
 }
 
-function appendDataToArchiveFile($fullArchiveFileName, $dataToAppend) {
-	$fh = fopen($fullArchiveFileName, 'ab');
+function appendDataToJournalFile($fullJournalFileName, $dataToAppend) {
+	$fh = fopen($fullJournalFileName, 'ab');
 	if (!$fh) {
-		exitWithJSONStatusMessage("Could not open archive file: '$fullArchiveFileName'", NO_FAILURE_HEADER, 500);
+		exitWithJSONStatusMessage("Could not open journal file: '$fullJournalFileName'", NO_FAILURE_HEADER, 500);
 	}
 	if (flock($fh, LOCK_EX)) {
 		fwrite($fh, $dataToAppend);
 		flock($fh, LOCK_UN);
 	} else {
-		exitWithJSONStatusMessage("Could not lock the archive file for appending: '$fullArchiveFileName'", NO_FAILURE_HEADER, 500);
+		exitWithJSONStatusMessage("Could not lock the journal file for appending: '$fullJournalFileName'", NO_FAILURE_HEADER, 500);
 	}
 	fclose($fh);
-}
-
-// recursively strip slashes from an array to deal with "magic quotes"
-function stripslashes_recursive($array) {
-	foreach ($array as $key => $value) {
-		$array[$key] = is_array($value) ?
-		stripslashes_recursive($value) :
-		stripslashes($value);
-	}
-	return $array;
-}
-
-// Change global values
-if (get_magic_quotes_gpc()) {
-	$_GET = stripslashes_recursive($_GET);
-	$_POST = stripslashes_recursive($_POST);
-	$_COOKIE = stripslashes_recursive($_COOKIE);
-	$_REQUEST = stripslashes_recursive($_REQUEST);
 }
 
 // the userID making the request
 $userID = $_POST['userID'];
 
-// the name of the archive
-$archiveName = $_POST['archiveName'];
+// the name of the journal
+$journalName = $_POST['journalName'];
 
 // operations and operands: 
-// exists -- see if archive exists
-// create -- make the archive
-// delete userSuppliedHeader userSuppliedSize -- remove the archive, verifying header and size
-// info -- returns data from the first line of the archive (which has a uuid) and the archive's size
+// exists -- see if journal exists
+// create -- make the journal
+// delete userSuppliedHeader userSuppliedSize -- remove the journal, verifying header and size
+// info -- returns data from the first line of the journal (which has a uuid) and the journal's size
 // get start length -- retrieves a number of bytes starting from start and ending at start + length - 1
-// put hash size type path data -- adds data to the archive, verifying the hash
+// put hash size type path data -- adds data to the journal, verifying the hash
 $operation = $_POST['operation'];
 
 $remoteAddress = $_SERVER['REMOTE_ADDR'];
@@ -107,7 +71,7 @@ $logTimeStamp = currentTimeStamp();
 // $authentication = $_POST['authentication'];
 
 // Log what was requested
-error_log('{"timeStamp": "' . $logTimeStamp . '", "remoteAddress": "' . $remoteAddress . '", "archiveName": "' . $archiveName . '", "operation": "' . $operation . '", "userID": "' . $userID . '"}' . "\n", 3, $fullLogFileName);
+error_log('{"timeStamp": "' . $logTimeStamp . '", "remoteAddress": "' . $remoteAddress . '", "request": "journal-store", journalName": "' . $journalName . '", "operation": "' . $operation . '", "userID": "' . $userID . '"}' . "\n", 3, $fullLogFileName);
 
 // Validate the input, returning error messages if there is something lacking
 
@@ -115,12 +79,12 @@ if (empty($userID)) {
 	exitWithJSONStatusMessage("No userID was specified", NO_FAILURE_HEADER, 400);
 }
 
-if (empty($archiveName)) {
-	exitWithJSONStatusMessage("No archiveName was specified", NO_FAILURE_HEADER, 400);
+if (empty($journalName)) {
+	exitWithJSONStatusMessage("No journalName was specified", NO_FAILURE_HEADER, 400);
 }
 
-if (strlen($archiveName) > 100) {
-	exitWithJSONStatusMessage("Archive name is too long (maximum 100 characters)", NO_FAILURE_HEADER, 400);
+if (strlen($journalName) > 100) {
+	exitWithJSONStatusMessage("Journal name is too long (maximum 100 characters)", NO_FAILURE_HEADER, 400);
 }
 
 if (!array_key_exists('operation', $_POST)) {
@@ -133,45 +97,44 @@ if (!in_array($operation, $operations)) {
 }
 
 
-// Determine the file name to go with the archive
+// Determine the file name to go with the journal
 
 // From: http://stackoverflow.com/questions/2668854/sanitizing-strings-to-make-them-url-and-filename-safe but changed to change dots to underscores
-$shortFileNameForArchiveName = preg_replace(array('/\s/', '/\.[\.]+/', '/[^\w_\.\-]/'), array('_', '_', '_'), $archiveName);
+$shortFileNameForJournalName = preg_replace(array('/\s/', '/\.[\.]+/', '/[^\w_\.\-]/'), array('_', '_', '_'), $journalName);
 
-$hexDigits = md5($shortFileNameForArchiveName);
-// Not creating subdirectories for now
-// $createSubdirectories = ($operation == "create");
-// $storagePath = calculateStoragePath($pointrelArchivesDirectory, $hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, $createSubdirectories);
-// $fullArchiveFileName = $storagePath . "archive_" . $hexDigits . "_" . $shortFileNameForArchiveName . '.pointrelArchive';
-$fullArchiveFileName = "archive_" . $hexDigits . "_" . $shortFileNameForArchiveName . '.jsonArchive';
+$hexDigits = md5($shortFileNameForJournalName);
+$createSubdirectories = ($operation == "create");
+$storagePath = calculateStoragePath($pointrelJournalsDirectory, $hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, $createSubdirectories);
+$fullJournalFileName = $storagePath . "journal_" . $hexDigits . "_" . $shortFileNameForJournalName . '.pointrelJournal';
+// $fullJournalFileName = "journal_" . $hexDigits . "_" . $shortFileNameForJournalName . '.pointrelJournal';
 
 $jsonToReturn = '"ERROR"';
 
 // operation: exists
 
 if ($operation == "exists") {
-	if (file_exists($fullArchiveFileName)) {
+	if (file_exists($fullJournalFileName)) {
 		// TODO: Can't replace this one because it has OK
-		exit('{"status": "OK", "message": "Archive file exists: ' . $shortFileNameForArchiveName . '"}');
+		exit('{"status": "OK", "message": "Journal file exists: ' . $shortFileNameForJournalName . '"}');
 	}
-	exitWithJSONStatusMessage("Archive file does not exist: '" . $shortFileNameForArchiveName . "'", NO_FAILURE_HEADER, 0);
+	exitWithJSONStatusMessage("Journal file does not exist: '" . $shortFileNameForJournalName . "'", NO_FAILURE_HEADER, 0);
 }
 
 // operation: create
-// Creates the archive, with the first entry being a JSON object that has a unique ID for this archive instance
+// Creates the journal, with the first entry being a JSON object that has a unique ID for this journal instance
 
 if ($operation == "create") {
-	if (file_exists($fullArchiveFileName)) {
-		exitWithJSONStatusMessage("Archive file already exists: '" . $fullArchiveFileName . "'", NO_FAILURE_HEADER, 400);
+	if (file_exists($fullJournalFileName)) {
+		exitWithJSONStatusMessage("Journal file already exists: '" . $fullJournalFileName . "'", NO_FAILURE_HEADER, 400);
 	}
 	
-	// TODO: Should also put archiveName in somehow
-	$randomUUID = uniqid('jsonArchiveInstance:', true);
-	// TODO: Maybe should use archiveName passed in, but with replacement for any double quotes in it?
-	$jsonForArchive = '{"archiveName":"' . $shortFileNameForArchiveName . '","versionUUID":"' . $randomUUID . '"}';
-	$firstLineHeader = "$jsonForArchive\n";
+	// TODO: Should also put journalName in somehow
+	$randomUUID = uniqid('pointrelJournalInstance:', true);
+	// TODO: Maybe should use journalName passed in, but with replacement for any double quotes in it?
+	$jsonForJournal = '{"journalName":"' . $shortFileNameForJournalName . '","versionUUID":"' . $randomUUID . '"}';
+	$firstLineHeader = "$jsonForJournal\n";
 
-	writeArchiveToNewFile($fullArchiveFileName, $firstLineHeader);
+	createJournalFile($fullJournalFileName, $firstLineHeader);
 	// Return a nested json object instead of a string
 	$jsonToReturn = rtrim($firstLineHeader);
 }
@@ -179,26 +142,26 @@ if ($operation == "create") {
 // operation: delete userSuppliedHeader userSuppliedSize
 
 if ($operation == "delete") {
-	validateFileExistsOrDie($fullArchiveFileName);
+	validateFileExistsOrDie($fullJournalFileName);
 	
 	// Check that header info and size are correct; header must be in canonical form as supplied
 	$userSuppliedHeader = $_POST['userSuppliedHeader'];
 	$userSuppliedSize = $_POST['userSuppliedSize'];
 	
-	$fh = fopen($fullArchiveFileName, 'r+b');
+	$fh = fopen($fullJournalFileName, 'r+b');
 	if (flock($fh, LOCK_EX)) {
 		$stat = fstat($fh);
 		$size = $stat['size'];
 		if ($size != $userSuppliedSize) {
 			fclose($fh);
-			exitWithJSONStatusMessage("Archive size: $size was not as expected: $userSuppliedSize", NO_FAILURE_HEADER, 409);
+			exitWithJSONStatusMessage("Journal size: $size was not as expected: $userSuppliedSize", NO_FAILURE_HEADER, 409);
 		}
 		
 		$firstLineHeader = fgets($fh);
 		$firstLineHeader = rtrim($firstLineHeader);
 		if ($firstLineHeader != $userSuppliedHeader) {
 			fclose($fh);
-			exitWithJSONStatusMessage("Archive header: $firstLineHeader was not as expected: $userSuppliedHeader", NO_FAILURE_HEADER, 409);
+			exitWithJSONStatusMessage("Journal header: $firstLineHeader was not as expected: $userSuppliedHeader", NO_FAILURE_HEADER, 409);
 		}
 		fseek($fh, 0);
 		// Temporarily set value to delete to prevent other process updating it while try to unlink
@@ -207,10 +170,10 @@ if ($operation == "delete") {
 		ftruncate($fh, strlen("DELETED"));
 		flock($fh, LOCK_UN);
 		fclose($fh);
-		unlink($fullArchiveFileName);
+		unlink($fullJournalFileName);
 		$jsonToReturn = '"DELETED"';
 	} else {
-		exitWithJSONStatusMessage("Could not lock the archive file for deleting: '$fullArchiveFileName'", NO_FAILURE_HEADER, 500);
+		exitWithJSONStatusMessage("Could not lock the journal file for deleting: '$fullJournalFileName'", NO_FAILURE_HEADER, 500);
 	}
 		
 }
@@ -218,8 +181,8 @@ if ($operation == "delete") {
 // operation: info
 
 if ($operation == "info") {
-	validateFileExistsOrDie($fullArchiveFileName);
-	$fh = fopen($fullArchiveFileName, 'rb');
+	validateFileExistsOrDie($fullJournalFileName);
+	$fh = fopen($fullJournalFileName, 'rb');
 	if (flock($fh, LOCK_EX)) {
 		$firstLineHeader = fgets($fh);
 		$stat = fstat($fh);
@@ -233,7 +196,7 @@ if ($operation == "info") {
 		$firstLineHeaderWithReplacedQuotes = str_replace('"', '\\"', $firstLineHeader);
 		$jsonToReturn = '{"header":"' . $firstLineHeaderWithReplacedQuotes . '", "size": ' . $size . "}";
 	} else {
-		exitWithJSONStatusMessage("Could not lock the archive file for info: '$fullArchiveFileName'", NO_FAILURE_HEADER, 500);
+		exitWithJSONStatusMessage("Could not lock the journal file for info: '$fullJournalFileName'", NO_FAILURE_HEADER, 500);
 	}
 		
 }
@@ -242,7 +205,7 @@ if ($operation == "info") {
 // This may return JSON if there is an error; otherwise it returns the byte data in that section of file
 
 if ($operation == "get") {
-	validateFileExistsOrDie($fullArchiveFileName);
+	validateFileExistsOrDie($fullJournalFileName);
 	
 	$start = $_POST['start'];
 	
@@ -261,7 +224,7 @@ if ($operation == "get") {
 	// in previous pointrel version as readfile at end or instead with buffering similar to::
 	// http://stackoverflow.com/questions/1395656/is-there-a-good-implementation-of-partial-file-downloading-in-php
 	// http://www.coneural.org/florian/papers/04_byteserving.php
-	$contentsPartial = file_get_contents($fullArchiveFileName, true, NULL, $start, $length);
+	$contentsPartial = file_get_contents($fullJournalFileName, true, NULL, $start, $length);
 	
 	if ($contentsPartial == FALSE) {
 		$jsonToReturn = '"FAILED"';
@@ -278,7 +241,7 @@ if ($operation == "get") {
 // operation: put
 
 if ($operation == "put") {
-	validateFileExistsOrDie($fullArchiveFileName);
+	validateFileExistsOrDie($fullJournalFileName);
 	
 	$encodedContent = $_POST['encodedContent'];
 	if (empty($encodedContent)) {
@@ -288,13 +251,13 @@ if ($operation == "put") {
 	$content = base64_decode($encodedContent);
 	
 	// TODO: Could check that it is valid JSON content
-	appendDataToArchiveFile($fullArchiveFileName, $content . "\n");
+	appendDataToJournalFile($fullJournalFileName, $content . "\n");
 	
 	$jsonToReturn = '"ADDED"';
 }
 
 // header("Content-type: application/json; charset=UTF-8");
 header("Content-type: application/json");
-echo '{"status": "OK", "message": "Successful operation: ' . $operation . '", "archiveName": "' . $archiveName . '", "result": ' . $jsonToReturn . '}';
+echo '{"status": "OK", "message": "Successful operation: ' . $operation . '", "journalName": "' . $journalName . '", "result": ' . $jsonToReturn . '}';
 
 
