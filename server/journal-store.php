@@ -54,13 +54,13 @@ $userID = $_POST['userID'];
 // the name of the journal
 $journalName = $_POST['journalName'];
 
-// operations and operands: 
-// exists -- see if journal exists
-// create -- make the journal
-// delete userSuppliedHeader userSuppliedSize -- remove the journal, verifying header and size
-// info -- returns data from the first line of the journal (which has a uuid) and the journal's size
-// get start length -- retrieves a number of bytes starting from start and ending at start + length - 1
-// put hash size type path data -- adds data to the journal, verifying the hash
+// Operations and operands: 
+//   exists -- see if journal exists
+//   create -- make the journal
+//   delete userSuppliedHeader userSuppliedSize -- remove the journal, verifying header and size
+//   info -- returns data from the first line of the journal (which has a uuid) and the journal's size
+//   get start length -- retrieves a number of bytes starting from start and ending at start + length - 1
+//   put hash size type path data -- adds data to the journal, verifying the hash
 $operation = $_POST['operation'];
 
 $remoteAddress = $_SERVER['REMOTE_ADDR'];
