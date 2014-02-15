@@ -6,6 +6,8 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
 
     var pointrel = {};
 
+    /// RESOURCES
+    
     // TODO: Add callback for success and errors
     // Data should be in 0-255 character range
     function pointrel_resource_add(serverURL, credentials, originalDataString, extension, callback) {
@@ -104,6 +106,8 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
         // alert("sent request: " + JSON.stringify(request));
         // document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request);
     }
+    
+    ///// VARIABLES
 
     function pointrel_variable_new(serverURL, credentials, variableName, newVersionURI, callback) {
         console.log("pointrel_resource_new: " + variableName + "new: " + newVersionURI);
@@ -224,6 +228,42 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
         // alert("sent request: " + JSON.stringify(request));
         // document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request);
     }
+    
+    ///// JOURNALS
+    
+    function pointrel_journal_create(serverURL, credentials, journalName, callback) {
+        console.log("pointrel_journal_create: " + journalName);
+        // var encodedJournalName = encodeAsUTF8(journalName);
+        var request = {
+            url: serverURL + "journal-store.php",
+            content: {"journalName": journalName, "operation": "create", "userID": pointrel_authentication.userIDFromCredentials(credentials)},
+            handleAs: "json",
+            load: function (data) {
+                // alert("GET result: '" + data + "'");
+                // document.getElementById("retrieve").innerHTML = data;
+                if (data.status == "OK") {
+                    if (typeof(callback) == "function") callback(null, data);
+                } else {
+                    if (typeof(callback) == "function") callback("FAILED", data);
+                }
+            },
+            error: function (error, other) {
+                console.log("error", error, other);
+                alert("POST journal create error: " + error);
+                // TODO: improve error reporting
+                if (typeof(callback) == "function") callback("ERROR", error, other);
+            }
+        };
+
+        xhr.post(request);
+
+        // alert("sent request: " + JSON.stringify(request));
+        // document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request);
+    }
+    
+    
+    
+    /// EXPORT
 
     pointrel.resource_add = pointrel_resource_add;
     pointrel.resource_get = pointrel_resource_get;
