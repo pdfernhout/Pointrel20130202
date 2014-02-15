@@ -1,6 +1,6 @@
 <?php
 $_POST['userID'] = "pdfernhout@example.com";
-$_POST['archiveName'] = "foo";
+$_POST['journalName'] = "test_foo";
 $_POST['operation'] = "info";
 
-include "../server/json_store.php";
+include "../../server/journal-store.php";
