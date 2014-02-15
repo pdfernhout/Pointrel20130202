@@ -16,11 +16,11 @@ Major "to do" items:
 --Paul Fernhout
 http://www.pdfernhout.net/
 ====
-The biggest challenge of the 21st century is the irony of technologies of abundance in the hands of those thinking in terms of scarcity.
+The biggest challenge of the 21st century is the irony of technologies of abundance in the hands of those still thinking in terms of scarcity.
 
 ------
 
-The Pointrel System is Copyright 1983-2013 by Paul D. Fernhout and contributors.
+The Pointrel System is Copyright 1983-2014 by Paul D. Fernhout and contributors.
 Please note that "Pointrel" is a trademark of Paul D. Fernhout and the trademark's use is covered by usage guidelines.
 
 This version of the Pointrel System is released under the GNU Lesser General Public License (LGPL) version 3 (or any later version). See this link for the license details:
