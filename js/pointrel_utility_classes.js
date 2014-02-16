@@ -231,8 +231,8 @@ function PointrelArchiver(Pointrel, serverURL, credentials) {
         return Pointrel.journal_exists(this.serverURL, this.credentials, journalName, callback);
     };
     
-    this.journal_create = function (journalName, callback) {
-        return Pointrel.journal_create(this.serverURL, this.credentials, journalName, callback);
+    this.journal_create = function (journalName, journalFormat, callback) {
+        return Pointrel.journal_create(this.serverURL, this.credentials, journalName, journalFormat, callback);
     };
     
     this.journal_delete = function (journalName, header, size, callback) {

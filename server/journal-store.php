@@ -130,10 +130,16 @@ if ($operation == "create") {
 		exitWithJSONStatusMessage("Journal file already exists: '" . $fullJournalFileName . "'", NO_FAILURE_HEADER, 400);
 	}
 	
+	$journalFormat = $_POST['journalFormat'];
+	
+	if (empty($journalFormat)) {
+		exitWithJSONStatusMessage("No journalFormat was specified", NO_FAILURE_HEADER, 400);
+	}
+	
 	// TODO: Should also put journalName in somehow
 	$randomUUID = uniqid('pointrelJournalInstance:', true);
-	// TODO: Maybe should use journalName passed in, but with replacement for any double quotes in it?
-	$jsonForJournal = '{"journalName":"' . $shortFileNameForJournalName . '","versionUUID":"' . $randomUUID . '"}';
+	// TODO: Maybe should use journalName passed in, but with replacement for any double quotes in it? Same for journalFormat?
+	$jsonForJournal = '{"journalFormat":"' . $journalFormat . '","journalName":"' . $shortFileNameForJournalName . '","versionUUID":"' . $randomUUID . '"}';
 	$firstLineHeader = "$jsonForJournal\n";
 
 	createJournalFile($fullJournalFileName, $firstLineHeader);

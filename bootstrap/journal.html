@@ -95,7 +95,7 @@
         function createButtonPressed() {
         	progress("starting to call create");
             var journalName = $("#journalName").val();
-            archiver.journal_create(journalName, function (error, response) {
+            archiver.journal_create(journalName, "freeform", function (error, response) {
             	progress("done with create", error);
                 if (error) {
                     alert("Error when fetching:" + JSON.stringify(response));

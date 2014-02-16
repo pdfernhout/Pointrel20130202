@@ -275,12 +275,12 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
         pointrel_journal_ajax("exist", serverURL, credentials, journalName, callback, {});
     }
     
-    function pointrel_journal_create(serverURL, credentials, journalName, callback) {
-        pointrel_journal_ajax("create", serverURL, credentials, journalName, callback, {});
+    function pointrel_journal_create(serverURL, credentials, journalName, journalFormat, callback) {
+        pointrel_journal_ajax("create", serverURL, credentials, journalName, callback, {"journalFormat": journalFormat});
     }
     
     function pointrel_journal_delete(serverURL, credentials, journalName, header, size, callback) {
-        pointrel_journal_ajax("delete", serverURL, credentials, journalName, callback, {userSuppliedHeader: header, userSuppliedSize: size});
+        pointrel_journal_ajax("delete", serverURL, credentials, journalName, callback, {"userSuppliedHeader": header, "userSuppliedSize": size});
     }
     
     function pointrel_journal_info(serverURL, credentials, journalName, callback) {
@@ -288,13 +288,13 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
     }
     
     function pointrel_journal_get(serverURL, credentials, journalName, start, length, callback) {
-        pointrel_journal_ajax("get", serverURL, credentials, journalName, callback, {start: start, length: length});
+        pointrel_journal_ajax("get", serverURL, credentials, journalName, callback, {"start": start, "length": length});
     }
     
     function pointrel_journal_put(serverURL, credentials, journalName, contentStringToAppend, callback) {
         var encodedContent = base64_encode(contentStringToAppend);
         // Maybe needed: headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
-        pointrel_journal_ajax("put", serverURL, credentials, journalName, callback, {encodedContent: encodedContent});
+        pointrel_journal_ajax("put", serverURL, credentials, journalName, callback, {"encodedContent": encodedContent});
     }
     
     /// EXPORT
