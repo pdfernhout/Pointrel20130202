@@ -257,12 +257,90 @@ var Pointrel = (function () {
         // document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request);
     }
 
+    ///// JOURNALS
+    
+    function pointrel_journal_ajax(operation, serverURL, credentials, journalName, callback, extra) {
+        console.log("pointrel_journal_" + operation + ": " + journalName);
+        // var encodedJournalName = encodeAsUTF8(journalName);
+        
+        // Build merged content with extra fields if needed
+        var content = {"journalName": journalName, "operation": operation, "userID": pointrel_authentication.userIDFromCredentials(credentials)};
+        for (var attributeName in extra) {content[attributeName] = extra[attributeName]; }
+
+        var request = {
+                type: "POST",
+                url: serverURL + "journal-store.php",
+                data: content,
+                dataType: "json",
+                // cache: false,
+                success: function (data) {
+                    // alert("POST success status: " + statusThing);
+                    // alert("POST result: '" + data + "'");
+                    // document.getElementById("retrieve").innerHTML = data;
+                    if (data.status == "OK") {
+                        if (typeof(callback) == "function") callback(null, data);
+                    } else {
+                        if (typeof(callback) == "function") callback("FAILED", data);
+                    }
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert("POST xhr.status: " + xhr.status);
+                    alert("POST xhr: " + xhr);
+                    alert("POST journal " + operation + " error: " + thrownError);
+                    // TODO: improve error reporting
+                    if (typeof(callback) == "function") callback("ERROR", xhr);
+                }
+            };
+
+        $.ajax(request);
+
+        // alert("sent request: " + JSON.stringify(request));
+        // document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request);
+    }
+    
+    function pointrel_journal_exists(serverURL, credentials, journalName, callback) {
+    	pointrel_journal_ajax("exists", serverURL, credentials, journalName, callback, {});
+    }
+    
+    function pointrel_journal_create(serverURL, credentials, journalName, callback) {
+    	pointrel_journal_ajax("create", serverURL, credentials, journalName, callback, {});
+    }
+    
+    function pointrel_journal_delete(serverURL, credentials, journalName, info, size, callback) {
+    	pointrel_journal_ajax("delete", serverURL, credentials, journalName, callback, {userSuppliedInfo: info, userSuppliedSize: size});
+    }
+    
+    function pointrel_journal_info(serverURL, credentials, journalName, callback) {
+    	pointrel_journal_ajax("info", serverURL, credentials, journalName, callback, {});
+    }
+    
+    function pointrel_journal_get(serverURL, credentials, journalName, start, length, callback) {
+    	pointrel_journal_ajax("get", serverURL, credentials, journalName, callback, {start: start, length: length});
+    }
+    
+    function pointrel_journal_put(serverURL, credentials, journalName, contentStringToAppend, callback) {
+    	var encodedContent = base64_encode(contentStringToAppend);
+    	// Maybe needed: headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
+    	pointrel_journal_ajax("put", serverURL, credentials, journalName, callback, {encodedContent: encodedContent});
+    }
+    
+    /// EXPORT
+
     pointrel.resource_add = pointrel_resource_add;
     pointrel.resource_get = pointrel_resource_get;
     pointrel.resource_publish = pointrel_resource_publish;
+    
     pointrel.variable_new = pointrel_variable_new;
     pointrel.variable_get = pointrel_variable_get;
     pointrel.variable_set = pointrel_variable_set;
     pointrel.variable_delete = pointrel_variable_delete;
+    
+    pointrel.journal_exists = pointrel_journal_exists;
+    pointrel.journal_create = pointrel_journal_create;
+    pointrel.journal_delete = pointrel_journal_delete;
+    pointrel.journal_info = pointrel_journal_info;
+    pointrel.journal_get = pointrel_journal_get;
+    pointrel.journal_put = pointrel_journal_put;
+    
     return pointrel;
 }());

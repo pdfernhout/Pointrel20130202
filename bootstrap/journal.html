@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset='utf-8'>
-    <title>Pointrel simple editor</title>
+    <title>Pointrel journal functionality test</title>
     <script type="text/javascript" src="../libs/jquery-1.9.1.min.js"></script>
 
     <script type="text/javascript" src="../libs/sha256.js"></script>
@@ -135,7 +135,7 @@
             });
         }
 
-        function store() {
+        function storeButtonPressed() {
             progress("starting to save");
             variableName = $("#variableName").val();
             updateURI();
@@ -198,7 +198,7 @@
         
         //////////
         
-        function exists() {
+        function existsButtonPressed() {
             var journalName = $("#journalName").val();
             archiver.journal_exists(journalName, function (error, text) {
                 if (error) {
@@ -229,14 +229,14 @@
 <b>Pointrel journal support test</b><br/>
 <form accept-charset="UTF-8">
     <label for="journalName">Journal: </label><input type="text" id="journalName" style="width:300px;" value="journal-test"/>
-    <input type="button" onclick="latest()" value="Latest"/>
-    <input type="button" onclick="create()" value="Create"/>
-    <input type="button" onclick="delete()" value="Delete"/><br/>
-    <label for="exists">Exists: </label><input type="text" id="exists" style="width:200px;" readonly/><input type="button" onclick="exists()" value="Exists"/><br/>
-    <label for="info">Info: </label><input type="text" id="info" style="width:200px;" readonly/><input type="button" onclick="info()" value="Info"/><br/>
+    <input type="button" onclick="latestButtonPressed()" value="Latest"/>
+    <input type="button" onclick="createButtonPressed()" value="Create"/>
+    <input type="button" onclick="deleteButtonPressed()" value="Delete"/><br/>
+    <label for="exists">Exists: </label><input type="text" id="exists" style="width:200px;" readonly/><input type="button" onclick="existsButtonPressed()" value="Exists"/><br/>
+    <label for="infoButtonPressed()">Info: </label><input type="text" id="infoButtonPressed()" style="width:200px;" readonly/><input type="button" onclick="infoButtonPressed()" value="Info"/><br/>
     <label for="currentContent">Current content:<br/></label><textarea id="currentContent" style="width:800px; height:500px; overflow: auto;" readonly></textarea><br/>
     <label for="newContent">New content:<br/></label><textarea id="newContent" style="width:800px; height:50px; overflow: auto;"></textarea><br/>
-    <a href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span>  <input type="button" onclick="store()" value="Append to journal"/> <span id="progress"></span> <br/>
+    <a href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span>  <input type="button" onclick="storeButtonPressed()" value="Append to journal"/> <span id="progress"></span> <br/>
 </form>
 
 <b>Help</b>
@@ -244,9 +244,9 @@ This tests Pointrel functionality for appending to a journal.
 Add some later versions by typing text in the newContent box at the bottom and then clicking "Append to journal".
 Click the "Latest" button to get the latest version of a journal document for some journal name.
 To add a new journal, change the journal name then click Create.
-Click Delete to delete a journal (after having previously loaded current info);
+Click Delete to delete a journal (after having previously loaded current infoButtonPressed());
 Exists says whether the journal exists.
-Info provides header info for the journal.
+Info provides header infoButtonPressed() for the journal.
 JavaScript must be enabled for this page for this test to work.
 <br/><br/>
 </body>
