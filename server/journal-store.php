@@ -208,8 +208,7 @@ if ($operation == "info") {
 		$jsonToReturn = '{"header":"' . $firstLineHeaderWithReplacedQuotes . '", "size": ' . $size . "}";
 	} else {
 		exitWithJSONStatusMessage("Could not lock the journal file for info: '$fullJournalFileName'", NO_FAILURE_HEADER, 500);
-	}
-		
+	}		
 }
 
 // operation: get
@@ -235,10 +234,26 @@ if ($operation == "get") {
 	// in previous pointrel version as readfile at end or instead with buffering similar to::
 	// http://stackoverflow.com/questions/1395656/is-there-a-good-implementation-of-partial-file-downloading-in-php
 	// http://www.coneural.org/florian/papers/04_byteserving.php
-	$contentsPartial = file_get_contents($fullJournalFileName, true, NULL, $start, $length);
+	$fh = fopen($fullJournalFileName, 'rb');
+	if (flock($fh, LOCK_EX)) {
+		if ($length == "END") {
+			$stat = fstat($fh);
+			$length = $stat['size'];
+		}
+		if ($length != 0) {
+			$contentsPartial = fread($fh, $length);
+		} else {
+			$contentsPartial = "";
+		}
+		flock($fh, LOCK_UN);
+		fclose($fh);
+	} else {
+		exitWithJSONStatusMessage("Could not lock the journal file for get: '$fullJournalFileName'", NO_FAILURE_HEADER, 500);
+	}
 	
 	if ($contentsPartial == FALSE) {
-		$jsonToReturn = '"FAILED"';
+		// $jsonToReturn = '"FAILED"';
+		exitWithJSONStatusMessage("Could not read the journal file for get: '$fullJournalFileName'", NO_FAILURE_HEADER, 500);
 	} else {
 		$contentsPartialEncoded = base64_encode($contentsPartial);
 		$jsonToReturn = '"' . $contentsPartialEncoded . '"';

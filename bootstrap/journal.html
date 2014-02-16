@@ -19,44 +19,37 @@
 
         var currentVersionURI = "";
         var variableName = "editor-test";
+        
+        var lastInfo = "";
+        var lastSize = "END";
 
         $(document).ready(loadLatestFromParameter);
         $(pointrel_authentication.loginPageLoaded);
 
         function loadLatestFromParameter() {
-            var chosenVariable = getParameter("documentName");
-            if (chosenVariable) {
-                console.log("Read document from: " + chosenVariable);
-                variableName = chosenVariable;
-                $("#variableName").val(chosenVariable);
-                latest("ignoreMissing");
+            var chosenJournal = getParameter("documentName");
+            if (chosenJournal) {
+                console.log("Read document from: " + chosenJournal);
+                journalName = chosenJournal;
+                $("#journalName").val(journalName);
+                lastSize = "END";
+                latestButtonPressed("ignoreMissing");
             }
-            updateURI();
         }
 
-        function updateURI() {
-            var editorAppBaseURL = "editor.html";
-            var viewerAppBaseURL = "viewer.html";
-            var versionsAppBaseURL = "versions.html";
-            var queryPart = "?documentName=" + encodeURI(variableName);
-            $("a#editorLink").prop("href", editorAppBaseURL + queryPart);
-            $("a#viewerLink").prop("href", viewerAppBaseURL + queryPart);
-            $("a#versionsLink").prop("href", versionsAppBaseURL + queryPart);
-        }
-
-        function latestButtonPressed() {
+        function latestButtonPressed(ignoreIfMissing) {
             progress("starting to load");
             var journalName = $("#journalName").val();
             
             // Just get everything for now; could optimize later
-            var start = 0;
-            var length = lastSize;
+            var start = 0; // end of previous data read, and then could append
+            var length = "END"; // lastSize;
             
-            console.log("start", start, "size", size);
+            console.log("start", start, "length", length);
 
             archiver.journal_get(journalName, start, length, function (error, response) {
                 if (error) {
-                    alert("Error when fetching:" + JSON.stringify(response));
+                    if (!ignoreIfMissing) alert("Error when fetching:" + JSON.stringify(response));
                     return;
                 }
                 $("#currentContent").val(response.result);
@@ -87,6 +80,7 @@
             var journalName = $("#journalName").val();
             archiver.journal_exists(journalName, function (error, response) {
                 if (error) {
+                	$("#exists").val("");
                     alert("Error when fetching:" + JSON.stringify(response));
                     return;
                 }
@@ -106,9 +100,6 @@
             });
         }
         
-        var lastInfo = "";
-        var lastSize = 0;
-        
         function deleteButtonPressed() {
         	console.log("lastInfo: " + lastInfo);
         	console.log("lastSize: " + lastSize);
@@ -127,6 +118,8 @@
             var journalName = $("#journalName").val();
             archiver.journal_info(journalName, function (error, response) {
                 if (error) {
+                    $("#header").val("");
+                    $("#size").val("");
                     alert("Error when fetching:" + JSON.stringify(response));
                     return;
                 }
