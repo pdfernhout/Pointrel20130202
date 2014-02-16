@@ -48,6 +48,7 @@
             console.log("start", start, "length", length);
 
             archiver.journal_get(journalName, start, length, function (error, response) {
+            	progress("done loading", error);
                 if (error) {
                     if (!ignoreIfMissing) alert("Error when fetching:" + JSON.stringify(response));
                     return;
@@ -57,7 +58,7 @@
         }
         
         function appendButtonPressed() {
-            progress("starting to save");
+            progress("starting to append");
             var journalName = $("#journalName").val();
             var newContent = $("#newContent").val();
             
@@ -66,6 +67,7 @@
             console.log("newContenttAsUTF8", newContentAsUTF8.length, newContentAsUTF8);
             
             archiver.journal_put(journalName, newContentAsUTF8, function (error, response) {
+            	progress("done appending", error);
                 if (error) {
                     alert("Error when fetching:" + JSON.stringify(response));
                     return;
@@ -77,8 +79,10 @@
         //////////
         
         function existsButtonPressed() {
+        	progress("starting to call exists");
             var journalName = $("#journalName").val();
             archiver.journal_exists(journalName, function (error, response) {
+            	progress("done with exists", error);
                 if (error) {
                 	$("#exists").val("");
                     alert("Error when fetching:" + JSON.stringify(response));
@@ -89,8 +93,10 @@
         }
         
         function createButtonPressed() {
+        	progress("starting to call create");
             var journalName = $("#journalName").val();
             archiver.journal_create(journalName, function (error, response) {
+            	progress("done with create", error);
                 if (error) {
                     alert("Error when fetching:" + JSON.stringify(response));
                     return;
@@ -101,10 +107,12 @@
         }
         
         function deleteButtonPressed() {
+        	progress("starting to call delete");
         	console.log("lastInfo: " + lastInfo);
         	console.log("lastSize: " + lastSize);
             var journalName = $("#journalName").val();
             archiver.journal_delete(journalName, lastInfo, lastSize, function (error, response) {
+            	progress("done with delete", error);
                 if (error) {
                     alert("Error when fetching:" + JSON.stringify(response));
                     return;
@@ -115,8 +123,10 @@
         }
         
         function infoButtonPressed() {
+        	progress("starting to call info");
             var journalName = $("#journalName").val();
             archiver.journal_info(journalName, function (error, response) {
+            	progress("done with info", error);
                 if (error) {
                     $("#header").val("");
                     $("#size").val("");
@@ -134,9 +144,10 @@
 
         var progressState = "";
 
-        function progress(state) {
+        function progress(state, error) {
             if (state) {
                 if (!progressState) $("#progress").fadeIn();
+                if (error) { state = state + "; error: " + error; }
                 $("#progress").text(state);
             } else {
                 $("#progress").fadeOut();
@@ -156,9 +167,11 @@
     <label for="header">Header: </label><input type="text" id="header" style="width:600px;" readonly/><label for="size">Size: </label><input type="text" id="size" style="width:50px;" readonly/><input type="button" onclick="infoButtonPressed()" value="Info"/><br/>
     <label for="currentContent">Current content:<br/></label><textarea id="currentContent" style="width:800px; height:500px; overflow: auto;" readonly></textarea><br/>
     <label for="newContent">New content:<br/></label><textarea id="newContent" style="width:800px; height:50px; overflow: auto;"></textarea><br/>
-    <a href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span>  <input type="button" onclick="appendButtonPressed()" value="Append to journal"/> <span id="progress"></span> <br/>
+    <input type="button" onclick="appendButtonPressed()" value="Append to journal"/><br/>
+    Progress: <span id="progress"></span><br/>
+    <a href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span><br/>
 </form>
-
+<hr>
 <b>Help</b>
 This tests Pointrel functionality for appending to a journal.
 Add some later versions by typing text in the newContent box at the bottom and then clicking "Append to journal".
