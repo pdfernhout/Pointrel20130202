@@ -13,8 +13,6 @@ define("conceptMap", [
     "dojo/touch",
     "Pointrel"], function (ready, domAttr, ioQuery, registry, gfx, move, Moveable, TextBox, Button, SimpleTextarea, Dialog, touch, Pointrel) {
 
-    ready(conceptMapPageLoaded);
-
    // Resources:
    // # http://dojotdg.zaffra.com/2009/03/dojo-now-with-drawing-tools-linux-journal-reprint/
 
@@ -64,7 +62,7 @@ define("conceptMap", [
         // Idea from: http://www.webdeveloper.com/forum/showthread.php?t=137518
         var hiddenDataElement = document.getElementById(fieldName);
         var hiddenDataString = hiddenDataElement.value;
-        if (hiddenDataString == "") {
+        if (hiddenDataString === "") {
             // console.log("First time loading");
             return null;
         } else {
@@ -104,7 +102,7 @@ define("conceptMap", [
         // Idea from: http://www.webdeveloper.com/forum/showthread.php?t=137518
         items = getHiddenJSONData("items");
 
-        if (items == null) {
+        if (items === null) {
             console.log("First time loading");
             items = [];
             requestLatestItemsToLoad();
@@ -524,7 +522,7 @@ define("conceptMap", [
         }
         console.log("items: ", items);
         setHiddenJSONData("items", items);
-        if (changesCount != 0) {
+        if (changesCount !== 0) {
             console.log("trying to go with changes...");
             var okToGo = confirm("You have unsaved changes");
             if (!okToGo) return;
@@ -632,7 +630,7 @@ define("conceptMap", [
                 line = word;
             }
         });
-        if (line != "") lines.push(line);
+        if (line !== "") lines.push(line);
         var startY = -((lines.length - 1) / 2) * lineHeight;
         if (lines.length == 6) startY += lineHeight;
         var y = startY;
@@ -644,6 +642,8 @@ define("conceptMap", [
             console.log(theTextItem);
             y += lineHeight;
         });
+        
+        ready(conceptMapPageLoaded);
     }
 
 });

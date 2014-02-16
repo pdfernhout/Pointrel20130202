@@ -7,33 +7,13 @@ function getParameter(paramName) {
 
     for (var i = 0; i < params.length; i++) {
         var val = params[i].split("=");
-        if (val[0] == paramName) {
+        if (val[0] === paramName) {
             return decodeURI(val[1]);
         }
     }
     return null;
 }
 
-/////
-
-function newStandardDocument(type, context, user, title, contentsType, contentsValue, parents, signature) {
-	return { 
-		"_id": newVersionUUID(type),
-		"timestamp": currentTimestamp(),
-		"type": type,
-		"context": context,
-		"user": user,
-		"title": title,
-		"contentsType": contentsType,
-		"contentsValue": contentsValue,
-		"parents": parents,
-		"signature": signature
-		};
-}
-
-function newVersionUUID(type) {
-	return "pce:" + type + ":uuid:" + jQuery.couch.newUUID(); // Math.uuidFast();
-}
 
 //////////// Timestamps
 
@@ -54,20 +34,24 @@ function ISODateString(d) {
         return n < 10 ? '0' + n : n;
     }
     function pad2(n){
-    	n = pad(n);
+        n = pad(n);
         return n < 100 ? '0' + n : n;
     }
     return d.getUTCFullYear() + '-' +
-    	pad(d.getUTCMonth() + 1) + '-' +
-    	pad(d.getUTCDate()) + 'T' +
-    	pad(d.getUTCHours()) + ':' +
-    	pad(d.getUTCMinutes()) + ':' +
-    	pad(d.getUTCSeconds()) + '.' +
-    	pad2(d.getUTCMilliseconds()) + 'Z';
+        pad(d.getUTCMonth() + 1) + '-' +
+        pad(d.getUTCDate()) + 'T' +
+        pad(d.getUTCHours()) + ':' +
+        pad(d.getUTCMinutes()) + ':' +
+        pad(d.getUTCSeconds()) + '.' +
+        pad2(d.getUTCMilliseconds()) + 'Z';
 }
 
 function currentTimestamp() {
 	return ISODateString(new Date());
+}
+
+function newVersionUUID(type) {
+	return "pce:" + type + ":uuid:" + jQuery.couch.newUUID(); // Math.uuidFast();
 }
 
 //from http://www.broofa.com/2008/09/javascript-uuid-function/
@@ -80,15 +64,15 @@ var CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.spl
 Math.uuidFastStandard = function() {
 	var chars = CHARS, uuid = new Array(36), rnd=0, r;
 	for (var i = 0; i < 36; i++) {
-	  if (i==8 || i==13 ||  i==18 || i==23) {
+	  if (i=== 8 || i === 13 ||  i === 18 || i === 23) {
 	    uuid[i] = '-';
-	  } else if (i==14) {
+	  } else if (i === 14) {
 	    uuid[i] = '4';
 	  } else {
-	    if (rnd <= 0x02) rnd = 0x2000000 + (Math.random()*0x1000000)|0;
+	    if (rnd <= 0x02) { rnd = 0x2000000 + (Math.random() * 0x1000000) | 0; }
 	    r = rnd & 0xf;
 	    rnd = rnd >> 4;
-	    uuid[i] = chars[(i == 19) ? (r & 0x3) | 0x8 : r];
+	    uuid[i] = chars[(i === 19) ? (r & 0x3) | 0x8 : r];
 	  }
 	}
 	return uuid.join('');
@@ -99,18 +83,34 @@ var CHARS2 = '0123456789abcdefghijklmnopqrstuvwxyz'.split('');
 Math.uuidFast = function() {
 	var chars = CHARS2, uuid = new Array(32), rnd=0, r;
 	for (var i = 0; i < 32; i++) {
-	  if (i==14) {
+	  if (i === 14) {
 	    uuid[i] = '4';
 	  } else {
-	    if (rnd <= 0x02) rnd = 0x2000000 + (Math.random()*0x1000000)|0;
+	    if (rnd <= 0x02) {rnd = 0x2000000 + (Math.random() * 0x1000000) | 0; }
 	    r = rnd & 0xf;
 	    rnd = rnd >> 4;
-	    uuid[i] = chars[(i == 19) ? (r & 0x3) | 0x8 : r];
+	    uuid[i] = chars[(i === 19) ? (r & 0x3) | 0x8 : r];
 	  }
 	}
 	return uuid.join('');
 };
 
+///
+
+function newStandardDocument(type, context, user, title, contentsType, contentsValue, parents, signature) {
+	return { 
+		"_id": newVersionUUID(type),
+		"timestamp": currentTimestamp(),
+		"type": type,
+		"context": context,
+		"user": user,
+		"title": title,
+		"contentsType": contentsType,
+		"contentsValue": contentsValue,
+		"parents": parents,
+		"signature": signature
+		};
+}
 
 /// encoding and decoding
 
