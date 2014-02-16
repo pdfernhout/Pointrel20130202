@@ -277,7 +277,7 @@ if ($operation == "put") {
 	$content = base64_decode($encodedContent);
 	
 	// TODO: Could check that it is valid JSON content
-	appendDataToJournalFile($fullJournalFileName, $content . "\n");
+	appendDataToJournalFile($fullJournalFileName, $content);
 	
 	$jsonToReturn = '"ADDED"';
 }
