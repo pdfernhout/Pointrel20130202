@@ -188,6 +188,8 @@ function PointrelArchiver(Pointrel, serverURL, credentials) {
     this.serverURL = serverURL;
     this.credentials = credentials;
 
+    // Resources
+    
     this.resource_add = function (originalDataString, extension, callback) {
         return Pointrel.resource_add(this.serverURL, this.credentials, originalDataString, extension, callback);
 
@@ -201,6 +203,8 @@ function PointrelArchiver(Pointrel, serverURL, credentials) {
     this.resource_publish = function (resourceURI, destinationURL, callback) {
         return Pointrel.resource_publish(this.serverURL, this.credentials, resourceURI, destinationURL, callback);
     };
+    
+    // Variables
 
     this.variable_new = function (variableName, newVersionURI, callback) {
         return Pointrel.variable_new(this.serverURL, this.credentials, variableName, newVersionURI, callback);
@@ -219,5 +223,31 @@ function PointrelArchiver(Pointrel, serverURL, credentials) {
 
     this.variable_delete = function (variableName, oldVersionURI, callback) {
         return Pointrel.variable_delete(this.serverURL, this.credentials, variableName, oldVersionURI, callback);
+    };
+    
+    // Journals
+    
+    this.journal_exists = function (journalName, callback) {
+        return Pointrel.journal_exists(this.serverURL, this.credentials, journalName, callback);
+    };
+    
+    this.journal_create = function (journalName, callback) {
+        return Pointrel.journal_create(this.serverURL, this.credentials, journalName, callback);
+    };
+    
+    this.journal_delete = function (journalName, header, size, callback) {
+        return Pointrel.journal_delete(this.serverURL, this.credentials, journalName, header, size, callback);
+    };
+    
+    this.journal_info = function (journalName, callback) {
+        return Pointrel.journal_info(this.serverURL, this.credentials, journalName, callback);
+    };
+    
+    this.journal_get = function (journalName, start, length, callback) {
+        return Pointrel.journal_get(this.serverURL, this.credentials, journalName, start, length, callback);
+    };
+    
+    this.journal_put = function (journalName, contentStringToAppend, callback) {
+        return Pointrel.journal_put(this.serverURL, this.credentials, journalName, contentStringToAppend, callback);
     };
 }

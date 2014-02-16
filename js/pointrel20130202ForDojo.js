@@ -276,7 +276,7 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
     	pointrel_journal_ajax("create", serverURL, credentials, journalName, callback, {});
     }
     
-    function pointrel_journal_delete(serverURL, credentials, journalName, callback, info, size) {
+    function pointrel_journal_delete(serverURL, credentials, journalName, info, size, callback) {
     	pointrel_journal_ajax("delete", serverURL, credentials, journalName, callback, {userSuppliedInfo: info, userSuppliedSize: size});
     }
     
@@ -284,12 +284,12 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
     	pointrel_journal_ajax("info", serverURL, credentials, journalName, callback, {});
     }
     
-    function pointrel_journal_get(serverURL, credentials, journalName, callback, start, length) {
+    function pointrel_journal_get(serverURL, credentials, journalName, start, length, callback) {
     	pointrel_journal_ajax("get", serverURL, credentials, journalName, callback, {start: start, length: length});
     }
     
-    function pointrel_journal_put(serverURL, credentials, journalName, callback, contentString) {
-    	var encodedContent = base64_encode(contentString);
+    function pointrel_journal_put(serverURL, credentials, journalName, contentStringToAppend, callback) {
+    	var encodedContent = base64_encode(contentStringToAppend);
     	// Maybe needed: headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
     	pointrel_journal_ajax("put", serverURL, credentials, journalName, callback, {encodedContent: encodedContent});
     }

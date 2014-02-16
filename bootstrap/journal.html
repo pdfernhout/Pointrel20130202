@@ -195,6 +195,22 @@
                 $("#editor").val(text);
             });
         }
+        
+        //////////
+        
+        function exists() {
+            var journalName = $("#journalName").val();
+            archiver.journal_exists(journalName, function (error, text) {
+                if (error) {
+                    alert("Error when fetching:" + JSON.stringify(text));
+                    return;
+                }
+                $("#editor").val(text);
+            });
+        }
+
+        
+        /////////////
 
         var progressState = "";
 
