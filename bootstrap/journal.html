@@ -95,7 +95,8 @@
         function createButtonPressed() {
         	progress("starting to call create");
             var journalName = $("#journalName").val();
-            archiver.journal_create(journalName, "freeform", function (error, response) {
+            var journalFormat = $("#journalFormat").val();
+            archiver.journal_create(journalName, journalFormat, function (error, response) {
             	progress("done with create", error);
                 if (error) {
                     alert("Error when fetching:" + JSON.stringify(response));
@@ -135,6 +136,7 @@
                 }
                 $("#header").val(response.result.header);
                 $("#size").val(response.result.size);
+                $("#journalFormat").val(JSON.parse(response.result.header).journalFormat);
                 lastInfo = response.result.header;
                 lastSize = response.result.size;
             });
@@ -159,14 +161,20 @@
 <body>
 <b>Pointrel journal support test</b><br/>
 <form accept-charset="UTF-8">
-    <label for="journalName">Journal: </label><input type="text" id="journalName" style="width:300px;" value="journal-test"/>
+    <label for="journalName">Journal name: </label><input type="text" id="journalName" style="width:300px;" value="journal-test"/>
+    <label for="journalFormat">format: </label><input type="text" id="journalFormat" style="width:100px;" value="freeform"/>
     <input type="button" onclick="latestButtonPressed()" value="Latest"/>
     <input type="button" onclick="createButtonPressed()" value="Create"/>
     <input type="button" onclick="deleteButtonPressed()" value="Delete"/><br/>
-    <label for="exists">Exists: </label><input type="text" id="exists" style="width:50px;" readonly/><input type="button" onclick="existsButtonPressed()" value="Exists"/><br/>
-    <label for="header">Header: </label><input type="text" id="header" style="width:600px;" readonly/><label for="size">Size: </label><input type="text" id="size" style="width:50px;" readonly/><input type="button" onclick="infoButtonPressed()" value="Info"/><br/>
-    <label for="currentContent">Current content:<br/></label><textarea id="currentContent" style="width:800px; height:500px; overflow: auto;" readonly></textarea><br/>
-    <label for="newContent">New content:<br/></label><textarea id="newContent" style="width:800px; height:50px; overflow: auto;"></textarea><br/>
+    <label for="exists">Exists: </label><input type="text" id="exists" style="width:50px;" readonly/>
+    <input type="button" onclick="existsButtonPressed()" value="Exists"/><br/>
+    <label for="header">Header: </label><input type="text" id="header" style="width:600px;" readonly/>
+    <label for="size">Size: </label><input type="text" id="size" style="width:50px;" readonly/>
+    <input type="button" onclick="infoButtonPressed()" value="Info"/><br/>
+    <label for="currentContent">Current content:<br/></label>
+    <textarea id="currentContent" style="width:800px; height:500px; overflow: auto;" readonly></textarea><br/>
+    <label for="newContent">New content:<br/></label>
+    <textarea id="newContent" style="width:800px; height:50px; overflow: auto;"></textarea><br/>
     <input type="button" onclick="appendButtonPressed()" value="Append to journal"/><br/>
     Progress: <span id="progress"></span><br/>
     <a href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span><br/>
