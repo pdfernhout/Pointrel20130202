@@ -90,109 +90,21 @@
             });
         }
 
-        function previous() {
-            var versionURI = $("#versionURI").val();
-            archiver.resource_get(versionURI, function (error, versionContents) {
-                console.log("in callback from resource_get");
-                if (error) {
-                    alert("Error happened on versionContents get");
-                    return;
-                }
-                console.log("versionContents:", versionContents);
-                var version = JSON.parse(versionContents);
-
-                var previousVersionURI = version.previousVersion;
-                if (previousVersionURI === "") {
-                    alert("No previous version");
-                    return;
-                }
-                archiver.resource_get(previousVersionURI, function (error, previousVersionContents) {
-                    console.log("in callback from resource_get");
-                    if (error) {
-                        alert("Error happened on previousVersionContents get");
-                        return;
-                    }
-                    console.log("previousVersionContents:", previousVersionContents);
-                    var previousVersion = JSON.parse(previousVersionContents);
-
-                    var textURI = previousVersion.value;
-                    archiver.resource_get(textURI, function (error, text) {
-                        console.log("in callback from resource_get");
-                        if (error) {
-                            alert("Error happened when getting text of previous version");
-                            return;
-                        }
-                        console.log("previousVersion:", previousVersion);
-                        $("#timestamp").val(previousVersion.timestamp);
-                        $("#userID").val(previousVersion.userID);
-                        $("#versionURI").val(previousVersionURI);
-                        $("#textURI").val(textURI);
-                        $("#editor").val(text);
-                        console.log("latest updating after:", previousVersion);
-                        currentVersionURI = previousVersionURI;
-                    });
-                });
-            });
-        }
-
-        function storeButtonPressed() {
+        function appendButtonPressed() {
             progress("starting to save");
-            variableName = $("#variableName").val();
-            updateURI();
-            var editorText = $("#editor").val();
-            console.log("editorText", editorText.length, editorText);
-            var editorTextAsUTF8 = encodeAsUTF8(editorText);
-            console.log("editorTextAsUTF8", editorTextAsUTF8.length, editorTextAsUTF8);
-            var textURI = archiver.resource_add(editorTextAsUTF8, "txt", function(error, status) {
-                // TODO: Improve the handling so PHP returns a better status
-                if (error && !startsWith(status.message, "File already exists:")) {
-                    alert("could not write resource: " + JSON.stringify(status) + " error: " + error);
-                    progress("failed as could not write resource");
-                    progress("");
-                    return
-                }
-                console.log("wrote", textURI);
-                progress("Saved text");
-                var timestamp = new Date().toISOString();
-                var userID = pointrel_authentication.getUserIDOrAnonymous();
-                var previousVersionURI = currentVersionURI;
-                var version = {timestamp: timestamp, userID: userID, previousVersion: previousVersionURI, value: textURI};
-                console.log("version:", version);
-                var versionAsString = JSON.stringify(version);
-                console.log("versionAsString:", versionAsString);
-                var newVersionURI = archiver.resource_add(encodeAsUTF8(versionAsString), "Version.json", function(error, status) {
-                    if (error) { alert("could not write new version: " + JSON.stringify(status)); return }
-                    console.log("wrote newVersionURI:", newVersionURI);
-                    progress("Saved version");
-                    archiver.variable_set(variableName, currentVersionURI, newVersionURI, function (error, status) {
-                        if (error) {
-                            alert("Error happened when trying to set variable: " + JSON.stringify(status));
-                            progress("failed as could not set variable");
-                            progress("");
-                            return;
-                        }
-                        progress("Updated variable");
-                        console.log("store updating before:", currentVersionURI);
-                        $("#timestamp").val(timestamp);
-                        $("#userID").val(userID);
-                        $("#versionURI").val(newVersionURI);
-                        $("#textURI").val(textURI);
-                        console.log("store updating after:", newVersionURI);
-                        currentVersionURI = newVersionURI;
-                        progress("");
-                    });
-                });
-            });
-        }
-
-        function fetch() {
-            var textURI = $("#textURI").val();
-            archiver.resource_get(textURI, function (error, text) {
+            var journalName = $("#journalName").val();
+            var newContent = $("#newContent").val();
+            
+            console.log("newContent", newContent.length, newContent);
+            var newContentAsUTF8 = encodeAsUTF8(newContent);
+            console.log("newContenttAsUTF8", newContentAsUTF8.length, newContentAsUTF8);
+            
+            archiver.journal_put(journalName, newContentAsUTF8, function (error, response) {
                 if (error) {
-                    alert("Error when fetching:" + JSON.stringify(text));
+                    alert("Error when fetching:" + JSON.stringify(response));
                     return;
                 }
-                $("#editor").val(text);
+                alert("Appended new content to journal: " + newContentAsUTF8);
             });
         }
         
@@ -278,7 +190,7 @@
     <label for="header">Header: </label><input type="text" id="header" style="width:600px;" readonly/><label for="size">Size: </label><input type="text" id="size" style="width:50px;" readonly/><input type="button" onclick="infoButtonPressed()" value="Info"/><br/>
     <label for="currentContent">Current content:<br/></label><textarea id="currentContent" style="width:800px; height:500px; overflow: auto;" readonly></textarea><br/>
     <label for="newContent">New content:<br/></label><textarea id="newContent" style="width:800px; height:50px; overflow: auto;"></textarea><br/>
-    <a href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span>  <input type="button" onclick="storeButtonPressed()" value="Append to journal"/> <span id="progress"></span> <br/>
+    <a href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span>  <input type="button" onclick="appendButtonPressed()" value="Append to journal"/> <span id="progress"></span> <br/>
 </form>
 
 <b>Help</b>
