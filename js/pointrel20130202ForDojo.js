@@ -251,6 +251,7 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
                 // alert("GET result: '" + data + "'");
                 // document.getElementById("retrieve").innerHTML = data;
                 if (data.status == "OK") {
+                	if (operation == "get") data.result = base64_decode(data.result);
                     if (typeof(callback) == "function") callback(null, data);
                 } else {
                     if (typeof(callback) == "function") callback("FAILED", data);

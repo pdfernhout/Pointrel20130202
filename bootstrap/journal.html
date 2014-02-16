@@ -44,52 +44,25 @@
             $("a#versionsLink").prop("href", versionsAppBaseURL + queryPart);
         }
 
-        function latest(ignoreMissing) {
-            variableName = $("#variableName").val();
-            updateURI();
-            archiver.variable_get(variableName, function (error, variableGetResult) {
-                console.log("in callback from variable_get");
+        function latestButtonPressed() {
+            progress("starting to load");
+            var journalName = $("#journalName").val();
+            
+            // Just get everything for now; could optimize later
+            var start = 0;
+            var length = lastSize;
+            
+            console.log("start", start, "size", size);
+
+            archiver.journal_get(journalName, start, length, function (error, response) {
                 if (error) {
-                    currentVersionURI = "";
-                    $("#timestamp").val("");
-                    $("#userID").val("");
-                    $("#versionURI").val("");
-                    // $("#textURI").val("");
-                    $("#editor").val("");
-                    var errorMessage = "Error happened on variable get; variable name may be new? Result: " + variableGetResult.message;
-                    console.log(errorMessage);
-                    if (!ignoreMissing) alert(errorMessage);
+                    alert("Error when fetching:" + JSON.stringify(response));
                     return;
                 }
-                var versionURI = variableGetResult.currentValue;
-                archiver.resource_get(versionURI, function (error, versionContents) {
-                    console.log("in callback from resource_get");
-                    if (error) {
-                        alert("Error happened on versionContents get");
-                        return;
-                    }
-                    console.log("versionContents:", versionContents);
-                    var version = JSON.parse(versionContents);
-                    var textURI = version.value;
-                    archiver.resource_get(textURI, function (error, text) {
-                        console.log("in callback from resource_get");
-                        if (error) {
-                            alert("Error happened when getting text of version");
-                            return;
-                        }
-                        console.log("latest updating before:", versionURI);
-                        $("#timestamp").val(version.timestamp);
-                        $("#userID").val(version.userID);
-                        $("#versionURI").val(versionURI);
-                        $("#textURI").val(textURI);
-                        $("#editor").val(text);
-                        console.log("latest updating after:", versionURI);
-                        currentVersionURI = versionURI;
-                    });
-                });
+                $("#currentContent").val(response.result);
             });
         }
-
+        
         function appendButtonPressed() {
             progress("starting to save");
             var journalName = $("#journalName").val();
