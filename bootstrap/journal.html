@@ -200,16 +200,58 @@
         
         function existsButtonPressed() {
             var journalName = $("#journalName").val();
-            archiver.journal_exists(journalName, function (error, text) {
+            archiver.journal_exists(journalName, function (error, response) {
                 if (error) {
-                    alert("Error when fetching:" + JSON.stringify(text));
+                    alert("Error when fetching:" + JSON.stringify(response));
                     return;
                 }
-                $("#editor").val(text);
+                $("#exists").val(response.exists);
+            });
+        }
+        
+        function createButtonPressed() {
+            var journalName = $("#journalName").val();
+            archiver.journal_create(journalName, function (error, response) {
+                if (error) {
+                    alert("Error when fetching:" + JSON.stringify(response));
+                    return;
+                }
+                $("#info").val(response.result);
+                alert("Created journal: " + journalName);
+            });
+        }
+        
+        var lastInfo = "";
+        var lastSize = 0;
+        
+        function deleteButtonPressed() {
+        	console.log("lastInfo: " + lastInfo);
+        	console.log("lastSize: " + lastSize);
+            var journalName = $("#journalName").val();
+            archiver.journal_delete(journalName, lastInfo, lastSize, function (error, response) {
+                if (error) {
+                    alert("Error when fetching:" + JSON.stringify(response));
+                    return;
+                }
+                $("#info").val(response.result);
+                alert("Deleted journal: " + journalName);
+            });
+        }
+        
+        function infoButtonPressed() {
+            var journalName = $("#journalName").val();
+            archiver.journal_info(journalName, function (error, response) {
+                if (error) {
+                    alert("Error when fetching:" + JSON.stringify(response));
+                    return;
+                }
+                $("#header").val(response.result.header);
+                $("#size").val(response.result.size);
+                lastInfo = response.result.header;
+                lastSize = response.result.size;
             });
         }
 
-        
         /////////////
 
         var progressState = "";
@@ -232,8 +274,8 @@
     <input type="button" onclick="latestButtonPressed()" value="Latest"/>
     <input type="button" onclick="createButtonPressed()" value="Create"/>
     <input type="button" onclick="deleteButtonPressed()" value="Delete"/><br/>
-    <label for="exists">Exists: </label><input type="text" id="exists" style="width:200px;" readonly/><input type="button" onclick="existsButtonPressed()" value="Exists"/><br/>
-    <label for="infoButtonPressed()">Info: </label><input type="text" id="infoButtonPressed()" style="width:200px;" readonly/><input type="button" onclick="infoButtonPressed()" value="Info"/><br/>
+    <label for="exists">Exists: </label><input type="text" id="exists" style="width:50px;" readonly/><input type="button" onclick="existsButtonPressed()" value="Exists"/><br/>
+    <label for="header">Header: </label><input type="text" id="header" style="width:600px;" readonly/><label for="size">Size: </label><input type="text" id="size" style="width:50px;" readonly/><input type="button" onclick="infoButtonPressed()" value="Info"/><br/>
     <label for="currentContent">Current content:<br/></label><textarea id="currentContent" style="width:800px; height:500px; overflow: auto;" readonly></textarea><br/>
     <label for="newContent">New content:<br/></label><textarea id="newContent" style="width:800px; height:50px; overflow: auto;"></textarea><br/>
     <a href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span>  <input type="button" onclick="storeButtonPressed()" value="Append to journal"/> <span id="progress"></span> <br/>

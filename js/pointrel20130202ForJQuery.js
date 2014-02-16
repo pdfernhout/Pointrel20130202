@@ -265,7 +265,11 @@ var Pointrel = (function () {
         
         // Build merged content with extra fields if needed
         var content = {"journalName": journalName, "operation": operation, "userID": pointrel_authentication.userIDFromCredentials(credentials)};
-        for (var attributeName in extra) {content[attributeName] = extra[attributeName]; }
+        for (var attributeName in extra) {
+            if (extra.hasOwnProperty(attributeName)) { content[attributeName] = extra[attributeName]; }
+        }
+        
+        console.log("content: ", content);
 
         var request = {
                 type: "POST",
@@ -306,8 +310,8 @@ var Pointrel = (function () {
     	pointrel_journal_ajax("create", serverURL, credentials, journalName, callback, {});
     }
     
-    function pointrel_journal_delete(serverURL, credentials, journalName, info, size, callback) {
-    	pointrel_journal_ajax("delete", serverURL, credentials, journalName, callback, {userSuppliedInfo: info, userSuppliedSize: size});
+    function pointrel_journal_delete(serverURL, credentials, journalName, header, size, callback) {
+    	pointrel_journal_ajax("delete", serverURL, credentials, journalName, callback, {userSuppliedHeader: header, userSuppliedSize: size});
     }
     
     function pointrel_journal_info(serverURL, credentials, journalName, callback) {

@@ -115,9 +115,11 @@ $jsonToReturn = '"ERROR"';
 if ($operation == "exists") {
 	if (file_exists($fullJournalFileName)) {
 		// TODO: Can't replace this one because it has OK
-		exit('{"status": "OK", "message": "Journal file exists: ' . $shortFileNameForJournalName . '"}');
+		exit('{"status": "OK", "exists": true, "message": "Journal file exists: ' . $shortFileNameForJournalName . '"}');
+	} else {
+		exit('{"status": "OK", "exists": false, "message": "Journal file does not exist: ' . $shortFileNameForJournalName . '"}');
 	}
-	exitWithJSONStatusMessage("Journal file does not exist: '" . $shortFileNameForJournalName . "'", NO_FAILURE_HEADER, 0);
+	// exitWithJSONStatusMessage("Journal file does not exist: '" . $shortFileNameForJournalName . "'", NO_FAILURE_HEADER, 0);
 }
 
 // operation: create
@@ -146,7 +148,16 @@ if ($operation == "delete") {
 	
 	// Check that header info and size are correct; header must be in canonical form as supplied
 	$userSuppliedHeader = $_POST['userSuppliedHeader'];
+	
+	if (empty($userSuppliedHeader)) {
+		exitWithJSONStatusMessage("No userSuppliedHeader was specified", NO_FAILURE_HEADER, 400);
+	}
+	
 	$userSuppliedSize = $_POST['userSuppliedSize'];
+	
+	if ($userSuppliedSize == "") {
+		exitWithJSONStatusMessage("No userSuppliedSize was specified", NO_FAILURE_HEADER, 400);
+	}
 	
 	$fh = fopen($fullJournalFileName, 'r+b');
 	if (flock($fh, LOCK_EX)) {
@@ -154,14 +165,14 @@ if ($operation == "delete") {
 		$size = $stat['size'];
 		if ($size != $userSuppliedSize) {
 			fclose($fh);
-			exitWithJSONStatusMessage("Journal size: $size was not as expected: $userSuppliedSize", NO_FAILURE_HEADER, 409);
+			exitWithJSONStatusMessage("Current journal size: $size was not as supplied: $userSuppliedSize", NO_FAILURE_HEADER, 409);
 		}
 		
 		$firstLineHeader = fgets($fh);
 		$firstLineHeader = rtrim($firstLineHeader);
 		if ($firstLineHeader != $userSuppliedHeader) {
 			fclose($fh);
-			exitWithJSONStatusMessage("Journal header: $firstLineHeader was not as expected: $userSuppliedHeader", NO_FAILURE_HEADER, 409);
+			exitWithJSONStatusMessage("Current journal header: $firstLineHeader was not as supplied: $userSuppliedHeader", NO_FAILURE_HEADER, 409);
 		}
 		fseek($fh, 0);
 		// Temporarily set value to delete to prevent other process updating it while try to unlink
