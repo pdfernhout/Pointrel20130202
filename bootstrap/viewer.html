@@ -26,6 +26,7 @@
 
         var currentVersionURI = "";
         var variableName = "editor-test";
+        var viewUsingMarkdown = true;
 
         var lastProcessedText = "";
 
@@ -86,7 +87,7 @@
             return text.replace(exp, resolvePointrelURL);
         }
 
-        function process(text) {
+        function processAsMarkdown(text) {
             // Seems like jQuery is handling this anyway?
             // return $('<div/>').text(text).html();
             // text = text.replace(/\n/g, '<br />');
@@ -118,8 +119,25 @@
             lastProcessedText = text;
             return text;
         }
+        
+        function process(text) {
+        	if (viewUsingMarkdown) {return processAsMarkdown(text);}
+            lastProcessedText = text;
+            
+            // Seems like jQuery is handling this anyway?
+            text = $('<div/>').text(text).html();
+            // text = text.replace(/\n/g, '<br />');
+            text = "<pre>\n" + text + "\n</pre>";
+            return text;
+        }
 
-        function latest() {
+        function latest(processingType) {
+        	if (processingType === "plain") { 
+        		viewUsingMarkdown = false;
+        	} else {
+        		viewUsingMarkdown = true;
+        	}
+        	
             $("#documentName").text(variableName);
             // Special handling if it is a resource instead of a variable
             if (startsWith(variableName, "pointrel://")) {
@@ -176,13 +194,17 @@
                 $("#documentContent").html(process(text));
             });
         }
+        
+        function publishedTo(destinationURL) {
+        	$("a#publishLink").prop("href", "../../pointrel-www/" + destinationURL);
+        }
 
         // TODO: Need to deal with embedded image resources somehow, because they can't be fetched from the server code as position is wrong, and want them to be static anyway
         function publish() {
-            var answer = confirm("Publish resource? " + variableName);
+            var answer = confirm("Publish resource with markdown formatting? " + variableName);
             if (!answer) return;
 
-            console.log("about to publish:", variableName);
+            console.log("about to publish with markdown formatting:", variableName);
             var contentToPublish = '<html>\n<head>\n<meta http-equiv="Content-Type" content="text/html; charset=utf-8">\n</head>\n<body>\n' + lastProcessedText + "\n</body>\n</html>";
 
             var newResourceURI = archiver.resource_add(encodeAsUTF8(contentToPublish), "html", function(error, status) {
@@ -197,15 +219,46 @@
                         return;
                     }
                     console.log("published resource:", destinationURL);
+                    publishedTo(destinationURL);
                 });
             });
+        }
+            
+        function publishPlain() {
+            var answer = confirm("Publish resource with just text as-is? " + variableName);
+            if (!answer) return;
+
+            console.log("about to publish with just text as-is:", variableName);
+            var contentToPublish = lastProcessedText;
+
+            var newResourceURI = archiver.resource_add(encodeAsUTF8(contentToPublish), "html", function(error, status) {
+                // TODO: Ignoring error for now as may already exist
+                // if (error) { alert("could not write new resource: " + JSON.stringify(status)); return }
+                console.log("wrote newResourceURI:", newResourceURI);
+                var destinationURL = variableName;
+                archiver.resource_publish(newResourceURI, destinationURL, function (error, status) {
+                    if (error) {
+                        alert("Error happened when trying to publish resource: " + JSON.stringify(status));
+                        return;
+                    }
+                    console.log("published resource:", destinationURL);
+                    publishedTo(destinationURL);
+                });
+            });
+
         }
     </script>
 </head>
 <body>
 Document: <b id="documentName">documentName</b> Time: <b id="timestamp">Timestamp</b> User: <b id="userID">userID</b><br/>
 <div id="refreshAndEdit">
-<input type="button" onclick="latest()" value="Refresh"/> <a id="editLink" href="editor.html?documentName=test">edit</a> <a id="versionsLink" href="">versions</a> <input type="button" onclick="publish()" value="Publish"/> <br/>
+<input type="button" onclick="latest()" value="Refresh with markdown"/> 
+<input type="button" onclick="latest('plain')" value="Refresh as plain text"/> 
+<a id="editLink" href="editor.html?documentName=test">edit</a> 
+<a id="versionsLink" href="">versions</a> 
+<a id="publishLink" href="">published to</a>
+<input type="button" onclick="publish()" value="Publish with markdown"/> 
+<input type="button" onclick="publishPlain()" value="Publish plain text"/> <br/>
 </div>
 <hr/>
 <div id="documentContent"></div>
