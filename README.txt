@@ -51,4 +51,13 @@ You should also make sure there is a .htaccess file in the pointrel-data directo
 
 That .htaccess file is needed to prevent people from reading resources directly or running any uploaded scripts like .php files. You may need a different sort of file if you are running a different sort of web server like lighttpd.
 
+If your site is public or otherwise allows use by non-trusted users, you should also have a .htaccess file like so
+in the /yoursite/pointrel-www directory to prevent executing uploaded cgi scripts using Apache. You might need another approach with a different web server.
+
+  # disable any cgi in this directory or subdirectories
+  <Files *>
+      SetHandler default-handler
+  </Files>
+
+
 You must also enable JavaScript in your web browser to use the applications.

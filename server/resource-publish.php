@@ -58,6 +58,18 @@ if (strpos($desiredPath, $baseDir)) {
     exitWithJSONStatusMessage('File has an invalid path: "' . $desiredPath . '"', NO_FAILURE_HEADER, 404);
 }
 
+// Overwritting .htaccess and .htpasswd should not be possible if these files are owned by root or a another webserver owner, but adding this as extra check
+
+// Disable overwriting the .htaccess file
+if (endsWith($desiredPath, ".htaccess")) {
+	exitWithJSONStatusMessage('File has an invalid path (2): "' . $desiredPath . '"', NO_FAILURE_HEADER, 404);
+}
+
+// Disable overwriting the .htpasswd file
+if (endsWith($desiredPath, ".htpasswd")) {
+	exitWithJSONStatusMessage('File has an invalid path (3): "' . $desiredPath . '"', NO_FAILURE_HEADER, 404);
+}
+
 if (empty($desiredPath)) {
     exitWithJSONStatusMessage("The desiredPath '$desiredPath' is empty for destinationFileName '$destinationFileName' with baseDir '$baseDir'", NO_FAILURE_HEADER, 400);
 }
