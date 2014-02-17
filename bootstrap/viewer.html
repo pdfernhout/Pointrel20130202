@@ -213,9 +213,9 @@
                 console.log("wrote newResourceURI:", newResourceURI);
                 var output = variableName.substr(0, variableName.lastIndexOf('.')) || variableName;
                 var destinationURL = output + ".html";
-                archiver.resource_publish(newResourceURI, destinationURL, function (error, status) {
-                    if (error) {
-                        alert("Error happened when trying to publish resource: " + JSON.stringify(status));
+                archiver.resource_publish(newResourceURI, destinationURL, function (error, response) {
+                    if (error || response.status == "FAIL") {
+                        alert("Error happened when trying to publish resource: " + JSON.stringify(response));
                         return;
                     }
                     console.log("published resource:", destinationURL);
@@ -230,15 +230,22 @@
 
             console.log("about to publish with just text as-is:", variableName);
             var contentToPublish = lastProcessedText;
+            
+            var extension = "";
+            var lastDot = variableName.lastIndexOf('.');
+            if (lastDot !== -1) {
+            	extension = variableName.substr(lastDot + 1);
+            }
+            if (extension === "") {extension = "html";}
 
-            var newResourceURI = archiver.resource_add(encodeAsUTF8(contentToPublish), "html", function(error, status) {
+            var newResourceURI = archiver.resource_add(encodeAsUTF8(contentToPublish), extension, function(error, status) {
                 // TODO: Ignoring error for now as may already exist
                 // if (error) { alert("could not write new resource: " + JSON.stringify(status)); return }
                 console.log("wrote newResourceURI:", newResourceURI);
                 var destinationURL = variableName;
-                archiver.resource_publish(newResourceURI, destinationURL, function (error, status) {
-                    if (error) {
-                        alert("Error happened when trying to publish resource: " + JSON.stringify(status));
+                archiver.resource_publish(newResourceURI, destinationURL, function (error, response) {
+                    if (error || response.status == "FAIL") {
+                        alert("Error happened when trying to publish resource: " + JSON.stringify(response));
                         return;
                     }
                     console.log("published resource:", destinationURL);
