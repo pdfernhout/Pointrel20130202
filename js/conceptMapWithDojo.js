@@ -641,9 +641,8 @@ define("conceptMap", [
                 setFill("black");
             console.log(theTextItem);
             y += lineHeight;
-        });
-        
-        ready(conceptMapPageLoaded);
+        }); 
     }
-
+    
+    ready(conceptMapPageLoaded);
 });
