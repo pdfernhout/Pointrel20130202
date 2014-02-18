@@ -15,6 +15,16 @@
         }
     </style>
 
+    <script type="text/javascript" src="../libs/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="../libs/ace-src/ace.js"></script>
+    <script type="text/javascript" src="../libs/sha256.js"></script>
+    <script type="text/javascript" src="../js/utils_common.js"></script>
+    <script type="text/javascript" src="../libs/jstorage.js"></script>
+    <script type="text/javascript" src="../js/pointrel_authentication.js"></script>
+    <script type="text/javascript" src="../js/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="../js/pointrel_utility_classes.js"></script>
+
+    <!-- Use these when bootstrapping to pointrel-www
     <script type="text/javascript" src="../pointrel-app/libs/jquery-1.9.1.min.js"></script>
     <script type="text/javascript" src="../pointrel-app/libs/ace-src/ace.js"></script>
     <script type="text/javascript" src="../pointrel-app/libs/sha256.js"></script>
@@ -23,9 +33,24 @@
     <script type="text/javascript" src="../pointrel-app/js/pointrel_authentication.js"></script>
     <script type="text/javascript" src="../pointrel-app/js/pointrel20130202ForJQuery.js"></script>
     <script type="text/javascript" src="../pointrel-app/js/pointrel_utility_classes.js"></script>
-
+    -->
+    
     <script type="text/javascript">
-        var archiveURL = "../pointrel-app/server/";
+    	var editorAppBaseURL = "new-editor.html";
+    	var viewerAppBaseURL = "viewer.html";
+    	var versionsAppBaseURL = "versions.html";
+    	var loginAppBaseURL = "login.html";
+        var archiveURL = "../server/";
+        
+        // Used these instead if bootstrapping editor further in pointrel-www directory
+    	// var editorAppBaseURL = "new-editor.html";
+    	// var viewerAppBaseURL = "../pointrel-app/bootstrap/viewer.html";
+    	// var versionsAppBaseURL = "../pointrel-app/bootstrap/versions.html";
+        // var loginAppBaseURL = "../pointrel-app/bootstrap/login.html";
+        // var archiveURL = "../pointrel-app/server/";
+                
+        $("a#loginLink").prop("href", loginAppBaseURL);
+        
         var credentials = pointrel_authentication.getUserIDOrAnonymous();
         var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
 
@@ -48,9 +73,6 @@
         }
 
         function updateURI() {
-            var editorAppBaseURL = "new-editor.html";
-            var viewerAppBaseURL = "../pointrel-app/bootstrap/viewer.html";
-            var versionsAppBaseURL = "../pointrel-app/bootstrap/versions.html";
             var queryPart = "?documentName=" + encodeURI(variableName);
             $("a#editorLink").prop("href", editorAppBaseURL + queryPart);
             $("a#viewerLink").prop("href", viewerAppBaseURL + queryPart);
@@ -379,6 +401,6 @@ console.log("Test");
 10 + 20;
 </div>
 <input type="button" id="button_sample" onclick="loadSampleData();" value="Load example code"/>
-<a href="../pointrel-app/bootstrap/login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span>  <input type="button" onclick="store()" value="Store new version of text"/><br/>
+<a id="loginURL" href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span>  <input type="button" onclick="store()" value="Store new version of text"/><br/>
 </body>
 </html>
