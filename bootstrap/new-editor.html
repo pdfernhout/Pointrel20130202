@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset='utf-8'>
+    <title>Pointrel content editor</title>
+
+    <style type="text/css" media="screen">
+        #editor {
+            height: 575px;
+            width: 800px;
+            border: 1px solid #DDD;
+            border-radius: 4px;
+            border-bottom-right-radius: 0;
+            margin-top: 5px;
+        }
+    </style>
+
+    <script type="text/javascript" src="../pointrel-app/libs/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="../pointrel-app/libs/ace-src/ace.js"></script>
+    <script type="text/javascript" src="../pointrel-app/libs/sha256.js"></script>
+    <script type="text/javascript" src="../pointrel-app/js/utils_common.js"></script>
+    <script type="text/javascript" src="../pointrel-app/libs/jstorage.js"></script>
+    <script type="text/javascript" src="../pointrel-app/js/pointrel_authentication.js"></script>
+    <script type="text/javascript" src="../pointrel-app/js/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="../pointrel-app/js/pointrel_utility_classes.js"></script>
+
+    <script type="text/javascript">
+        var archiveURL = "../pointrel-app/server/";
+        var credentials = pointrel_authentication.getUserIDOrAnonymous();
+        var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
+
+        var currentVersionURI = "";
+        var variableName = "code-editor-test.js";
+
+        $(document).ready(startEditor);
+        $(document).ready(pointrel_authentication.loginPageLoaded);
+        $(document).ready(loadLatestFromParameter);
+
+        function loadLatestFromParameter() {
+            var chosenVariable = getParameter("documentName");
+            if (chosenVariable) {
+                console.log("Read document from: " + chosenVariable);
+                variableName = chosenVariable;
+                $("#variableName").val(chosenVariable);
+                latest("ignoreMissing");
+            }
+            updateURI();
+        }
+
+        function updateURI() {
+            var editorAppBaseURL = "new-editor.html";
+            var viewerAppBaseURL = "../pointrel-app/bootstrap/viewer.html";
+            var versionsAppBaseURL = "../pointrel-app/bootstrap/versions.html";
+            var queryPart = "?documentName=" + encodeURI(variableName);
+            $("a#editorLink").prop("href", editorAppBaseURL + queryPart);
+            $("a#viewerLink").prop("href", viewerAppBaseURL + queryPart);
+            $("a#versionsLink").prop("href", versionsAppBaseURL + queryPart);
+            $("a#publishLink").prop("href", variableName);
+            setEditorMode();
+        }
+
+        function latest(ignoreMissing) {
+            variableName = $("#variableName").val();
+            updateURI();
+            archiver.variable_get(variableName, function (error, variableGetResult) {
+                console.log("in callback from variable_get");
+                if (error) {
+                    currentVersionURI = "";
+                    $("#timestamp").val("");
+                    $("#userID").val("");
+                    $("#versionURI").val("");
+                    // $("#textURI").val("");
+                    editor.setValue("");
+                    var errorMessage = "Error happened on variable get; variable name may be new? Result: " + variableGetResult.message;
+                    console.log(errorMessage);
+                    if (!ignoreMissing) alert(errorMessage);
+                    return;
+                }
+                var versionURI = variableGetResult.currentValue;
+                archiver.resource_get(versionURI, function (error, versionContents) {
+                    console.log("in callback from resource_get");
+                    if (error) {
+                        alert("Error happened on versionContents get");
+                        return;
+                    }
+                    console.log("versionContents:", versionContents);
+                    var version = JSON.parse(versionContents);
+                    var textURI = version.value;
+                    archiver.resource_get(textURI, function (error, text) {
+                        console.log("in callback from resource_get");
+                        if (error) {
+                            alert("Error happened when getting text of version");
+                            return;
+                        }
+                        console.log("latest updating before:", versionURI);
+                        $("#timestamp").val(version.timestamp);
+                        $("#userID").val(version.userID);
+                        $("#versionURI").val(versionURI);
+                        $("#textURI").val(textURI);
+                        resetEditorForLoadedData(text);
+                        console.log("latest updating after:", versionURI);
+                        currentVersionURI = versionURI;
+                    });
+                });
+            });
+        }
+
+        function previous() {
+            var versionURI = $("#versionURI").val();
+            archiver.resource_get(versionURI, function (error, versionContents) {
+                console.log("in callback from resource_get");
+                if (error) {
+                    alert("Error happened on versionContents get");
+                    return;
+                }
+                console.log("versionContents:", versionContents);
+                var version = JSON.parse(versionContents);
+
+                var previousVersionURI = version.previousVersion;
+                if (previousVersionURI === "") {
+                    alert("No previous version");
+                    return;
+                }
+                archiver.resource_get(previousVersionURI, function (error, previousVersionContents) {
+                    console.log("in callback from resource_get");
+                    if (error) {
+                        alert("Error happened on previousVersionContents get");
+                        return;
+                    }
+                    console.log("previousVersionContents:", previousVersionContents);
+                    var previousVersion = JSON.parse(previousVersionContents);
+
+                    var textURI = previousVersion.value;
+                    archiver.resource_get(textURI, function (error, text) {
+                        console.log("in callback from resource_get");
+                        if (error) {
+                            alert("Error happened when getting text of previous version");
+                            return;
+                        }
+                        console.log("previousVersion:", previousVersion);
+                        $("#timestamp").val(previousVersion.timestamp);
+                        $("#userID").val(previousVersion.userID);
+                        $("#versionURI").val(previousVersionURI);
+                        $("#textURI").val(textURI);
+                        resetEditorForLoadedData(text);
+                        console.log("latest updating after:", previousVersion);
+                        currentVersionURI = previousVersionURI;
+                    });
+                });
+            });
+        }
+
+        function store() {
+            variableName = $("#variableName").val();
+            updateURI();
+            var editorText = editor.getValue();
+            console.log("editorText", editorText.length, editorText);
+            var editorTextAsUTF8 = encodeAsUTF8(editorText);
+            console.log("editorTextAsUTF8", editorTextAsUTF8.length, editorTextAsUTF8);
+            var extension = extensionForVariableName();
+            var textURI = archiver.resource_add(editorTextAsUTF8, extension, function(error, status) {
+                // TODO: Improve the handling so PHP returns a better status
+                if (error && !startsWith(status.message, "File already exists:")) {
+                    alert("could not write resource: " + JSON.stringify(status) + " error: " + error);
+                    return
+                }
+                console.log("wrote", textURI);
+                var timestamp = new Date().toISOString();
+                var userID = pointrel_authentication.getUserIDOrAnonymous();
+                var previousVersionURI = currentVersionURI;
+                var version = {timestamp: timestamp, userID: userID, previousVersion: previousVersionURI, value: textURI};
+                console.log("version:", version);
+                var versionAsString = JSON.stringify(version);
+                console.log("versionAsString:", versionAsString);
+                var newVersionURI = archiver.resource_add(encodeAsUTF8(versionAsString), "Version.json", function(error, status) {
+                    if (error) { alert("could not write new version: " + JSON.stringify(status)); return }
+                    console.log("wrote newVersionURI:", newVersionURI);
+                    archiver.variable_set(variableName, currentVersionURI, newVersionURI, function (error, status) {
+                        if (error) {
+                            alert("Error happened when trying to set variable: " + JSON.stringify(status));
+                            return;
+                        }
+                        console.log("store updating before:", currentVersionURI);
+                        $("#timestamp").val(timestamp);
+                        $("#userID").val(userID);
+                        $("#versionURI").val(newVersionURI);
+                        $("#textURI").val(textURI);
+                        console.log("store updating after:", newVersionURI);
+                        currentVersionURI = newVersionURI;
+                    });
+                });
+            });
+        }
+
+        function fetch() {
+            var textURI = $("#textURI").val();
+            archiver.resource_get(textURI, function (error, text) {
+                if (error) {
+                    alert("Error when fetching:" + JSON.stringify(text));
+                    return;
+                }
+                resetEditorForLoadedData(text);
+            });
+        }
+
+
+        /////////////////// Code editor part
+
+        function resetEditorForLoadedData(text) {
+            editor.setValue(text);
+            editor.clearSelection();
+            editor.moveCursorTo(0, 0);
+        }
+
+        function startEditor() {
+            // Needed when using CDN to host ace
+            //var path = "../libs/ace-worker";
+            //ace.config.set("workerPath", path);
+
+            // Ace editor source available from: https://github.com/ajaxorg/ace-builds/
+            editor = ace.edit("editor");
+
+            // Use a hidden field to save editor content
+
+            editor.setTheme("ace/theme/chrome");
+            
+            setEditorMode();
+
+            // use a hidden field to save editor content
+            editorSaved = document.getElementById("editorSaved");
+
+            if (editorSaved.value.length > 0) {
+                resetEditorForLoadedData(editorSaved.value);
+            } else {
+                resetEditorForLoadedData("");
+            }
+        }
+        
+        function setEditorMode() {
+            if (!editor) return;
+            
+            var extension = extensionForVariableName();
+            if (extension === "") extension = "html";
+            
+            // Build a map of extensions to editor types
+            var supportedTypes = "coffee css html javascript/js json less lisp markdown/md php sh tex text xml xquery yaml".split(" ");
+            var map = {}
+            for (var index in supportedTypes) {
+                var aliases = supportedTypes[index].split("/");
+                for (var aliasIndex in aliases) {
+                    map[aliases[aliasIndex]] = aliases[0];
+                }
+            }
+            
+            var mode = "html";
+            if (map.hasOwnProperty(extension)) mode = map[extension];
+            editor.getSession().setMode("ace/mode/" + mode);
+            $("#editorMode").html('').append("editor mode: " + mode);
+        }
+
+        function saveInput() {
+            var allTheCode = editor.getValue();
+            editorSaved.value = allTheCode;
+            return allTheCode;
+        }
+
+        function control_run_main() {
+            var code = saveInput();
+            // var code = editor.getValue();
+            // console.log("run pressed: ", code);
+            var result = eval(code);
+            // console.log("eval result", result);
+            try {
+                main();
+            } catch (err) {
+                console.log("Exception running main", err);
+            }
+            // console.log("done with run");
+        }
+
+        function control_run_selected() {
+            saveInput();
+            var code = editor.session.getTextRange(editor.getSelectionRange());
+            // console.log("evaluate pressed: ", code);
+            var result = eval(code);
+            console.log("eval result:", result);
+            // console.log("done with run");
+        }
+
+        function control_undo() {
+            editor.getSession().getUndoManager().undo();
+            //updateButtons();
+        }
+
+        function control_redo() {
+            editor.getSession().getUndoManager().redo();
+            //updateButtons();
+        }
+
+        function updateButtons() {
+            document.getElementById("button_undo").disabled = !editor.getSession().getUndoManager().hasUndo();
+            document.getElementById("button_redo").disabled = !editor.getSession().getUndoManager().hasRedo();
+        }
+        //updateButtons();
+
+        // Makes the editor too slow
+        //editor.getSession().on('change', function(e) {
+        //    updateButtons();
+        //});
+
+    function loadSampleData() {
+        if (window.confirm('Load example code?')) {
+            resetEditorForLoadedData($('#sampleData').text());
+        }
+    }
+    
+    function extensionForVariableName() {
+        var extension = "";
+        var lastDot = variableName.lastIndexOf('.');
+        if (lastDot !== -1) {
+            extension = variableName.substr(lastDot + 1);
+        }
+        if (extension === "") {extension = "html";}
+        return extension;
+    }
+    
+    function publish() {
+        var newResourceURI = $("#textURI").val();
+        var answer = confirm("Publish resource using current saved version? " + variableName);
+        if (!answer) return;
+
+        console.log("about to publish using last version", variableName, newResourceURI);
+        
+        var extension = extensionForVariableName();
+
+        var destinationURL = variableName;
+        archiver.resource_publish(newResourceURI, destinationURL, function (error, response) {
+            if (error || response.status == "FAIL") {
+                alert("Error happened when trying to publish resource: " + JSON.stringify(response));
+                return;
+            }
+            console.log("published resource:", destinationURL);
+        });
+    }
+
+    </script>
+</head>
+<body>
+<b>Pointrel content editor</b><br/>
+<label for="variableName">Variable: </label><input type="text" id="variableName" style="width:300px;" value="code-editor-test.js"/>
+<input type="button" onclick="latest()" value="Latest"/>
+<a id="editorLink" href="">editor</a> <a id="viewerLink" href="">viewer</a> <a id="versionsLink" href="">versions</a><br/>
+<label for="timestamp">Time: </label><input type="text" id="timestamp" style="width:300px;" readonly/>
+<label for="userID">User: </label><input type="text" id="userID" style="width:400px;" readonly/><br/>
+<label for="versionURI">Version: </label><input type="text" id="versionURI" style="width:900px;"/><input type="button" onclick="previous()" value="Previous"/><br/>
+<label for="textURI">Text resource URI: </label><input type="text" id="textURI" style="width:900px;"/><input type="button" onclick="fetch()" value="Fetch"/><br/>
+
+<input type="button" id="button_run_main" onclick="control_run_main()" value="Run main"/>
+<input type="button" id="button_run_selected" onclick="control_run_selected()" value="Evaluate selected"/>
+<input type="button" id="button_undo" onclick="control_undo()" value="Undo"/>
+<input type="button" id="button_redo" onclick="control_redo()" value="Redo"/>
+<input type="button" id="publish" onclick="publish()" value="Publish"/> 
+<a id="publishLink" href="">published to</a> 
+<span id="editorMode">editor mode: html</span>
+<input type="hidden" id="editorSaved"/>
+<div id="editor" style="height: 500px; width: 1200px"></div>
+<div id="sampleData" style="display: none;" >// Some sample code
+function foo(items) {
+    var x = "All this is syntax highlighted";
+    return x;
+}
+
+function main() {
+    alert("hello world");
+}
+
+console.log("Test");
+
+10 + 20;
+</div>
+<input type="button" id="button_sample" onclick="loadSampleData();" value="Load example code"/>
+<a href="../pointrel-app/bootstrap/login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span>  <input type="button" onclick="store()" value="Store new version of text"/><br/>
+</body>
+</html>
