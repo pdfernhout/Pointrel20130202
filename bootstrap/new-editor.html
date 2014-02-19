@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/html">
 <head>
@@ -15,42 +16,48 @@
         }
     </style>
 
+    <!-- Use these when editing from pointrel-app -->
     <script type="text/javascript" src="../libs/jquery-1.9.1.min.js"></script>
     <script type="text/javascript" src="../libs/ace-src/ace.js"></script>
+    <script type="text/javascript" src="../libs/marked.js"></script>
     <script type="text/javascript" src="../libs/sha256.js"></script>
     <script type="text/javascript" src="../js/utils_common.js"></script>
     <script type="text/javascript" src="../libs/jstorage.js"></script>
     <script type="text/javascript" src="../js/pointrel_authentication.js"></script>
     <script type="text/javascript" src="../js/pointrel20130202ForJQuery.js"></script>
     <script type="text/javascript" src="../js/pointrel_utility_classes.js"></script>
-
-    <!-- Use these when bootstrapping to pointrel-www
+    <script>var bootstrapping = false;</script>
+    
+    <!-- Use these when bootstrapping from pointrel-www
     <script type="text/javascript" src="../pointrel-app/libs/jquery-1.9.1.min.js"></script>
     <script type="text/javascript" src="../pointrel-app/libs/ace-src/ace.js"></script>
+    <script type="text/javascript" src="../pointrel-app/libs/marked.js"></script>
     <script type="text/javascript" src="../pointrel-app/libs/sha256.js"></script>
     <script type="text/javascript" src="../pointrel-app/js/utils_common.js"></script>
     <script type="text/javascript" src="../pointrel-app/libs/jstorage.js"></script>
     <script type="text/javascript" src="../pointrel-app/js/pointrel_authentication.js"></script>
     <script type="text/javascript" src="../pointrel-app/js/pointrel20130202ForJQuery.js"></script>
     <script type="text/javascript" src="../pointrel-app/js/pointrel_utility_classes.js"></script>
+    <script>var bootstrapping = true;</script>
     -->
     
     <script type="text/javascript">
-    	// TODO: Fix this mess af variables to have a couple cleaner paths, ideally derived from the document location
-    	var editorAppBaseURL = "new-editor.html";
-    	var viewerAppBaseURL = "viewer.html";
-    	var versionsAppBaseURL = "versions.html";
-    	var loginAppBaseURL = "login.html";
-    	var publishBaseURL = "../../pointrel-www/";
+        var appPath = "";
+        var publishBaseURL = "../../pointrel-www/";
         var archiveURL = "../server/";
         
-        // Used these instead if bootstrapping editor further in pointrel-www directory
-    	// var editorAppBaseURL = "new-editor.html";
-    	// var viewerAppBaseURL = "../pointrel-app/bootstrap/viewer.html";
-    	// var versionsAppBaseURL = "../pointrel-app/bootstrap/versions.html";
-    	// var publishBaseURL = "";
-        // var loginAppBaseURL = "../pointrel-app/bootstrap/login.html";
-        // var archiveURL = "../pointrel-app/server/";
+        if (bootstrapping) {
+            // Use these instead if bootstrapping editor further in pointrel-www directory
+            appPath = "../pointrel-app/bootstrap/";
+            publishBaseURL = "";
+            archiveURL = "../pointrel-app/server/";
+        }
+
+        var editorAppBaseURL = "new-editor.html";
+        
+    	var viewerAppBaseURL = appPath + "viewer.html";
+    	var versionsAppBaseURL = appPath + "versions.html";
+        var loginAppBaseURL = appPath + "login.html";
                 
         $("a#loginLink").prop("href", loginAppBaseURL);
         
@@ -59,6 +66,8 @@
 
         var currentVersionURI = "";
         var variableName = "code-editor-test.js";
+        
+        var editorMode = "html";
 
         $(document).ready(startEditor);
         $(document).ready(pointrel_authentication.loginPageLoaded);
@@ -82,6 +91,8 @@
             $("a#versionsLink").prop("href", versionsAppBaseURL + queryPart);
             $("a#publishLink").prop("href", publishBaseURL + variableName);
             setEditorMode();
+            console.log("editorMode", editorMode, editorMode !== "markdown")
+            $('#publishWithMarkdown').attr('disabled', editorMode !== "markdown");
         }
 
         function latest(ignoreMissing) {
@@ -277,10 +288,10 @@
                 }
             }
             
-            var mode = "html";
-            if (map.hasOwnProperty(extension)) mode = map[extension];
-            editor.getSession().setMode("ace/mode/" + mode);
-            $("#editorMode").html('').append("editor mode: " + mode);
+            editorMode = "html";
+            if (map.hasOwnProperty(extension)) editorMode = map[extension];
+            editor.getSession().setMode("ace/mode/" + editorMode);
+            $("#editorMode").html('').append("editor-mode: " + editorMode);
         }
 
         function saveInput() {
@@ -349,6 +360,42 @@
         return extension;
     }
     
+    function resolvePointrelURL(pointrelURL) {
+        // Remove leading and trailing parentheses
+        pointrelURL = pointrelURL.substr(1, pointrelURL.length - 2);
+        // Convert to local url and put parens back
+        return "(" + archiveURL + "resource-get.php?userID=anonymous&resourceURI=" + pointrelURL + ")";
+    }
+
+    function replacePointrelReferences(text) {
+        var exp = /\(((pointrel):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])\)/ig;
+        return text.replace(exp, resolvePointrelURL);
+    }
+        
+    function processAsMarkdown(text) {
+        text = replacePointrelReferences(text);
+
+        marked.setOptions({
+            gfm: true,
+            tables: true,
+            breaks: false,
+            pedantic: false,
+            sanitize: true,
+            smartLists: true,
+            langPrefix: 'language-',
+            highlight: function(code, lang) {
+                if (lang === 'js') {
+                    return highlighter.javascript(code);
+                }
+                return code;
+            }
+        });
+        
+        text = marked(text);
+        console.log("converted test using marked", text);
+        return text;
+    }
+
     function publish() {
         var newResourceURI = $("#textURI").val();
         var answer = confirm("Publish resource using current saved version? " + variableName);
@@ -365,6 +412,33 @@
                 return;
             }
             console.log("published resource:", destinationURL);
+        });
+    }
+
+    function publishWithMarkdown() {
+        var newResourceURI = $("#textURI").val();
+        var answer = confirm("Publish resource with markdown formatting? " + variableName);
+        if (!answer) return;
+
+        console.log("about to publish with markdown formatting:", variableName);
+        var editorContents = editor.getValue();
+        var markdownReformattedText = processAsMarkdown(editorContents);
+        var contentToPublish = '<html>\n<head>\n<meta http-equiv="Content-Type" content="text/html; charset=utf-8">\n</head>\n<body>\n' + markdownReformattedText + "\n</body>\n</html>";
+
+        var newResourceURI = archiver.resource_add(encodeAsUTF8(contentToPublish), "html", function(error, status) {
+            // TODO: Ignoring error for now as may already exist
+            // if (error) { alert("could not write new resource: " + JSON.stringify(status)); return }
+            console.log("maybe wrote newResourceURI:", newResourceURI);
+            var output = variableName.substr(0, variableName.lastIndexOf('.')) || variableName;
+            var destinationURL = output + ".html";
+            archiver.resource_publish(newResourceURI, destinationURL, function (error, response) {
+                if (error || response.status == "FAIL") {
+                    alert("Error happened when trying to publish resource: " + JSON.stringify(response));
+                    return;
+                }
+                console.log("published resource:", destinationURL);
+                $("a#publishLink").prop("href", publishBaseURL + destinationURL);
+            });
         });
     }
 
@@ -385,6 +459,7 @@
 <input type="button" id="button_undo" onclick="control_undo()" value="Undo"/>
 <input type="button" id="button_redo" onclick="control_redo()" value="Redo"/>
 <input type="button" id="publish" onclick="publish()" value="Publish"/> 
+<input type="button" id="publishWithMarkdown" onclick="publishWithMarkdown()" value="Publish with Markdown" disabled/> 
 <a id="publishLink" href="">published to</a> 
 <span id="editorMode">editor mode: html</span>
 <input type="hidden" id="editorSaved"/>
