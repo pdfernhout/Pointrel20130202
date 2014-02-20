@@ -49,10 +49,10 @@ function appendDataToJournalFile($fullJournalFileName, $dataToAppend) {
 }
 
 // the userID making the request
-$userID = $_POST['userID'];
+$userID = getPost('userID');
 
 // the name of the journal
-$journalName = $_POST['journalName'];
+$journalName = getPost('journalName');
 
 // Operations and operands: 
 //   exists -- see if journal exists
@@ -61,14 +61,14 @@ $journalName = $_POST['journalName'];
 //   info -- returns data from the first line of the journal (which has a uuid) and the journal's size
 //   get start length -- retrieves a number of bytes starting from start and ending at start + length - 1
 //   put hash size type path data -- adds data to the journal, verifying the hash
-$operation = $_POST['operation'];
+$operation = getPost('operation');
 
 $remoteAddress = $_SERVER['REMOTE_ADDR'];
 $logTimeStamp = currentTimeStamp();
 
 // Ideas for later use; need to add to log
-// $session = $_POST['session'];
-// $authentication = $_POST['authentication'];
+// $session = getPost('session');
+// $authentication = getPost('authentication');
 
 // Log what was requested
 error_log('{"timeStamp": "' . $logTimeStamp . '", "remoteAddress": "' . $remoteAddress . '", "request": "journal-store", journalName": "' . $journalName . '", "operation": "' . $operation . '", "userID": "' . $userID . '"}' . "\n", 3, $fullLogFileName);
@@ -130,7 +130,7 @@ if ($operation == "create") {
 		exitWithJSONStatusMessage("Journal file already exists: '" . $fullJournalFileName . "'", NO_FAILURE_HEADER, 400);
 	}
 	
-	$journalFormat = $_POST['journalFormat'];
+	$journalFormat = getPost('journalFormat');
 	
 	if (empty($journalFormat)) {
 		exitWithJSONStatusMessage("No journalFormat was specified", NO_FAILURE_HEADER, 400);
@@ -153,13 +153,13 @@ if ($operation == "delete") {
 	validateFileExistsOrDie($fullJournalFileName);
 	
 	// Check that header info and size are correct; header must be in canonical form as supplied
-	$userSuppliedHeader = $_POST['userSuppliedHeader'];
+	$userSuppliedHeader = getPost('userSuppliedHeader');
 	
 	if (empty($userSuppliedHeader)) {
 		exitWithJSONStatusMessage("No userSuppliedHeader was specified", NO_FAILURE_HEADER, 400);
 	}
 	
-	$userSuppliedSize = $_POST['userSuppliedSize'];
+	$userSuppliedSize = getPost('userSuppliedSize');
 	
 	if ($userSuppliedSize == "") {
 		exitWithJSONStatusMessage("No userSuppliedSize was specified", NO_FAILURE_HEADER, 400);
@@ -223,13 +223,13 @@ if ($operation == "info") {
 if ($operation == "get") {
 	validateFileExistsOrDie($fullJournalFileName);
 	
-	$start = $_POST['start'];
+	$start = getPost('start');
 	
 	if ($start == '') {
 		exitWithJSONStatusMessage("No start was specified", NO_FAILURE_HEADER, 400);
 	}
 	
-	$length = $_POST['length'];
+	$length = getPost('length');
 	
 	if (empty($length)) {
 		exitWithJSONStatusMessage("No length was specified", NO_FAILURE_HEADER, 400);
@@ -275,7 +275,7 @@ if ($operation == "get") {
 if ($operation == "put") {
 	validateFileExistsOrDie($fullJournalFileName);
 	
-	$encodedContent = $_POST['encodedContent'];
+	$encodedContent = getPost('encodedContent');
 	if (empty($encodedContent)) {
 		exitWithJSONStatusMessage("No encodedContent was specified", NO_FAILURE_HEADER, 400);
 	}	

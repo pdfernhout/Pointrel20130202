@@ -32,6 +32,22 @@ if (get_magic_quotes_gpc()) {
     $_REQUEST = stripslashes_recursive($_REQUEST);
 }
 
+function getGet($name) {
+	if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+		return array_key_exists($name, $_POST) ? $_POST[$name] : null;
+	} else {
+		return array_key_exists($name, $_GET) ? $_GET[$name] : null;
+	}
+}
+
+function getPost($name) {
+	if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+		return array_key_exists($name, $_POST) ? $_POST[$name] : null;
+	} else {
+		null;
+	}
+}
+
 function startsWith($haystack, $needle) {
     return !strncmp($haystack, $needle, strlen($needle));
 }

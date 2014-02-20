@@ -3,13 +3,13 @@
 
 include "pointrel_utils.php";
 
-$resourceURI = $_POST['resourceURI'];
-$destinationURL = $_POST['destinationURL'];
-$userID = $_POST['userID'];
+$resourceURI = getPost('resourceURI');
+$destinationURL = getPost('destinationURL');
+$userID = getPost('userID');
 
 // For later use
-$session = $_POST['session'];
-$authentication = $_POST['authentication'];
+$session = getPost('session');
+$authentication = getPost('authentication');
 
 $remoteAddress = $_SERVER['REMOTE_ADDR'];
 

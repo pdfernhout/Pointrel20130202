@@ -25,17 +25,17 @@ function writeVariableToNewFile($fullVariableFileName, $newValue) {
 // Buffer should be big enough for version info...
 $MaximumVariableVersionBufferSize = 8192;
 
-$variableName = $_POST['variableName'];
-$operation = $_POST['operation'];
-$createIfMissing = $_POST['createIfMissing'];
-$operation = $_POST['operation'];
-$newValue = $_POST['newValue'];
-$currentValue = $_POST['currentValue'];
-$userID = $_POST['userID'];
+$variableName = getPost('variableName');
+$operation = getPost('operation');
+$createIfMissing = getPost('createIfMissing');
+$operation = getPost('operation');
+$newValue = getPost('newValue');
+$currentValue = getPost('currentValue');
+$userID = getPost('userID');
 
 // For later use
-$session = $_POST['session'];
-$authentication = $_POST['authentication'];
+$session = getPost('session');
+$authentication = getPost('authentication');
 
 // Default createIfMissing to true unless explicitly set to false
 if ($createIfMissing == "f" || $createIfMissing == "false" || $createIfMissing == "F" || $createIfMissing == "FALSE") {

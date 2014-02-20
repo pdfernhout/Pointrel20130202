@@ -3,15 +3,15 @@ include "pointrel_utils.php";
 
 // Example: http://localhost/~pdf/pointrel-app/resource-get.php?userID=anonymous&resourceURI=pointrel://sha256_a2ca24b424919216bdf441301d65fd83215562891a2bd2195984313a26f04029_12466.txt&contentType=text/plain&charset=UTF-8
 
-$resourceURI = $_GET['resourceURI'];
-$userID = $_GET['userID'];
-$contentType = $_GET['contentType'];
-$charset = $_GET['charset'];
-$attachmentName = $_GET['attachmentName'];
+$resourceURI = getGet('resourceURI');
+$userID = getGet('userID');
+$contentType = getGet('contentType');
+$charset = getGet('charset');
+$attachmentName = getGet('attachmentName');
 
 // For later use
-$session = $_POST['session'];
-$authentication = $_POST['authentication'];
+$session = getPost('session');
+$authentication = getPost('authentication');
 
 $remoteAddress = $_SERVER['REMOTE_ADDR'];
 
