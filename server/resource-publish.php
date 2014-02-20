@@ -51,10 +51,12 @@ if (!endsWith($destinationFileName, $extension)) {
     exitWithJSONStatusMessage('File "' . $destinationFileName . '" does not end with the same extension "' . $extension . '" as the resource: "' . $shortName . '"', NO_FAILURE_HEADER, 404);
 }
 
+// Inspired by: http://stackoverflow.com/questions/1911382/sanitize-file-path-in-php
+// using call to expandPath to deal with relative paths
 $baseDir = realpath($pointrelPublishingDirectory);
-$desiredPath = normpath($destinationFileName);
-// if baseDir isn't at the front 0==strpos, most likely hacking attempt
-if (strpos($desiredPath, $baseDir)) {
+$desiredPath = expandPath($destinationFileName);
+
+if (strpos($desiredPath, $baseDir) !== 0) {
     exitWithJSONStatusMessage('File has an invalid path: "' . $desiredPath . '"', NO_FAILURE_HEADER, 404);
 }
 
@@ -73,6 +75,11 @@ if (endsWith($desiredPath, ".htpasswd")) {
 if (empty($desiredPath)) {
     exitWithJSONStatusMessage("The desiredPath '$desiredPath' is empty for destinationFileName '$destinationFileName' with baseDir '$baseDir'", NO_FAILURE_HEADER, 400);
 }
+
+$targetDirectory = dirname($desiredPath);
+
+// ensure intermediate directories exist
+mkdir($targetDirectory, 0777, true);
 
 $copyResult = copy($fullName, $desiredPath);
 

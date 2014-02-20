@@ -150,22 +150,21 @@ function calculateStoragePath($baseDirectory, $hexDigits, $levelCount, $segmentL
 }
 
 // From: http://stackoverflow.com/questions/2670299/is-there-a-php-equivalent-function-to-the-python-os-path-normpath
-function normpath($path)
+// With changes to use current directory to make expanded path (may not be canonical if symbolic links?)
+function expandPath($path)
 {
     if (empty($path))
-        return '.';
+        return getcwd() . '/';
 
-    if (strpos($path, '/') === 0)
-        $initial_slashes = true;
-    else
-        $initial_slashes = false;
-    if (
-        ($initial_slashes) &&
-        (strpos($path, '//') === 0) &&
-        (strpos($path, '///') === false)
-    )
-        $initial_slashes = 2;
-    $initial_slashes = (int) $initial_slashes;
+    if (strpos($path, '/') !== 0) {
+        // append current working directory
+        $path = getcwd() . "/" . $path;
+    }
+    if ((strpos($path, '//') === 0) && (strpos($path, '///') === false)) {
+    	$initial_slashes = 2;
+    } else {
+    	$initial_slashes = 1;
+    }
 
     $comps = explode('/', $path);
     $new_comps = array();
@@ -184,10 +183,9 @@ function normpath($path)
     }
     $comps = $new_comps;
     $path = implode('/', $comps);
-    if ($initial_slashes)
-        $path = str_repeat('/', $initial_slashes) . $path;
+    $path = str_repeat('/', $initial_slashes) . $path;
     if ($path)
         return $path;
     else
-        return '.';
+        return getcwd() . '/';
 }
