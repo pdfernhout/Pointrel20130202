@@ -193,7 +193,7 @@
             console.log("editorText", editorText.length, editorText);
             var editorTextAsUTF8 = encodeAsUTF8(editorText);
             console.log("editorTextAsUTF8", editorTextAsUTF8.length, editorTextAsUTF8);
-            var extension = extensionForVariableName();
+            var extension = extensionForVariableNameLong();
             var textURI = archiver.resource_add(editorTextAsUTF8, extension, function(error, status) {
                 // TODO: Improve the handling so PHP returns a better status
                 if (error && !startsWith(status.message, "File already exists:")) {
@@ -275,7 +275,7 @@
         function setEditorMode() {
             if (!editor) return;
             
-            var extension = extensionForVariableName();
+            var extension = extensionForVariableNameShort();
             if (extension === "") extension = "html";
             
             // Build a map of extensions to editor types
@@ -350,11 +350,21 @@
         }
     }
     
-    function extensionForVariableName() {
+    function extensionForVariableNameShort() {
         var extension = "";
         var lastDot = variableName.lastIndexOf('.');
         if (lastDot !== -1) {
             extension = variableName.substr(lastDot + 1);
+        }
+        if (extension === "") {extension = "html";}
+        return extension;
+    }
+    
+    function extensionForVariableNameLong() {
+        var extension = "";
+        var firstDot = variableName.indexOf('.');
+        if (firstDot !== -1) {
+            extension = variableName.substr(firstDot + 1);
         }
         if (extension === "") {extension = "html";}
         return extension;
@@ -403,8 +413,6 @@
 
         console.log("about to publish using last version", variableName, newResourceURI);
         
-        var extension = extensionForVariableName();
-
         var destinationURL = variableName;
         archiver.resource_publish(newResourceURI, destinationURL, function (error, response) {
             if (error || response.status == "FAIL") {
