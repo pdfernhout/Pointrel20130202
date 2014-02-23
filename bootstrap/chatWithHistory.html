@@ -18,34 +18,32 @@
 
 <input type="text" id="message_to_send" size="63"/>
 <input type="button" id="button_send" onClick="send();" value="Send"/>
+<input type="button" id="button_history" onClick="history();" value="History"/>
+<input type="button" id="button_forwards" onClick="forward();" value="Forward"/>
 <input type="button" id="button_refresh" onClick="refresh();" value="Refresh"/>
 <input type="checkbox" id="checkbox_auto_refresh"/>auto-refresh
+<!-- <input type="button" id="button_forwards" onClick="addTestData();" value="Add Test Data" /> -->
 
 <div id="div_messages">(Chat messages will go here on refresh)</div>
 <a href="new-editor.html?documentName=bootstrap/chat.html">Edit this page</a>
 
 <script type="text/javascript">
+    $(pointrel_authentication.loginPageLoaded);
+    $(setupTimer);
+
     var archiveURL = "../../pointrel-app/server/";
     var credentials = pointrel_authentication.getUserIDOrAnonymous();
     var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
-    var variable = new PointrelVariable(archiver, "chat-test-001");
-    var messages = [];
 
     function setupTimer() {
         window.setInterval(autorefresh, 5000);
     }
 
-    function autorefresh() {
-        if ($("#checkbox_auto_refresh").is(':checked')) {
-            refresh();
-        }
-    }
-    
-    function refresh() {
-        variable.getNewVersions(newVersionsDone);
-    }
-    
-    function newVersionsDone(error, versions, endingStatus, follower) {
+    var variable = new PointrelVariable(archiver, "chat-test-001");
+    var messages = [];
+    var lastHistory = 0;
+
+    function newVersionsDone2(error, versions, endingStatus, follower) {
         console.log("newVersionsDone: ", endingStatus, error, versions);
         if (error) { alert("error"); return; }
         if (versions) {
@@ -60,27 +58,16 @@
         }
     }
 
-    function updateMessagesList() {
-        // Put all the messages int to the component that displays them
-        var output = "";
-        var messagesReversed = messages.slice(0);
-        messagesReversed.reverse();
-        for (var i in messagesReversed) {
-            //noinspection JSUnfilteredForInLoop
-            var oldMessage = messagesReversed[i];
-            output = output + displayStringForTimestamp(oldMessage.timestamp) + " " + oldMessage.userID + " " + oldMessage.message + "<br/>";
+    function autorefresh() {
+        if ($("#checkbox_auto_refresh").is(':checked')) {
+            refresh();
         }
-        $("#div_messages").html(output);
-    }
-
-    function send() {
-        const $message_to_send = $("#message_to_send");
-        var message = $message_to_send.val();
-        console.log("send pressed", message);
-        $message_to_send.val("");
-        store(message);
     }
     
+    function refresh() {
+        variable.getNewVersions(newVersionsDone2);
+    }
+
     function store(message) {
         console.log("store message", message);
         // Do a refresh or something first to make sure the variable is as up-to-date as possible
@@ -109,20 +96,82 @@
         });
     }
 
-    function initalize() {
-        pointrel_authentication.loginPageLoaded();
-        setupTimer();
-        
-        // Hookup enter key to send message if pressed in message_to_send field
+    function updateMessagesList() {
+        // Put all the messages int to the component that displays them
+        var output = "";
+        var messagesReversed = messages.slice(0);
+        messagesReversed.reverse();
+        for (var i in messagesReversed) {
+            //noinspection JSUnfilteredForInLoop
+            var oldMessage = messagesReversed[i];
+            output = output + displayStringForTimestamp(oldMessage.timestamp) + " " + oldMessage.userID + " " + oldMessage.message + "<br/>";
+        }
+        $("#div_messages").html(output);
+    }
+
+    function send() {
+        const $message_to_send = $("#message_to_send");
+        var message = $message_to_send.val();
+        console.log("send pressed", message);
+        $message_to_send.val("");
+        //messages.push(message);
+        //console.log(messages);
+        lastHistory = messages.length;
+        console.log("lastHistory", lastHistory);
+        // updateMessagesList();
+        // TODO: This position may be off depending on what others are doing with the list...
+        lastHistory = messages.length + 1;
+        store(message);
+    }
+
+    function history() {
+        console.log("history pressed");
+        console.log("lastHistory before history", lastHistory);
+        // var pastElement = messages.slice(-1)[0];
+        lastHistory = lastHistory - 1;
+        if (lastHistory < 0) {
+            lastHistory = 0;
+            alert("at bottom of history");
+        }
+        var pastElement = messages[lastHistory];
+        console.log(pastElement);
+        $("#message_to_send").val(pastElement.message);
+        console.log("lastHistory after history", lastHistory);
+    }
+
+    function forward() {
+        console.log("forward pressed");
+        console.log("lastHistory before forward", lastHistory);
+        lastHistory = lastHistory + 1;
+        if (lastHistory > messages.length - 1) {
+            lastHistory = messages.length - 1;
+            alert("at top of history");
+        }
+        var pastElement = messages[lastHistory];
+        console.log("pastElement to put in message", pastElement);
+        $("#message_to_send").val(pastElement.message);
+        pastElement = messages[lastHistory];
+        console.log("pastElement at new position", pastElement);
+        console.log("lastHistory after forward", lastHistory);
+    }
+
+    //   function addTestData() {
+    //      messages = ["a", "b", "c"];
+    //      lastHistory = 3;
+    //      console.log("test data loaded messages:", messages, "lastHistory:" , lastHistory);
+    //   }
+
+    // jQuery Document
+    $(document).ready(function () {
+        console.log("Hello");
+
+        // Send message if enter is pressed in that input field
         $("#message_to_send").keyup(function(event){
             if(event.keyCode == 13) {
                 $("#button_send").click();
             }
         });
-    }
-    
-    // jQuery -- run initialize when everything is loaded
-    $(initialize);
+    });
 </script>
 </body>
 </html>
