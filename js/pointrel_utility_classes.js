@@ -184,20 +184,18 @@ function PointrelVariable(archiver, variableName) {
     };
 }
 
-function PointrelJournal(archiver, journalName, journalType) {
+function PointrelJournal(archiver, journalName) {
     this.archiver = archiver;
     this.journalName = journalName;
-    this.journalType = journalType;
     this.header = "";
     this.content = "";
     this.newContent = "";
-    this.callbackWhenVersionsLoaded = null;
 
     this.getNewContents = function(callback) {
         console.log("geNewContents -- callback", callback);
         var self = this;
         
-        this.archiver.index_get(this.journalName, this.journalType, this.content.length, "END", function (error, journalGetResult) {
+        this.archiver.journal_get(this.journalName, this.content.length, "END", function (error, journalGetResult) {
             console.log("callback for archiver.journal_get in getNewContents");
             if (error) {
                 alert("Error happened on journal get");
@@ -218,6 +216,51 @@ function PointrelJournal(archiver, journalName, journalType) {
             if (typeof(callback) == "function") callback(null, self.content, self.newContent);
         });
     };
+}
+
+// indexType can be "all" (for all resources), "index" (for a specific index) or also "journal" (but for that you could use PointrelJournal)
+function PointrelIndex(archiver, indexName, indexType) {
+	this.archiver = archiver;
+	this.indexName = indexName;
+	this.indexType = indexType;
+	this.header = "";
+	this.headerObject = null;
+	this.content = "";
+	this.newContent = "";
+	this.entries = [];
+
+	this.getNewContents = function(callback) {
+		console.log("geNewContents -- callback", callback);
+		var self = this;
+
+		this.archiver.index_get(this.indexName, this.indexType, this.content.length, "END", function (error, indexGetResult) {
+			console.log("callback for archiver.index_get in getNewContents");
+			if (error) {
+				alert("Error happened on index get");
+				// self.latestVariableVersionURI = null;
+				if (typeof(callback) == "function") callback(error, null);
+				return;
+			}
+			self.newContent = indexGetResult.result;
+			// console.log("getLatestVariableVersionURI result", self.newContent);
+			if (self.newContent) {
+				var lines = self.newContent.split("\n\n");
+				for (var i = 0; i < lines.length; i++) {
+					var indexEntry = lines[i];
+					var parsedIndexEntry = JSON.parse(indexEntry);
+					if (i === 0 && !self.content && !self.header) {
+						self.header = lines[0];
+						self.headerObject = parsedIndexEntry;
+					} else {
+						self.entries.push(parsedIndexEntry);
+					}
+				}
+				self.content = self.content + self.newContent;
+			}
+			console.log("Callback", callback);
+			if (typeof(callback) == "function") callback(null, self.content, self.newContent);
+		});
+	};
 }
 
 function PointrelArchiver(Pointrel, serverURL, credentials) {
