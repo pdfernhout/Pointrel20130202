@@ -249,6 +249,9 @@ function appendDataToFile($fullFileName, $dataToAppend) {
 	fclose($fh);
 }
 
+// Index entries have a newline at the start as well as at the end to make it easier to recover from partial writes of an index entry
+// If there is only one newline, then most likely the previous line is incomplete
+
 function createIndexEntry($indexString, $shortFileNameForResource, $timestamp, $userID) {
 	global $pointrelIndexesDirectory;
 	// echo "createIndexEntry '$indexString' '$shortFileName' $timestamp $userID\n";
@@ -267,7 +270,7 @@ function createIndexEntry($indexString, $shortFileNameForResource, $timestamp, $
 		createFile($fullIndexFileName, $firstLineHeader);
 	}
 	
-	$jsonForIndex = '{"operation":"add","resource":"' . $shortFileNameForResource . '","timestamp":"' . $timestamp . '","userID":"' . $userID . '"}' . "\n";
+	$jsonForIndex = "\n" . '{"operation":"add","resource":"' . $shortFileNameForResource . '","timestamp":"' . $timestamp . '","userID":"' . $userID . '"}' . "\n";
 	appendDataToFile($fullIndexFileName, $jsonForIndex);
 	// echo "done making index\n";
 }
@@ -286,7 +289,7 @@ function addToIndexes($shortFileName, $timestamp, $userID, $content) {
 	if (!file_exists($fullMainIndexFileName)) {
 		$randomUUID = uniqid('pointrelIndex:', true);
 		$jsonForIndex = '{"indexFormat":"index","indexName":"' . $shortFileNameForMainIndex . '","versionUUID":"' . $randomUUID . '"}';
-		$firstLineHeader = "$jsonForIndex\n";
+		$firstLineHeader = "\n$jsonForIndex\n";
 		createFile($fullMainIndexFileName, $firstLineHeader);
 	}
 	
