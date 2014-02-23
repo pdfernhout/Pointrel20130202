@@ -2,20 +2,18 @@
 <html>
 <head>
     <meta charset='utf-8'>
-    <title>Chat</title>
-    <script type="text/javascript" src="../libs/jquery-1.9.1.min.js"></script>
-
-    <script type="text/javascript" src="../libs/mustache.js"></script>
-
-    <script type="text/javascript" src="../libs/sha256.js"></script>
-    <script type="text/javascript" src="../js/utils_common.js"></script>
-    <script type="text/javascript" src="../libs/jstorage.js"></script>
-    <script type="text/javascript" src="../js/pointrel_authentication.js"></script>
-    <script type="text/javascript" src="../js/pointrel20130202ForJQuery.js"></script>
-    <script type="text/javascript" src="../js/pointrel_utility_classes.js"></script>
+    <title>Pointrel Chat</title>
+    <script type="text/javascript" src="../../pointrel-app/libs/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/libs/mustache.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/libs/sha256.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/js/utils_common.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/libs/jstorage.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/js/pointrel_authentication.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/js/pointrel_utility_classes.js"></script>
 </head>
 <body>
-<b>Chat program</b> <a href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span><br/>
+<b>Chat program</b> <a href="../../pointrel-app/bootstrap/login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span><br/>
 <!--suppress HtmlFormInputWithoutLabel -->
 
 <input type="text" id="message_to_send" size="63"/>
@@ -23,20 +21,22 @@
 <input type="button" id="button_history" onClick="history();" value="History"/>
 <input type="button" id="button_forwards" onClick="forward();" value="Forward"/>
 <input type="button" id="button_refresh" onClick="refresh();" value="Refresh"/>
+<input type="checkbox" id="checkbox_auto_refresh"/>auto-refresh
 <!-- <input type="button" id="button_forwards" onClick="addTestData();" value="Add Test Data" /> -->
 
-<div id="div_messages">Welcome (messages go here)</div>
+<div id="div_messages">(Chat messages will go here on refresh)</div>
+<a href="new-editor.html?documentName=bootstrap/chat.html">Edit this page</a>
 
 <script type="text/javascript">
     $(pointrel_authentication.loginPageLoaded);
     $(setupTimer);
 
-    var archiveURL = "../server/";
+    var archiveURL = "../../pointrel-app/server/";
     var credentials = pointrel_authentication.getUserIDOrAnonymous();
     var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
 
     function setupTimer() {
-        window.setInterval(refresh, 5000);
+        window.setInterval(autorefresh, 5000);
     }
 
     var variable = new PointrelVariable(archiver, "chat-test-001");
@@ -58,6 +58,12 @@
         }
     }
 
+    function autorefresh() {
+        if ($("#checkbox_auto_refresh").is(':checked')) {
+            refresh();
+        }
+    }
+    
     function refresh() {
         variable.getNewVersions(newVersionsDone2);
     }
