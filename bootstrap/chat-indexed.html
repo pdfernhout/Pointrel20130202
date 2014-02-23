@@ -40,7 +40,17 @@
     var variable = new PointrelVariable(archiver, "chat-test-001");
     var messages = [];
 
-    function newVersionsDone2(error, versions, endingStatus, follower) {
+    function autorefresh() {
+        if ($("#checkbox_auto_refresh").is(':checked')) {
+            refresh();
+        }
+    }
+    
+    function refresh() {
+        variable.getNewVersions(newVersionsDone);
+    }
+    
+    function newVersionsDone(error, versions, endingStatus, follower) {
         console.log("newVersionsDone: ", endingStatus, error, versions);
         if (error) { alert("error"); return; }
         if (versions) {
@@ -55,16 +65,27 @@
         }
     }
 
-    function autorefresh() {
-        if ($("#checkbox_auto_refresh").is(':checked')) {
-            refresh();
+    function updateMessagesList() {
+        // Put all the messages int to the component that displays them
+        var output = "";
+        var messagesReversed = messages.slice(0);
+        messagesReversed.reverse();
+        for (var i in messagesReversed) {
+            //noinspection JSUnfilteredForInLoop
+            var oldMessage = messagesReversed[i];
+            output = output + displayStringForTimestamp(oldMessage.timestamp) + " " + oldMessage.userID + " " + oldMessage.message + "<br/>";
         }
-    }
-    
-    function refresh() {
-        variable.getNewVersions(newVersionsDone2);
+        $("#div_messages").html(output);
     }
 
+    function send() {
+        const $message_to_send = $("#message_to_send");
+        var message = $message_to_send.val();
+        console.log("send pressed", message);
+        $message_to_send.val("");
+        store(message);
+    }
+    
     function store(message) {
         console.log("store message", message);
         // Do a refresh or something first to make sure the variable is as up-to-date as possible
@@ -93,32 +114,10 @@
         });
     }
 
-    function updateMessagesList() {
-        // Put all the messages int to the component that displays them
-        var output = "";
-        var messagesReversed = messages.slice(0);
-        messagesReversed.reverse();
-        for (var i in messagesReversed) {
-            //noinspection JSUnfilteredForInLoop
-            var oldMessage = messagesReversed[i];
-            output = output + displayStringForTimestamp(oldMessage.timestamp) + " " + oldMessage.userID + " " + oldMessage.message + "<br/>";
-        }
-        $("#div_messages").html(output);
-    }
-
-    function send() {
-        const $message_to_send = $("#message_to_send");
-        var message = $message_to_send.val();
-        console.log("send pressed", message);
-        $message_to_send.val("");
-        store(message);
-    }
 
     // jQuery Document
     $(document).ready(function () {
-        console.log("Hello");
-
-        // Send message if enter is pressed in that input field
+        // Hookup enter key to send message if pressed in message_to_send field
         $("#message_to_send").keyup(function(event){
             if(event.keyCode == 13) {
                 $("#button_send").click();
