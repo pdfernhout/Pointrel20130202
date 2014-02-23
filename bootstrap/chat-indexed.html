@@ -18,14 +18,12 @@
 
 <input type="text" id="message_to_send" size="63"/>
 <input type="button" id="button_send" onClick="send();" value="Send"/>
-<input type="button" id="button_history" onClick="history();" value="History"/>
-<input type="button" id="button_forwards" onClick="forward();" value="Forward"/>
 <input type="button" id="button_refresh" onClick="refresh();" value="Refresh"/>
 <input type="checkbox" id="checkbox_auto_refresh"/>auto-refresh
 <!-- <input type="button" id="button_forwards" onClick="addTestData();" value="Add Test Data" /> -->
 
 <div id="div_messages">(Chat messages will go here on refresh)</div>
-<a href="new-editor.html?documentName=bootstrap/chat.html">Edit this page</a>
+<a href="new-editor.html?documentName=bootstrap/chat-indexed.html">Edit this page</a>
 
 <script type="text/javascript">
     $(pointrel_authentication.loginPageLoaded);
@@ -41,7 +39,6 @@
 
     var variable = new PointrelVariable(archiver, "chat-test-001");
     var messages = [];
-    var lastHistory = 0;
 
     function newVersionsDone2(error, versions, endingStatus, follower) {
         console.log("newVersionsDone: ", endingStatus, error, versions);
@@ -114,52 +111,8 @@
         var message = $message_to_send.val();
         console.log("send pressed", message);
         $message_to_send.val("");
-        //messages.push(message);
-        //console.log(messages);
-        lastHistory = messages.length;
-        console.log("lastHistory", lastHistory);
-        // updateMessagesList();
-        // TODO: This position may be off depending on what others are doing with the list...
-        lastHistory = messages.length + 1;
         store(message);
     }
-
-    function history() {
-        console.log("history pressed");
-        console.log("lastHistory before history", lastHistory);
-        // var pastElement = messages.slice(-1)[0];
-        lastHistory = lastHistory - 1;
-        if (lastHistory < 0) {
-            lastHistory = 0;
-            alert("at bottom of history");
-        }
-        var pastElement = messages[lastHistory];
-        console.log(pastElement);
-        $("#message_to_send").val(pastElement.message);
-        console.log("lastHistory after history", lastHistory);
-    }
-
-    function forward() {
-        console.log("forward pressed");
-        console.log("lastHistory before forward", lastHistory);
-        lastHistory = lastHistory + 1;
-        if (lastHistory > messages.length - 1) {
-            lastHistory = messages.length - 1;
-            alert("at top of history");
-        }
-        var pastElement = messages[lastHistory];
-        console.log("pastElement to put in message", pastElement);
-        $("#message_to_send").val(pastElement.message);
-        pastElement = messages[lastHistory];
-        console.log("pastElement at new position", pastElement);
-        console.log("lastHistory after forward", lastHistory);
-    }
-
-    //   function addTestData() {
-    //      messages = ["a", "b", "c"];
-    //      lastHistory = 3;
-    //      console.log("test data loaded messages:", messages, "lastHistory:" , lastHistory);
-    //   }
 
     // jQuery Document
     $(document).ready(function () {
