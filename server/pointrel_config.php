@@ -6,3 +6,6 @@ $pointrelJournalsDirectory = "../../pointrel-data/journals/";
 $pointrelVariablesDirectory = "../../pointrel-data/variables/";
 $pointrelLogsDirectory = "../../pointrel-data/logs/";
 $pointrelPublishingDirectory = "../../pointrel-www/";
+$pointrelIndexesDirectory = "../../pointrel-data/indexes/";
+$pointrelPublishingAllow = true;
+$pointrelIndexesMaintain = true;

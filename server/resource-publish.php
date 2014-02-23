@@ -15,6 +15,10 @@ $remoteAddress = $_SERVER['REMOTE_ADDR'];
 
 error_log('{"timeStamp": "' . currentTimeStamp() . '", "remoteAddress": "' . $remoteAddress . '", "request": "resource-publish", "resourceURI": "' . $resourceURI . '", "destinationURL": "' . $destinationURL . '", "userID": "' . $userID . '", "session": "' . $session . '"}' . "\n", 3, $fullLogFileName);
 
+if (!$pointrelPublishingAllow) {
+	exitWithJSONStatusMessage("Publishing not allowed", SEND_FAILURE_HEADER, 400);
+}
+
 if (empty($resourceURI)) {
     exitWithJSONStatusMessage("No resourceURI was specified", SEND_FAILURE_HEADER, 400);
 }
