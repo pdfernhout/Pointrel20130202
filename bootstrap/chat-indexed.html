@@ -26,19 +26,15 @@
 <a href="new-editor.html?documentName=bootstrap/chat-indexed.html">Edit this page</a>
 
 <script type="text/javascript">
-    $(pointrel_authentication.loginPageLoaded);
-    $(setupTimer);
-
     var archiveURL = "../../pointrel-app/server/";
     var credentials = pointrel_authentication.getUserIDOrAnonymous();
     var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
+    var variable = new PointrelVariable(archiver, "chat-test-001");
+    var messages = [];
 
     function setupTimer() {
         window.setInterval(autorefresh, 5000);
     }
-
-    var variable = new PointrelVariable(archiver, "chat-test-001");
-    var messages = [];
 
     function autorefresh() {
         if ($("#checkbox_auto_refresh").is(':checked')) {
@@ -114,16 +110,20 @@
         });
     }
 
-
-    // jQuery Document
-    $(document).ready(function () {
+    function initalize() {
+        pointrel_authentication.loginPageLoaded();
+        setupTimer();
+        
         // Hookup enter key to send message if pressed in message_to_send field
         $("#message_to_send").keyup(function(event){
             if(event.keyCode == 13) {
                 $("#button_send").click();
             }
         });
-    });
+    }
+    
+    // jQuery -- run initialize when everything is loaded
+    $(initialize);
 </script>
 </body>
 </html>
