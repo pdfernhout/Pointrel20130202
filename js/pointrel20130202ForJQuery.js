@@ -11,7 +11,7 @@ var Pointrel = (function () {
     // Data passed to this needs to be only characters in the range 0-255 (byte)
     // That means you should encode and decode text using the UTF8 functions above if needed
     function pointrel_resource_add(serverURL, credentials, originalDataString, extension, callback) {
-        console.log("pointrel_resource_add extension: " + extension);
+        console.log("pointrel_resource_add extension: ", extension);
         // special validation for now
         if (!validateBinaryData(originalDataString)) { callback("FAILED Not Binary Data", null); return ""; }
 
@@ -59,12 +59,12 @@ var Pointrel = (function () {
 
         $.ajax(request);
 
-        console.log("pointrel_resource_add returning: " + uri);
+        console.log("pointrel_resource_add returning: ", uri);
         return uri;
     }
 
     function pointrel_resource_get(serverURL, credentials, uri, callback) {
-        console.log("pointrel_resource_get: " + uri);
+        console.log("pointrel_resource_get: ", uri);
         var request = {
             type: "GET",
             url: serverURL + "resource-get.php",
@@ -94,7 +94,7 @@ var Pointrel = (function () {
     }
 
     function pointrel_resource_publish(serverURL, credentials, resourceURI, destinationURL, callback) {
-        console.log("pointrel_resource_publish: " + resourceURI + " to: " + destinationURL);
+        console.log("pointrel_resource_publish: ", resourceURI, " to: ", destinationURL);
         var request = {
             type: "POST",
             url: serverURL + "resource-publish.php",
@@ -124,7 +124,7 @@ var Pointrel = (function () {
     //////// VARIABLES
 
     function pointrel_variable_new(serverURL, credentials, variableName, newValue, callback) {
-        console.log("pointrel_variable_new: " + variableName);
+        console.log("pointrel_variable_new: ", variableName);
         // var encodedVariableName = EncodeAsUTF8(variableName);
         var request = {
             type: "POST",
@@ -158,7 +158,7 @@ var Pointrel = (function () {
     }
 
     function pointrel_variable_get(serverURL, credentials, variableName, callback) {
-        console.log("pointrel_variable_get: " + variableName);
+        console.log("pointrel_variable_get: ", variableName);
         // var encodedVariableName = EncodeAsUTF8(variableName);
         var request = {
             type: "POST",
@@ -191,7 +191,7 @@ var Pointrel = (function () {
     }
 
     function pointrel_variable_set(serverURL, credentials, variableName, oldVersionURI, newVersionURI, callback) {
-        console.log("pointrel_resource_set: " + variableName + " old: " + oldVersionURI + "new: " + newVersionURI);
+        console.log("pointrel_resource_set: ", variableName, " old: ", oldVersionURI, " new: ", newVersionURI);
         // var encodedVariableName = EncodeAsUTF8(variableName);
         var request = {
             type: "POST",
@@ -224,7 +224,7 @@ var Pointrel = (function () {
     }
 
     function pointrel_variable_delete(serverURL, credentials, variableName, currentValue, callback) {
-        console.log("pointrel_variable_delete: " + variableName);
+        console.log("pointrel_variable_delete: ", variableName);
         // var encodedVariableName = EncodeAsUTF8(variableName);
         var request = {
             type: "POST",
@@ -260,7 +260,7 @@ var Pointrel = (function () {
     ///// JOURNALS
     
     function pointrel_journal_ajax(operation, serverURL, credentials, journalName, callback, extra) {
-        console.log("pointrel_journal_" + operation + ": " + journalName);
+        console.log("pointrel_journal_ajax", operation, journalName);
         // var encodedJournalName = encodeAsUTF8(journalName);
         
         // Build merged content with extra fields if needed

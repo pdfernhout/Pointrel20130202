@@ -11,7 +11,7 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
     // TODO: Add callback for success and errors
     // Data should be in 0-255 character range
     function pointrel_resource_add(serverURL, credentials, originalDataString, extension, callback) {
-        console.log("pointrel_resource_add extension: " + extension);
+        console.log("pointrel_resource_add extension: ", extension);
 
         // special validation for now
         if (!validateBinaryData(originalDataString)) { callback("FAILED Not Binary Data", null); return ""; }
@@ -53,12 +53,12 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
 
         xhr.post(request);
 
-        console.log("pointrel_resource_add returning: " + uri);
+        console.log("pointrel_resource_add returning: ", uri);
         return uri;
     }
 
     function pointrel_resource_get(serverURL, credentials, uri, callback) {
-        console.log("pointrel_resource_get: " + uri);
+        console.log("pointrel_resource_get: ", uri);
         var request = {
             url: serverURL + "resource-get.php",
             content: {"resourceURI": uri, "userID": pointrel_authentication.userIDFromCredentials(credentials)},
@@ -84,7 +84,7 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
     }
 
     function pointrel_resource_publish(serverURL, credentials, resourceURI, destinationURL, callback) {
-        console.log("pointrel_resource_publish: " + resourceURI + " to: " + destinationURL);
+        console.log("pointrel_resource_publish: ", resourceURI, " to: ", destinationURL);
         var request = {
             url: serverURL + "resource-publish.php",
             content: {"resourceURI": resourceURI, "destinationURL": destinationURL, "userID": pointrel_authentication.userIDFromCredentials(credentials)},
@@ -112,7 +112,7 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
     ///// VARIABLES
 
     function pointrel_variable_new(serverURL, credentials, variableName, newVersionURI, callback) {
-        console.log("pointrel_resource_new: " + variableName + "new: " + newVersionURI);
+        console.log("pointrel_resource_new: ", variableName, "new: ", newVersionURI);
         // var encodedVariableName = encodeAsUTF8(variableName);
         var request = {
             url: serverURL + "variable-query.php",
@@ -142,7 +142,7 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
     }
 
     function pointrel_variable_get(serverURL, credentials, variableName, callback) {
-        console.log("pointrel_variable_get: " + variableName);
+        console.log("pointrel_variable_get: ", variableName);
         // var encodedVariableName = encodeAsUTF8(variableName);
         var request = {
             url: serverURL + "variable-query.php",
@@ -172,7 +172,7 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
     }
 
     function pointrel_variable_set(serverURL, credentials, variableName, oldVersionURI, newVersionURI, callback) {
-        console.log("pointrel_resource_set: " + variableName + " old: " + oldVersionURI + "new: " + newVersionURI);
+        console.log("pointrel_resource_set: ", variableName, " old: ", oldVersionURI, " new: ", newVersionURI);
         // var encodedVariableName = encodeAsUTF8(variableName);
         var request = {
             url: serverURL + "variable-query.php",
@@ -202,7 +202,7 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
     }
 
     function pointrel_variable_delete(serverURL, credentials, variableName, oldVersionURI, callback) {
-        console.log("pointrel_resource_set: " + variableName + " old: " + oldVersionURI);
+        console.log("pointrel_resource_set: ", variableName, " old: ", oldVersionURI);
         // var encodedVariableName = encodeAsUTF8(variableName);
         var request = {
             url: serverURL + "variable-query.php",
@@ -234,7 +234,7 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
     ///// JOURNALS
     
     function pointrel_journal_ajax(operation, serverURL, credentials, journalName, callback, extra) {
-        console.log("pointrel_journal_" + operation + ": " + journalName);
+        console.log("pointrel_journal_ajax", operation, journalName);
         // var encodedJournalName = encodeAsUTF8(journalName);
         
         // Build merged content with extra fields if needed
