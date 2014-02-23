@@ -246,7 +246,11 @@ function appendDataToFile($fullFileName, $dataToAppend) {
 	fclose($fh);
 }
 
-function addToIndexes($shortFileName, $timestamp, $userID, $contents) {
+function createIndexEntry($indexString, $shortFileName) {
+	echo "createIndexEntry '$indexString' '$shortFileName'\n";
+}
+
+function addToIndexes($shortFileName, $timestamp, $userID, $content) {
 	global $pointrelIndexesMaintain, $pointrelIndexesDirectory, $pointrelIndexesCustomFunction;
 	
 	if ($pointrelIndexesMaintain !== true) {
@@ -269,14 +273,32 @@ function addToIndexes($shortFileName, $timestamp, $userID, $contents) {
 	appendDataToFile($fullMainIndexFileName, $jsonForIndex);
 	
 	// TODO: What kind of files to index?
-// 	if (endsWith($shortFileName, ".jsonIndexed")) {
-// 		// Do indexing
-// 		$json = json_decode($contents);
-// 		$indexing = $json["indexing"];
-// 		if ($indexing) {
-			
-// 		}
-// 	}
+	if (endsWith($shortFileName, ".pointrel-indexed.json")) {
+		// echo "indexable; trying to decode json\n";
+		// Do indexing
+		$json = json_decode($content, true);
+		// Error if array: echo "decoded into: '$json'\n";
+		// echo "content: '$content'\n";
+		if ($json) {
+			if (is_array($json)) {
+				// echo "trying to index\n";
+				$indexing = $json["indexing"];
+				// echo "the array is: $indexing";
+				if ($indexing) {
+					foreach ($indexing as $indexString) {
+						// echo "Index on: $indexString/n";
+						// Create index entry for item
+						createIndexEntry($indexString, $shortFileName);
+					}
+				} else {
+					// echo "No indexes\n";
+				}
+			} else {
+				// $json_printable = print_r($json, true);
+				// echo "not array '$json_printable'\n";
+			}
+		}
+	}
 
 	if ($pointrelIndexesCustomFunction !== null) {
 		call_user_func($pointrelIndexesCustomFunction, $shortFileName, $timestamp, $userID, $contents);

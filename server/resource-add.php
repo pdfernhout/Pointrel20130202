@@ -51,7 +51,7 @@ if (file_exists($fullName)) {
 }
 
 // TODO; Is it good enough to create indexes before writing file, with the implication it is OK if an index entry can't be found or is corrupt?
-addToIndexes($shortName, $timestamp, $userID, $contents);
+addToIndexes($shortName, $timestamp, $userID, $content);
 
 $fp = fopen($fullName, 'w');
 
