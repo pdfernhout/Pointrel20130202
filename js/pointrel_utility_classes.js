@@ -184,6 +184,36 @@ function PointrelVariable(archiver, variableName) {
     };
 }
 
+function PointrelJournal(archiver, journalName, journalType) {
+    this.archiver = archiver;
+    this.journalName = journalName;
+    this.journalType = journalType;
+    this.header = "";
+    this.content = "";
+    this.newContent = "";
+    this.callbackWhenVersionsLoaded = null;
+
+    this.getNewContents = function(callback) {
+        console.log("geNewContents -- callback", callback);
+        var self = this;
+        
+        this.archiver.index_get(this.journalName, this.journalType, this.content.length, "END", function (error, journalGetResult) {
+            console.log("callback for archiver.journal_get in getNewContents");
+            if (error) {
+                alert("Error happened on journal get");
+                // self.latestVariableVersionURI = null;
+                if (typeof(callback) == "function") callback(error, null);
+                return;
+            }
+            self.newContent = journalGetResult.result;
+            // console.log("getLatestVariableVersionURI result", self.newContent);
+            if (self.newContent) self.content = self.content + self.newContent;
+            console.log("Callback", callback);
+            if (typeof(callback) == "function") callback(null, self.content, self.newContent);
+        });
+    };
+}
+
 function PointrelArchiver(Pointrel, serverURL, credentials) {
     this.serverURL = serverURL;
     this.credentials = credentials;
@@ -228,26 +258,40 @@ function PointrelArchiver(Pointrel, serverURL, credentials) {
     // Journals
     
     this.journal_exists = function (journalName, callback) {
-        return Pointrel.journal_exists(this.serverURL, this.credentials, journalName, callback);
+        return Pointrel.journal_exists(this.serverURL, this.credentials, journalName, "journal", callback);
     };
     
     this.journal_create = function (journalName, journalFormat, callback) {
-        return Pointrel.journal_create(this.serverURL, this.credentials, journalName, journalFormat, callback);
+        return Pointrel.journal_create(this.serverURL, this.credentials, journalName, "journal", journalFormat, callback);
     };
     
     this.journal_delete = function (journalName, header, size, callback) {
-        return Pointrel.journal_delete(this.serverURL, this.credentials, journalName, header, size, callback);
+        return Pointrel.journal_delete(this.serverURL, this.credentials, journalName, "journal", header, size, callback);
     };
     
     this.journal_info = function (journalName, callback) {
-        return Pointrel.journal_info(this.serverURL, this.credentials, journalName, callback);
+        return Pointrel.journal_info(this.serverURL, this.credentials, journalName, "journal", callback);
     };
     
     this.journal_get = function (journalName, start, length, callback) {
-        return Pointrel.journal_get(this.serverURL, this.credentials, journalName, start, length, callback);
+        return Pointrel.journal_get(this.serverURL, this.credentials, journalName, "journal", start, length, callback);
     };
     
     this.journal_put = function (journalName, contentStringToAppend, callback) {
-        return Pointrel.journal_put(this.serverURL, this.credentials, journalName, contentStringToAppend, callback);
+        return Pointrel.journal_put(this.serverURL, this.credentials, journalName, "journal", contentStringToAppend, callback);
+    };
+    
+    // Indexes -- type can be either journal, index, or all
+    
+    this.index_exists = function (indexName, indexType, callback) {
+        return Pointrel.journal_exists(this.serverURL, this.credentials, indexName, indexType, callback);
+    };
+    
+    this.index_info = function (indexName, indexType, callback) {
+        return Pointrel.journal_info(this.serverURL, this.credentials, indexName, indexType, callback);
+    };
+    
+    this.index_get = function (indexName, indexType, start, length, callback) {
+        return Pointrel.journal_get(this.serverURL, this.credentials, indexName, indexType, start, length, callback);
     };
 }

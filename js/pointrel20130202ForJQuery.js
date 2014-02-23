@@ -259,12 +259,12 @@ var Pointrel = (function () {
 
     ///// JOURNALS
     
-    function pointrel_journal_ajax(operation, serverURL, credentials, journalName, callback, extra) {
-        console.log("pointrel_journal_ajax", operation, journalName);
+    function pointrel_journal_ajax(operation, serverURL, credentials, journalName, journalType, callback, extra) {
+        console.log("pointrel_journal_ajax", operation, journalName, journalType);
         // var encodedJournalName = encodeAsUTF8(journalName);
         
         // Build merged content with extra fields if needed
-        var content = {"journalName": journalName, "operation": operation, "userID": pointrel_authentication.userIDFromCredentials(credentials)};
+        var content = {"journalName": journalName, "journalType": journalType, "operation": operation, "userID": pointrel_authentication.userIDFromCredentials(credentials)};
         for (var attributeName in extra) {
             if (extra.hasOwnProperty(attributeName)) { content[attributeName] = extra[attributeName]; }
         }
@@ -303,30 +303,30 @@ var Pointrel = (function () {
         // document.getElementById("query").innerHTML = "Waiting... on " + JSON.stringify(request);
     }
     
-    function pointrel_journal_exists(serverURL, credentials, journalName, callback) {
-        pointrel_journal_ajax("exists", serverURL, credentials, journalName, callback, {});
+    function pointrel_journal_exists(serverURL, credentials, journalName, journalType, callback) {
+        pointrel_journal_ajax("exists", serverURL, credentials, journalName, journalType, callback, {});
     }
     
-    function pointrel_journal_create(serverURL, credentials, journalName, journalFormat, callback) {
-        pointrel_journal_ajax("create", serverURL, credentials, journalName, callback, {"journalFormat": journalFormat});
+    function pointrel_journal_create(serverURL, credentials, journalName, journalType, journalFormat, callback) {
+        pointrel_journal_ajax("create", serverURL, credentials, journalName, journalType, callback, {"journalFormat": journalFormat});
     }
     
-    function pointrel_journal_delete(serverURL, credentials, journalName, header, size, callback) {
-        pointrel_journal_ajax("delete", serverURL, credentials, journalName, callback, {"userSuppliedHeader": header, "userSuppliedSize": size});
+    function pointrel_journal_delete(serverURL, credentials, journalName, journalType, header, size, callback) {
+        pointrel_journal_ajax("delete", serverURL, credentials, journalName, journalType, callback, {"userSuppliedHeader": header, "userSuppliedSize": size});
     }
     
-    function pointrel_journal_info(serverURL, credentials, journalName, callback) {
-        pointrel_journal_ajax("info", serverURL, credentials, journalName, callback, {});
+    function pointrel_journal_info(serverURL, credentials, journalName, journalType, callback) {
+        pointrel_journal_ajax("info", serverURL, credentials, journalName, journalType, callback, {});
     }
     
-    function pointrel_journal_get(serverURL, credentials, journalName, start, length, callback) {
-        pointrel_journal_ajax("get", serverURL, credentials, journalName, callback, {"start": start, "length": length});
+    function pointrel_journal_get(serverURL, credentials, journalName, journalType, start, length, callback) {
+        pointrel_journal_ajax("get", serverURL, credentials, journalName, journalType, callback, {"start": start, "length": length});
     }
     
-    function pointrel_journal_put(serverURL, credentials, journalName, contentStringToAppend, callback) {
+    function pointrel_journal_put(serverURL, credentials, journalName, journalType, contentStringToAppend, callback) {
         var encodedContent = base64_encode(contentStringToAppend);
         // Maybe needed: headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
-        pointrel_journal_ajax("put", serverURL, credentials, journalName, callback, {"encodedContent": encodedContent});
+        pointrel_journal_ajax("put", serverURL, credentials, journalName, journalType, callback, {"encodedContent": encodedContent});
     }
     
     /// EXPORT
