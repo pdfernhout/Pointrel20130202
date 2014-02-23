@@ -37,6 +37,10 @@ $logTimeStamp = currentTimeStamp();
 // Log what was requested
 error_log('{"timeStamp": "' . $logTimeStamp . '", "remoteAddress": "' . $remoteAddress . '", "request": "journal-store", journalName": "' . $journalName . '", "operation": "' . $operation . '", "userID": "' . $userID . '"}' . "\n", 3, $fullLogFileName);
 
+if ($pointrelJournalsAllow !== true) {
+	exitWithJSONStatusMessage("Journals not allowed", SEND_FAILURE_HEADER, 400);
+}
+
 // Validate the input, returning error messages if there is something lacking
 
 if (empty($userID)) {
@@ -114,6 +118,10 @@ if ($operation == "create") {
 // operation: delete userSuppliedHeader userSuppliedSize
 
 if ($operation == "delete") {
+	if ($pointrelJournalsDeleteAllow !== true) {
+		exitWithJSONStatusMessage("Journals delete not allowed", SEND_FAILURE_HEADER, 400);
+	}
+	
 	validateFileExistsOrExit($fullJournalFileName);
 	
 	// Check that header info and size are correct; header must be in canonical form as supplied

@@ -247,7 +247,7 @@ function appendDataToFile($fullFileName, $dataToAppend) {
 }
 
 function addToIndexes($shortFileName, $timestamp, $userID, $contents) {
-	global $pointrelIndexesMaintain, $pointrelIndexesDirectory;
+	global $pointrelIndexesMaintain, $pointrelIndexesDirectory, $pointrelIndexesCustomFunction;
 	
 	if ($pointrelIndexesMaintain !== true) {
 		return;
@@ -277,4 +277,8 @@ function addToIndexes($shortFileName, $timestamp, $userID, $contents) {
 			
 // 		}
 // 	}
+
+	if ($pointrelIndexesCustomFunction !== null) {
+		call_user_func($pointrelIndexesCustomFunction, $shortFileName, $timestamp, $userID, $contents);
+	}
 }

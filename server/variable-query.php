@@ -48,6 +48,10 @@ $remoteAddress = $_SERVER['REMOTE_ADDR'];
 
 error_log('{"timeStamp": "' . currentTimeStamp() . '", "remoteAddress": "' . $remoteAddress . '", "request": "variable-change", "variableName": "' . $variableName . '", "operation": "' . $operation . '", "newValue": "' . $newValue . '", "currentValue": "' . $currentValue . '", "userID": "' . $userID . '", "session": "' . $session . '"}' . "\n", 3, $fullLogFileName);
 
+if ($pointrelVariablesAllow !== true) {
+	exitWithJSONStatusMessage("Variables not allowed", SEND_FAILURE_HEADER, 400);
+}
+
 if (!array_key_exists('operation', $_POST)) {
     exitWithJSONStatusMessage("No operation was specified", NO_FAILURE_HEADER, 400);
 }
@@ -100,6 +104,10 @@ if ($operation == "new") {
 }
 
 if ($operation == "delete") {
+	if ($pointrelVariablesDeleteAllow !== true) {
+		exitWithJSONStatusMessage("Variables delete not allowed", SEND_FAILURE_HEADER, 400);
+	}
+	
     validateFileExistsOrDie($fullVariableFileName);
     validateURIOrExit($currentValue, NO_FAILURE_HEADER);
     $fh = fopen($fullVariableFileName, 'r+');
