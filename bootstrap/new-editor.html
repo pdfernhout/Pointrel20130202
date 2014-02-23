@@ -7,55 +7,53 @@
 
     <style type="text/css" media="screen">
         #editor {
-            height: 575px;
-            width: 800px;
+            height: 375px;
+            /* width: 800px; */
             border: 1px solid #DDD;
             border-radius: 4px;
             border-bottom-right-radius: 0;
             margin-top: 5px;
         }
+        
+        .fullScreen .fullScreen-editor{
+            height: auto!important;
+            width: auto!important;
+            border: 0;
+                    margin: 0;
+                    position: fixed !important;
+                    top: 0;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+            z-index: 10000
+        }
+    
+        .fullScreen {
+            overflow: hidden
+        }
     </style>
 
-    <!-- Use these when editing from pointrel-app -->
-    <script type="text/javascript" src="../libs/jquery-1.9.1.min.js"></script>
-    <script type="text/javascript" src="../libs/ace-src/ace.js"></script>
-    <script type="text/javascript" src="../libs/marked.js"></script>
-    <script type="text/javascript" src="../libs/sha256.js"></script>
-    <script type="text/javascript" src="../js/utils_common.js"></script>
-    <script type="text/javascript" src="../libs/jstorage.js"></script>
-    <script type="text/javascript" src="../js/pointrel_authentication.js"></script>
-    <script type="text/javascript" src="../js/pointrel20130202ForJQuery.js"></script>
-    <script type="text/javascript" src="../js/pointrel_utility_classes.js"></script>
-    <script>var bootstrapping = false;</script>
-    
-    <!-- Use these when bootstrapping from pointrel-www
-    <script type="text/javascript" src="../pointrel-app/libs/jquery-1.9.1.min.js"></script>
-    <script type="text/javascript" src="../pointrel-app/libs/ace-src/ace.js"></script>
-    <script type="text/javascript" src="../pointrel-app/libs/marked.js"></script>
-    <script type="text/javascript" src="../pointrel-app/libs/sha256.js"></script>
-    <script type="text/javascript" src="../pointrel-app/js/utils_common.js"></script>
-    <script type="text/javascript" src="../pointrel-app/libs/jstorage.js"></script>
-    <script type="text/javascript" src="../pointrel-app/js/pointrel_authentication.js"></script>
-    <script type="text/javascript" src="../pointrel-app/js/pointrel20130202ForJQuery.js"></script>
-    <script type="text/javascript" src="../pointrel-app/js/pointrel_utility_classes.js"></script>
-    <script>var bootstrapping = true;</script>
-    -->
+    <script type="text/javascript" src="../../pointrel-app/libs/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/libs/ace-src/ace.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/libs/marked.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/libs/sha256.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/js/utils_common.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/libs/jstorage.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/js/pointrel_authentication.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/js/pointrel_utility_classes.js"></script>
     
     <script type="text/javascript">
-        var appPath = "";
+        // This script might be in pointrel-app/bootstrap at the start 
+        // or it might be in pointrel-www/bootstrap if bootstrapping,
+        // so that is th reasons for the ../../ prefix
+        var appPath = "../../pointrel-app/bootstrap/";
         var publishBaseURL = "../../pointrel-www/";
-        var archiveURL = "../server/";
-        
-        if (bootstrapping) {
-            // Use these instead if bootstrapping editor further in pointrel-www directory
-            appPath = "../pointrel-app/bootstrap/";
-            publishBaseURL = "";
-            archiveURL = "../pointrel-app/server/";
-        }
+        var archiveURL = "../../pointrel-app/server/";
 
         var editorAppBaseURL = "new-editor.html";
         
-    	var viewerAppBaseURL = appPath + "viewer.html";
+        var viewerAppBaseURL = appPath + "viewer.html";
     	var versionsAppBaseURL = appPath + "versions.html";
         var loginAppBaseURL = appPath + "login.html";
                 
@@ -252,11 +250,23 @@
             // Needed when using CDN to host ace
             //var path = "../libs/ace-worker";
             //ace.config.set("workerPath", path);
-
             // Ace editor source available from: https://github.com/ajaxorg/ace-builds/
-            editor = ace.edit("editor");
 
-            // Use a hidden field to save editor content
+            var dom = require("ace/lib/dom");
+            var commands = require("ace/commands/default_commands").commands;
+            
+            // add command for all new editors
+            commands.push({
+                name: "Toggle Fullscreen",
+                bindKey: "F11",
+                exec: function(editor) {
+                    dom.toggleCssClass(document.body, "fullScreen");
+                    dom.toggleCssClass(editor.container, "fullScreen-editor");
+                    editor.resize();
+                }
+            });
+            
+            editor = ace.edit("editor");
 
             editor.setTheme("ace/theme/chrome");
             
@@ -453,7 +463,7 @@
     </script>
 </head>
 <body>
-<b>Pointrel content editor</b><br/>
+<b>Pointrel content editor</b> (F11 in editor toggles full page mode)<br/>
 <label for="variableName">Variable: </label><input type="text" id="variableName" style="width:300px;" value="code-editor-test.js"/>
 <input type="button" onclick="latest()" value="Latest"/>
 <a id="editorLink" href="">editor</a> <a id="viewerLink" href="">viewer</a> <a id="versionsLink" href="">versions</a><br/>
@@ -471,7 +481,7 @@
 <a id="publishLink" href="">published to</a> 
 <span id="editorMode">editor mode: html</span>
 <input type="hidden" id="editorSaved"/>
-<div id="editor" style="height: 500px; width: 1200px"></div>
+<div id="editor"></div>
 <div id="sampleData" style="display: none;" >// Some sample code
 function foo(items) {
     var x = "All this is syntax highlighted";
@@ -488,5 +498,6 @@ console.log("Test");
 </div>
 <input type="button" id="button_sample" onclick="loadSampleData();" value="Load example code"/>
 <a id="loginURL" href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span>  <input type="button" onclick="store()" value="Store new version of text"/><br/>
+<a href="new-editor.html?documentName=bootstrap/new-editor.html">Edit this page</a>
 </body>
 </html>
