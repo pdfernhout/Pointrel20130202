@@ -50,6 +50,9 @@ if (file_exists($fullName)) {
   exitWithJSONStatusMessage('File already exists: "' . $fullName . '"', NO_FAILURE_HEADER, 0);
 }
 
+// TODO; Is it good enough to create indexes before writing file, with the implication it is OK if an index entry can't be found or is corrupt?
+addToIndexes($shortName, $timestamp, $userID, $contents);
+
 $fp = fopen($fullName, 'w');
 
 if (!$fp) {
@@ -58,9 +61,6 @@ if (!$fp) {
 
 fwrite($fp, $content);
 fclose($fp);
-
-// TODO; Need to fix so transactional in case something goes wrong after added resource but before wrote indexes
-addToIndexes($shortName, $timestamp, $userID, $contents);
 
 // ??? header("Content-type: text/json; charset=UTF-8");
 echo '{"status": "OK", "message": "Wrote ' . $fullName . '"}';
