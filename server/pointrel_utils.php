@@ -251,6 +251,7 @@ function appendDataToFile($fullFileName, $dataToAppend) {
 
 // Index entries have a newline at the start as well as at the end to make it easier to recover from partial writes of an index entry
 // If there is only one newline, then most likely the previous line is incomplete
+// TODO: Instead of userID, should have an array of receiving steps like in email headers, to track how data gets pushed into system across distributed network
 
 function createIndexEntry($indexString, $shortFileNameForResource, $timestamp, $userID) {
 	global $pointrelIndexesDirectory;
