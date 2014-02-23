@@ -207,7 +207,13 @@ function PointrelJournal(archiver, journalName, journalType) {
             }
             self.newContent = journalGetResult.result;
             // console.log("getLatestVariableVersionURI result", self.newContent);
-            if (self.newContent) self.content = self.content + self.newContent;
+            if (self.newContent) {
+                if (!self.content) {
+                    // Record the header
+                    self.header = self.newContent.split("\n")[0];
+                }
+                self.content = self.content + self.newContent;
+            }
             console.log("Callback", callback);
             if (typeof(callback) == "function") callback(null, self.content, self.newContent);
         });
