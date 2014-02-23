@@ -246,8 +246,27 @@ function appendDataToFile($fullFileName, $dataToAppend) {
 	fclose($fh);
 }
 
-function createIndexEntry($indexString, $shortFileName) {
-	echo "createIndexEntry '$indexString' '$shortFileName'\n";
+function createIndexEntry($indexString, $shortFileNameForResource, $timestamp, $userID) {
+	global $pointrelIndexesDirectory;
+	// echo "createIndexEntry '$indexString' '$shortFileName' $timestamp $userID\n";
+	$shortFileNameForIndexName = preg_replace(array('/\s/', '/\.[\.]+/', '/[^\w_\.\-]/'), array('_', '_', '_'), $indexString);
+	
+	$hexDigits = md5($shortFileNameForIndexName);
+	$createSubdirectories = true;
+	$storagePath = calculateStoragePath($pointrelIndexesDirectory, $hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, $createSubdirectories);
+	$fullIndexFileName = $storagePath . "index_" . $hexDigits . "_" . $shortFileNameForIndexName . '.pointrelIndex';
+	
+	// TODO: Ideally should just do this once when install, not every time we add a resource
+	if (!file_exists($fullIndexFileName)) {
+		$randomUUID = uniqid('pointrelIndex:', true);
+		$jsonForIndex = '{"indexFormat":"index","indexName":"' . $shortFileNameForIndexName . '","versionUUID":"' . $randomUUID . '"}';
+		$firstLineHeader = "$jsonForIndex\n";
+		createFile($fullIndexFileName, $firstLineHeader);
+	}
+	
+	$jsonForIndex = '{"operation":"add","resource":"' . $shortFileNameForResource . '","timestamp":"' . $timestamp . '","userID":"' . $userID . '"}' . "\n";
+	appendDataToFile($fullIndexFileName, $jsonForIndex);
+	// echo "done making index\n";
 }
 
 function addToIndexes($shortFileName, $timestamp, $userID, $content) {
@@ -288,7 +307,7 @@ function addToIndexes($shortFileName, $timestamp, $userID, $content) {
 					foreach ($indexing as $indexString) {
 						// echo "Index on: $indexString/n";
 						// Create index entry for item
-						createIndexEntry($indexString, $shortFileName);
+						createIndexEntry($indexString, $shortFileName, $timestamp, $userID);
 					}
 				} else {
 					// echo "No indexes\n";
