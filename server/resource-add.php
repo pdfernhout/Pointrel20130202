@@ -11,7 +11,8 @@ $authentication = getPost('authentication');
 
 $remoteAddress = $_SERVER['REMOTE_ADDR'];
 
-error_log('{"timeStamp": "' . currentTimeStamp() . '", "remoteAddress": "' . $remoteAddress . '", "request": "resource-add", "resourceURI": "' . $resourceURI . '", "userID": "' . $userID . '", "session": "' . $session . '"}' . "\n", 3, $fullLogFileName);
+$timestamp = currentTimeStamp();
+error_log('{"timeStamp": "' . $timestamp . '", "remoteAddress": "' . $remoteAddress . '", "request": "resource-add", "resourceURI": "' . $resourceURI . '", "userID": "' . $userID . '", "session": "' . $session . '"}' . "\n", 3, $fullLogFileName);
 
 if (empty($resourceURI)) {
   exitWithJSONStatusMessage("No resourceURI was specified", SEND_FAILURE_HEADER, 400);
@@ -39,6 +40,8 @@ if ($uriSpecifiedLength != $contentLength) {
     exitWithJSONStatusMessage("Lengths do not agree from URI: $uriSpecifiedLength and from content: $contentLength", NO_FAILURE_HEADER, 0);
 }
 
+// TODO: Validate shortName is OK for files; validate the SHA256 agrees
+
 $createSubdirectories = true;
 $storagePath = calculateStoragePath($pointrelResourcesDirectory, $hexDigits, RESOURCE_STORAGE_LEVEL_COUNT, RESOURCE_STORAGE_SEGMENT_LENGTH, $createSubdirectories);
 $fullName = $storagePath . $shortName;
@@ -55,6 +58,9 @@ if (!$fp) {
 
 fwrite($fp, $content);
 fclose($fp);
+
+// TODO; Need to fix so transactional in case something goes wrong after added resource but before wrote indexes
+addToIndexes($shortName, $timestamp, $userID, $contents);
 
 // ??? header("Content-type: text/json; charset=UTF-8");
 echo '{"status": "OK", "message": "Wrote ' . $fullName . '"}';

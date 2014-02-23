@@ -12,42 +12,6 @@ include "pointrel_utils.php";
 // PHP uses advisory locking on many platforms, so this locking may only be adequate if the file  is only accessed by this script
 // There could be concurrency issues in between the time a check for existency is done for a file and when it is modified?
 
-function validateFileExistsOrDie($fullJournalFileName) {
-    if (!file_exists($fullJournalFileName)) {
-        // TODO: Can't replace with exitWithJSONStatusMessage because has extra value
-        // header("HTTP/1.1 400 Journal file does not exist: " . $fullJournalFileName);
-        exit('{"status": "FAIL", "message": "Journal file does not exist: ' . $fullJournalFileName . '", "currentValue": null}');
-    }
-}
-
-function createJournalFile($fullJournalFileName, $contents) {
-	$fh = fopen($fullJournalFileName, 'xb');
-	if (!$fh) {
-		exitWithJSONStatusMessage("Could not create journal file: '$fullJournalFileName'", NO_FAILURE_HEADER, 500);
-	}
-	if (flock($fh, LOCK_EX)) {
-		fwrite($fh, $contents);
-		flock($fh, LOCK_UN);
-	} else {
-		exitWithJSONStatusMessage("Could not lock the journal file for creating: '$fullJournalFileName'", NO_FAILURE_HEADER, 500);
-	}
-	fclose($fh);
-}
-
-function appendDataToJournalFile($fullJournalFileName, $dataToAppend) {
-	$fh = fopen($fullJournalFileName, 'ab');
-	if (!$fh) {
-		exitWithJSONStatusMessage("Could not open journal file: '$fullJournalFileName'", NO_FAILURE_HEADER, 500);
-	}
-	if (flock($fh, LOCK_EX)) {
-		fwrite($fh, $dataToAppend);
-		flock($fh, LOCK_UN);
-	} else {
-		exitWithJSONStatusMessage("Could not lock the journal file for appending: '$fullJournalFileName'", NO_FAILURE_HEADER, 500);
-	}
-	fclose($fh);
-}
-
 // the userID making the request
 $userID = getPost('userID');
 
@@ -142,7 +106,7 @@ if ($operation == "create") {
 	$jsonForJournal = '{"journalFormat":"' . $journalFormat . '","journalName":"' . $shortFileNameForJournalName . '","versionUUID":"' . $randomUUID . '"}';
 	$firstLineHeader = "$jsonForJournal\n";
 
-	createJournalFile($fullJournalFileName, $firstLineHeader);
+	createFile($fullJournalFileName, $firstLineHeader);
 	// Return a nested json object instead of a string
 	$jsonToReturn = rtrim($firstLineHeader);
 }
@@ -150,7 +114,7 @@ if ($operation == "create") {
 // operation: delete userSuppliedHeader userSuppliedSize
 
 if ($operation == "delete") {
-	validateFileExistsOrDie($fullJournalFileName);
+	validateFileExistsOrExit($fullJournalFileName);
 	
 	// Check that header info and size are correct; header must be in canonical form as supplied
 	$userSuppliedHeader = getPost('userSuppliedHeader');
@@ -198,7 +162,7 @@ if ($operation == "delete") {
 // operation: info
 
 if ($operation == "info") {
-	validateFileExistsOrDie($fullJournalFileName);
+	validateFileExistsOrExit($fullJournalFileName);
 	$fh = fopen($fullJournalFileName, 'rb');
 	if (flock($fh, LOCK_EX)) {
 		$firstLineHeader = fgets($fh);
@@ -221,7 +185,7 @@ if ($operation == "info") {
 // This may return JSON if there is an error; otherwise it returns the byte data in that section of file
 
 if ($operation == "get") {
-	validateFileExistsOrDie($fullJournalFileName);
+	validateFileExistsOrExit($fullJournalFileName);
 	
 	$start = getPost('start');
 	
@@ -273,7 +237,7 @@ if ($operation == "get") {
 // operation: put
 
 if ($operation == "put") {
-	validateFileExistsOrDie($fullJournalFileName);
+	validateFileExistsOrExit($fullJournalFileName);
 	
 	$encodedContent = getPost('encodedContent');
 	if (empty($encodedContent)) {
@@ -283,7 +247,7 @@ if ($operation == "put") {
 	$content = base64_decode($encodedContent);
 	
 	// TODO: Could check that it is valid JSON content
-	appendDataToJournalFile($fullJournalFileName, $content);
+	appendDataToFile($fullJournalFileName, $content);
 	
 	$jsonToReturn = '"ADDED"';
 }

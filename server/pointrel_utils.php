@@ -205,3 +205,76 @@ function expandPath($path)
     else
         return getcwd() . '/';
 }
+
+// Functionns used by journals and by indexes
+// PHP uses advisory locking on many platforms, so this locking may only be adequate if the file  is only accessed by this script
+// There could be concurrency issues in between the time a check for existency is done for a file and when it is modified?
+
+function validateFileExistsOrExit($fullFileName) {
+	if (!file_exists($fullFileName)) {
+		// TODO: Can't replace with exitWithJSONStatusMessage because has extra value
+		// header("HTTP/1.1 400 File does not exist: " . $fullFileName);
+		exit('{"status": "FAIL", "message": "File does not exist: ' . $fullFileName . '", "currentValue": null}');
+	}
+}
+
+function createFile($fullFileName, $contents) {
+	$fh = fopen($fullFileName, 'xb');
+	if (!$fh) {
+		exitWithJSONStatusMessage("Could not create file: '$fullFileName'", NO_FAILURE_HEADER, 500);
+	}
+	if (flock($fh, LOCK_EX)) {
+		fwrite($fh, $contents);
+		flock($fh, LOCK_UN);
+	} else {
+		exitWithJSONStatusMessage("Could not lock the file for creating: '$fullFileName'", NO_FAILURE_HEADER, 500);
+	}
+	fclose($fh);
+}
+
+function appendDataToFile($fullFileName, $dataToAppend) {
+	$fh = fopen($fullFileName, 'ab');
+	if (!$fh) {
+		exitWithJSONStatusMessage("Could not open file: '$fullFileName'", NO_FAILURE_HEADER, 500);
+	}
+	if (flock($fh, LOCK_EX)) {
+		fwrite($fh, $dataToAppend);
+		flock($fh, LOCK_UN);
+	} else {
+		exitWithJSONStatusMessage("Could not lock the file for appending: '$fullFileName'", NO_FAILURE_HEADER, 500);
+	}
+	fclose($fh);
+}
+
+function addToIndexes($shortFileName, $timestamp, $userID, $contents) {
+	global $pointrelIndexesMaintain, $pointrelIndexesDirectory;
+	
+	if ($pointrelIndexesMaintain !== true) {
+		return;
+	}
+	
+	$shortFileNameForMainIndex = "__PointrelMainIndex.pointrelIndex";
+	$fullMainIndexFileName = $pointrelIndexesDirectory . $shortFileNameForMainIndex;
+	
+	// TODO: Ideally should just do this once when install, not every time we add a resource
+	if (!file_exists($fullMainIndexFileName)) {
+		$randomUUID = uniqid('pointrelIndex:', true);
+		$jsonForIndex = '{"indexFormat":"index","indexName":"' . $shortFileNameForMainIndex . '","versionUUID":"' . $randomUUID . '"}';
+		$firstLineHeader = "$jsonForIndex\n";
+		createFile($fullMainIndexFileName, $firstLineHeader);
+	}
+	
+	// TODO: Implement recovery plan if fails while writing, like keeping resource in temp directory until finished indexing
+	$jsonForIndex = '{"operation":"add","resource":"' . $shortFileName . '","timestamp":"' . $timestamp . '","userID":"' . $userID . '"}' . "\n";
+	appendDataToFile($fullMainIndexFileName, $jsonForIndex);
+	
+	// TODO: What kind of files to index?
+// 	if (endsWith($shortFileName, ".jsonIndexed")) {
+// 		// Do indexing
+// 		$json = json_decode($contents);
+// 		$indexing = $json["indexing"];
+// 		if ($indexing) {
+			
+// 		}
+// 	}
+}

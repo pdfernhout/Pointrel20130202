@@ -239,5 +239,6 @@ function validateBinaryData(dataString) {
 
 
 function startsWith(data, start) {
+	if (!data) return false;
     return data.substring(0, start.length) === start;
 }

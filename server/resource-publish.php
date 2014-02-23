@@ -15,7 +15,7 @@ $remoteAddress = $_SERVER['REMOTE_ADDR'];
 
 error_log('{"timeStamp": "' . currentTimeStamp() . '", "remoteAddress": "' . $remoteAddress . '", "request": "resource-publish", "resourceURI": "' . $resourceURI . '", "destinationURL": "' . $destinationURL . '", "userID": "' . $userID . '", "session": "' . $session . '"}' . "\n", 3, $fullLogFileName);
 
-if (!$pointrelPublishingAllow) {
+if ($pointrelPublishingAllow !== true) {
 	exitWithJSONStatusMessage("Publishing not allowed", SEND_FAILURE_HEADER, 400);
 }
 
