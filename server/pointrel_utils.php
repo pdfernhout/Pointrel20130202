@@ -11,6 +11,9 @@ define("RESOURCE_STORAGE_SEGMENT_LENGTH", 2);
 define("VARIABLE_STORAGE_LEVEL_COUNT", 3);
 define("VARIABLE_STORAGE_SEGMENT_LENGTH", 2);
 
+// The short name of the main index of all resources added to the archive
+define("POINTREL_ALL_INDEX_FILE_NAME", "__PointrelMainIndex.pointrelIndex");
+
 // Calculate today's log file name
 $fullLogFileName = $pointrelLogsDirectory . gmdate("Y-m-d") . ".log";
 
@@ -276,7 +279,7 @@ function addToIndexes($shortFileName, $timestamp, $userID, $content) {
 		return;
 	}
 	
-	$shortFileNameForMainIndex = "__PointrelMainIndex.pointrelIndex";
+	$shortFileNameForMainIndex = POINTREL_ALL_INDEX_FILE_NAME;
 	$fullMainIndexFileName = $pointrelIndexesDirectory . $shortFileNameForMainIndex;
 	
 	// TODO: Ideally should just do this once when install, not every time we add a resource

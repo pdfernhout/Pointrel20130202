@@ -27,6 +27,10 @@ $journalName = getPost('journalName');
 //   put hash size type path data -- adds data to the journal, verifying the hash
 $operation = getPost('operation');
 
+// can be journal, index, or all
+$journalType = getPost('journalType');
+if (!$journalType) $journalType = "journal";
+
 $remoteAddress = $_SERVER['REMOTE_ADDR'];
 $logTimeStamp = currentTimeStamp();
 
@@ -37,7 +41,7 @@ $logTimeStamp = currentTimeStamp();
 // Log what was requested
 error_log('{"timeStamp": "' . $logTimeStamp . '", "remoteAddress": "' . $remoteAddress . '", "request": "journal-store", journalName": "' . $journalName . '", "operation": "' . $operation . '", "userID": "' . $userID . '"}' . "\n", 3, $fullLogFileName);
 
-if ($pointrelJournalsAllow !== true) {
+if ($pointrelJournalsAllow !== true && $journalType === "journal") {
 	exitWithJSONStatusMessage("Journals not allowed", SEND_FAILURE_HEADER, 400);
 }
 
@@ -64,17 +68,33 @@ if (!in_array($operation, $operations)) {
 	exitWithJSONStatusMessage("Unsupported operation: '$operation'", NO_FAILURE_HEADER, 400);
 }
 
+$journalTypes = array("journal", "index", "all");
+if (!in_array($journalType, $journalTypes)) {
+	exitWithJSONStatusMessage("Unsupported journalType: 'journalType'", NO_FAILURE_HEADER, 400);
+}
 
 // Determine the file name to go with the journal
 
 // From: http://stackoverflow.com/questions/2668854/sanitizing-strings-to-make-them-url-and-filename-safe but changed to change dots to underscores
 $shortFileNameForJournalName = preg_replace(array('/\s/', '/\.[\.]+/', '/[^\w_\.\-]/'), array('_', '_', '_'), $journalName);
 
-$hexDigits = md5($shortFileNameForJournalName);
-$createSubdirectories = ($operation == "create");
-$storagePath = calculateStoragePath($pointrelJournalsDirectory, $hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, $createSubdirectories);
-$fullJournalFileName = $storagePath . "journal_" . $hexDigits . "_" . $shortFileNameForJournalName . '.pointrelJournal';
-// $fullJournalFileName = "journal_" . $hexDigits . "_" . $shortFileNameForJournalName . '.pointrelJournal';
+if (journalType === "all") {
+	$fullJournalFileName = $pointrelIndexesDirectory . POINTREL_ALL_INDEX_FILE_NAME;
+} else {
+	if (journalType === "index") {
+		$baseDirectory = $pointrelIndexesDirectory;
+	} else {
+		$baseDirectory = $pointrelJournalsDirectory;
+	}
+	$hexDigits = md5($shortFileNameForJournalName);
+	$createSubdirectories = ($operation == "create" && journalType !== "index");
+	$storagePath = calculateStoragePath($pointrelJournalsDirectory, $hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, $createSubdirectories);
+	if (journalType === "index") {
+		$fullJournalFileName = $storagePath . "index_" . $hexDigits . "_" . $shortFileNameForJournalName . '.pointrelIndex';
+	} else {
+		$fullJournalFileName = $storagePath . "journal_" . $hexDigits . "_" . $shortFileNameForJournalName . '.pointrelJournal';
+	}	
+}
 
 $jsonToReturn = '"ERROR"';
 
@@ -94,6 +114,10 @@ if ($operation == "exists") {
 // Creates the journal, with the first entry being a JSON object that has a unique ID for this journal instance
 
 if ($operation == "create") {
+	if ($journalType !== "journal") {
+		exitWithJSONStatusMessage("Only journalType of journal can be created", NO_FAILURE_HEADER, 400);
+	}
+	
 	if (file_exists($fullJournalFileName)) {
 		exitWithJSONStatusMessage("Journal file already exists: '" . $fullJournalFileName . "'", NO_FAILURE_HEADER, 400);
 	}
@@ -120,6 +144,10 @@ if ($operation == "create") {
 if ($operation == "delete") {
 	if ($pointrelJournalsDeleteAllow !== true) {
 		exitWithJSONStatusMessage("Journals delete not allowed", SEND_FAILURE_HEADER, 400);
+	}
+	
+	if ($journalType !== "journal") {
+		exitWithJSONStatusMessage("Only journalType of journal can be deleted", NO_FAILURE_HEADER, 400);
 	}
 	
 	validateFileExistsOrExit($fullJournalFileName);
@@ -245,6 +273,10 @@ if ($operation == "get") {
 // operation: put
 
 if ($operation == "put") {
+	if ($journalType !== "journal") {
+		exitWithJSONStatusMessage("Only journalType of journal can be appended", NO_FAILURE_HEADER, 400);
+	}
+	
 	validateFileExistsOrExit($fullJournalFileName);
 	
 	$encodedContent = getPost('encodedContent');
@@ -262,6 +294,6 @@ if ($operation == "put") {
 
 // header("Content-type: application/json; charset=UTF-8");
 header("Content-type: application/json");
-echo '{"status": "OK", "message": "Successful operation: ' . $operation . '", "journalName": "' . $journalName . '", "result": ' . $jsonToReturn . '}';
+echo '{"status": "OK", "message": "Successful operation: ' . $operation . '", "journalName": "' . $journalName . '", "journalType": "' . $journalType . '", "result": ' . $jsonToReturn . '}';
 
 
