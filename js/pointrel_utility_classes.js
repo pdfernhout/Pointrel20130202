@@ -39,6 +39,7 @@ function PointrelVersionFollower(archiver, startingVersionURI, stopAtVersionURI,
         if (typeof(this.callbackForAllVersions) == "function") this.callbackForAllVersions(this.errorStatus, this.versions, this.endingStatus, this);
     };
 
+    // TODO: Could be an issue if this function is called a second time by someone else before it is done? May need guard variable to fail if called while running (or some other approach to pass around state through the recursion).
     this.getPreviousVersionsRecursively = function (versionURI, currentSearchDepth) {
         console.log("getPreviousVersionsRecursively", versionURI, currentSearchDepth);
         if (!versionURI) {
@@ -219,22 +220,30 @@ function PointrelJournal(archiver, journalName) {
 }
 
 // indexType can be "all" (for all resources), "index" (for a specific index) or also "journal" (but for that you could use PointrelJournal)
-function PointrelIndex(archiver, indexName, indexType) {
+function PointrelIndex(archiver, indexName, indexType, fetchResources) {
+	// Default some parameters
+	if (indexType === undefined) indexType = "index";
+	if (fetchResources === undefined) fetchResources = true;
+	
 	this.archiver = archiver;
 	this.indexName = indexName;
 	this.indexType = indexType;
+	this.fetchResources = fetchResources;
 	this.header = "";
 	this.headerObject = null;
 	this.content = "";
 	this.newContent = "";
 	this.entries = [];
+	this.newEntries = [];
 
-	this.getNewContents = function(callback) {
+	this.getNewEntries = function(callback) {
 		console.log("geNewContents -- callback", callback);
 		var self = this;
+		var start = this.content.length;
 
-		this.archiver.index_get(this.indexName, this.indexType, this.content.length, "END", function (error, indexGetResult) {
-			console.log("callback for archiver.index_get in getNewContents");
+		// TODO: Limit the length requested if the index is too big; would require getting the info first and some kind of looping
+		this.archiver.index_get(this.indexName, this.indexType, start, "END", function (error, indexGetResult) {
+			console.log("callback for archiver.index_get in getNewEntries");
 			if (error) {
 				alert("Error happened on index get");
 				// self.latestVariableVersionURI = null;
@@ -242,24 +251,80 @@ function PointrelIndex(archiver, indexName, indexType) {
 				return;
 			}
 			self.newContent = indexGetResult.result;
-			// console.log("getLatestVariableVersionURI result", self.newContent);
+			console.log("start", start, "content.length", content.length, "self.newContent.length", self.newContent.length, "getNewEntries result", self.newContent);
+			self.newEntries = [];
+			self.newResources = [];
 			if (self.newContent) {
+				// TODO: Error handling if there is only one new line or if JSON parse fails due to data corruption or failure while writing to index
 				var lines = self.newContent.split("\n\n");
 				for (var i = 0; i < lines.length; i++) {
 					var indexEntry = lines[i];
 					var parsedIndexEntry = JSON.parse(indexEntry);
-					if (i === 0 && !self.content && !self.header) {
+					if (i === 0 && self.content ==="" && self.header === "") {
+						// Handle the header on the first line as a special case
 						self.header = lines[0];
 						self.headerObject = parsedIndexEntry;
 					} else {
 						self.entries.push(parsedIndexEntry);
+						self.newEntries.push(parsedIndexEntry);
 					}
 				}
 				self.content = self.content + self.newContent;
 			}
-			console.log("Callback", callback);
-			if (typeof(callback) == "function") callback(null, self.content, self.newContent);
+			
+			if (fetchResources) {
+//				// Thinking about using JSDeferred to handle asynchronous chain of requests
+//				loop(self.newEntries.length, function(i) {
+//					return next(function() {
+//						var entry = self.newEntries[i];
+//						self.archiver.resource_get(entry, function (error, data) {
+//							if (error) {
+//								console.log("Error while fetching", i, entry, error);
+//								// TODO: How to signal this issue? Maybe should just proceed anyway, in case it is a missing resource but more are available?
+//							} else {
+//								var resourceParsed = JSON.parse(data);
+//								entry.resource = resourceParsed;
+//							}
+//						});
+//						// Somehow need to do this at end: if (typeof(callback) == "function") callback(null, self.entries, self.newEntries);
+//					});
+//				});
+				self.fetchEntries(self, 0, self.newEntries, callback);
+			} else {
+				console.log("Callback", callback);
+				if (typeof(callback) == "function") callback(null, self.entries, self.newEntries);
+			}
 		});
+	};
+	
+	// indirectly recursive function -- could this lead to stack overflow if there are too many new entries in the index? Especially for main index?
+	this.fetchEntries = function(self, entryIndex, newEntries, callback) {
+		if (entryIndex >= newEntries.length) {
+			console.log("Callback", callback);
+			if (typeof(callback) == "function") callback(null, self.entries, newEntries);
+			return;
+		}
+		var entry = newEntries[entryIndex];
+		var resourceURI = entry.resource;
+		console.log("fetchNewEntries about to request", resourceURI);
+		if (!resourceURI) {
+			console.log("No resourceURI", entry);
+			self.fetchEntries(self, entryIndex + 1, newEntries, callback);
+		} else {
+			self.archiver.resource_get(resourceURI, function (error, data) {
+				if (error) {
+					console.log("Error while fetching", entryIndex, entry, error);
+					// TODO: How to signal this issue? Maybe should just proceed anyway, in case it is a missing resource but more are available?
+				} else {
+					// We know the resource must be JSON otherwise it would not have been indexed
+					// TODO: Error handling
+					var resourceParsed = JSON.parse(data);
+					entry.resourceContent = resourceParsed;
+				}
+				// Continue to try to fetch other entries even if the current one failed
+				self.fetchEntries(self, entryIndex + 1, newEntries, callback);
+			});
+		}
 	};
 }
 

@@ -70,7 +70,7 @@ if (!in_array($operation, $operations)) {
 
 $journalTypes = array("journal", "index", "all");
 if (!in_array($journalType, $journalTypes)) {
-	exitWithJSONStatusMessage("Unsupported journalType: 'journalType'", NO_FAILURE_HEADER, 400);
+	exitWithJSONStatusMessage("Unsupported journalType: '$journalType'", NO_FAILURE_HEADER, 400);
 }
 
 // Determine the file name to go with the journal
@@ -78,18 +78,18 @@ if (!in_array($journalType, $journalTypes)) {
 // From: http://stackoverflow.com/questions/2668854/sanitizing-strings-to-make-them-url-and-filename-safe but changed to change dots to underscores
 $shortFileNameForJournalName = preg_replace(array('/\s/', '/\.[\.]+/', '/[^\w_\.\-]/'), array('_', '_', '_'), $journalName);
 
-if (journalType === "all") {
+if ($journalType === "all") {
 	$fullJournalFileName = $pointrelIndexesDirectory . POINTREL_ALL_INDEX_FILE_NAME;
 } else {
-	if (journalType === "index") {
+	if ($journalType === "index") {
 		$baseDirectory = $pointrelIndexesDirectory;
 	} else {
 		$baseDirectory = $pointrelJournalsDirectory;
 	}
 	$hexDigits = md5($shortFileNameForJournalName);
-	$createSubdirectories = ($operation == "create" && journalType !== "index");
-	$storagePath = calculateStoragePath($pointrelJournalsDirectory, $hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, $createSubdirectories);
-	if (journalType === "index") {
+	$createSubdirectories = ($operation == "create" && $journalType !== "index");
+	$storagePath = calculateStoragePath($baseDirectory, $hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, $createSubdirectories);
+	if ($journalType === "index") {
 		$fullJournalFileName = $storagePath . "index_" . $hexDigits . "_" . $shortFileNameForJournalName . '.pointrelIndex';
 	} else {
 		$fullJournalFileName = $storagePath . "journal_" . $hexDigits . "_" . $shortFileNameForJournalName . '.pointrelJournal';
@@ -225,15 +225,19 @@ if ($operation == "get") {
 	
 	$start = getPost('start');
 	
-	if ($start == '') {
+	if ($start === '') {
 		exitWithJSONStatusMessage("No start was specified", NO_FAILURE_HEADER, 400);
 	}
+	
+	$start = intval($start);
 	
 	$length = getPost('length');
 	
 	if (empty($length)) {
 		exitWithJSONStatusMessage("No length was specified", NO_FAILURE_HEADER, 400);
 	}
+	
+	if ($length !== "END") $length = intval($length);
 	
 	// Need to return arbitrary length content in body instead of JSON status result
 	// TODO: Just doing it as a single read to a string, which should be improved such as done 
@@ -242,11 +246,12 @@ if ($operation == "get") {
 	// http://www.coneural.org/florian/papers/04_byteserving.php
 	$fh = fopen($fullJournalFileName, 'rb');
 	if (flock($fh, LOCK_EX)) {
-		if ($length == "END") {
+		if ($length === "END") {
 			$stat = fstat($fh);
-			$length = $stat['size'];
+			$length = $stat['size'] - $start;
 		}
 		if ($length != 0) {
+			fseek($fh, $start, SEEK_SET);
 			$contentsPartial = fread($fh, $length);
 		} else {
 			$contentsPartial = "";
@@ -257,7 +262,7 @@ if ($operation == "get") {
 		exitWithJSONStatusMessage("Could not lock the journal file for get: '$fullJournalFileName'", NO_FAILURE_HEADER, 500);
 	}
 	
-	if ($contentsPartial == FALSE) {
+	if ($contentsPartial === FALSE) {
 		// $jsonToReturn = '"FAILED"';
 		exitWithJSONStatusMessage("Could not read the journal file for get: '$fullJournalFileName'", NO_FAILURE_HEADER, 500);
 	} else {

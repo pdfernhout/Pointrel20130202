@@ -271,7 +271,7 @@ function createIndexEntry($indexString, $shortFileNameForResource, $timestamp, $
 		createFile($fullIndexFileName, $firstLineHeader);
 	}
 	
-	$jsonForIndex = "\n" . '{"operation":"add","resource":"' . $shortFileNameForResource . '","timestamp":"' . $timestamp . '","userID":"' . $userID . '"}' . "\n";
+	$jsonForIndex = "\n" . '{"operation":"add","resource":"pointrel://' . $shortFileNameForResource . '","timestamp":"' . $timestamp . '","userID":"' . $userID . '"}' . "\n";
 	appendDataToFile($fullIndexFileName, $jsonForIndex);
 	// echo "done making index\n";
 }
@@ -295,7 +295,7 @@ function addToIndexes($shortFileName, $timestamp, $userID, $content) {
 	}
 	
 	// TODO: Implement recovery plan if fails while writing, like keeping resource in temp directory until finished indexing
-	$jsonForIndex = '{"operation":"add","resource":"' . $shortFileName . '","timestamp":"' . $timestamp . '","userID":"' . $userID . '"}' . "\n";
+	$jsonForIndex = '{"operation":"add","resource":"pointrel://' . $shortFileName . '","timestamp":"' . $timestamp . '","userID":"' . $userID . '"}' . "\n";
 	appendDataToFile($fullMainIndexFileName, $jsonForIndex);
 	
 	// TODO: What kind of files to index?
@@ -308,7 +308,7 @@ function addToIndexes($shortFileName, $timestamp, $userID, $content) {
 		if ($json) {
 			if (is_array($json)) {
 				// echo "trying to index\n";
-				$indexing = $json["indexing"];
+				$indexing = $json["_indexing"];
 				// echo "the array is: $indexing";
 				if ($indexing) {
 					foreach ($indexing as $indexString) {
