@@ -4,7 +4,7 @@ Major "to do" items:
 * some form of authentication (other than just the always possible .htpasswd).
 * creating better base apps for general content creation for a semantic web (inspired by Ward's-Wiki discussions, Drupal, Squeak, PataPata, Augment, Memex, and more);
 * creating better "Twirlip" community-oriented issue-focused discussion apps (including ones with ideas inspired by Compendium/Cohere, ProCon, Slashdot, Rakontu, Angler, SEAS, RAHS, PhiBetaIota, Analyst, and more, as well as educational simulations especially on socioeconomic policy topics, like discussed in SimulChaord),
-* adding server-side indexing and querying of stored data in an archive (like CouchDB and Map/Reduce),
+* adding server-side indexing and querying of stored data in an archive (like CouchDB and Map/Reduce) [Some limited support added 2014-02-23],
 * improving server-side versioning support for variables and related logging,
 * rethinking what a "pointrel:" URL means and what its format is,
 * figuring out how a bunch of repositories can form a "federation",
