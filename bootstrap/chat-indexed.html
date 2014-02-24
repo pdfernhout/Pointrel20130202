@@ -50,11 +50,9 @@
         console.log("newEntriesDone: ", error, newEntries);
         if (error) { alert("error"); return; }
         if (newEntries) {
-            var newEntriesReversed = newEntries.slice(0).reverse();
-            for (var i in newEntriesReversed) {
+            for (var i in newEntries) {
                 //noinspection JSUnfilteredForInLoop
-                var indexEntry = newEntriesReversed[i];
-                // messages.push(version.timestamp + " " + version.message);
+                var indexEntry = newEntries[i];
                 var resourceContent = indexEntry.resourceContent;
                 if (resourceContent !== undefined) {
                 	messages.push(indexEntry.resourceContent);
@@ -91,12 +89,12 @@
         
         var timestamp = new Date().toISOString();
         var userID = pointrel_authentication.getUserIDOrAnonymous();
-        var version = {"_indexing": [hyperdocumentID], "timestamp": timestamp, "userID": userID, "message": message};
+        var version = {"_pointrelIndexing": [hyperdocumentID], "timestamp": timestamp, "userID": userID, "message": message};
         console.log("version:", version);
         var versionAsString = JSON.stringify(version);
         console.log("versionAsString:", versionAsString);
         
-        var newVersionURI = archiver.resource_add(encodeAsUTF8(versionAsString), "pointrel-indexed.json", function(error, status) {
+        var newVersionURI = archiver.resource_add(encodeAsUTF8(versionAsString), "PointrelChat.json", function(error, status) {
 	        if (error) { alert("could not write new version: " + JSON.stringify(status)); return }
 	        console.log("wrote newVersionURI:", newVersionURI);
 			refresh();

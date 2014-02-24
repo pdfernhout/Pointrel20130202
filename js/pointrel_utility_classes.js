@@ -259,14 +259,21 @@ function PointrelIndex(archiver, indexName, indexType, fetchResources) {
 				var lines = self.newContent.split("\n\n");
 				for (var i = 0; i < lines.length; i++) {
 					var indexEntry = lines[i];
-					var parsedIndexEntry = JSON.parse(indexEntry);
-					if (i === 0 && self.content ==="" && self.header === "") {
-						// Handle the header on the first line as a special case
-						self.header = lines[0];
-						self.headerObject = parsedIndexEntry;
-					} else {
-						self.entries.push(parsedIndexEntry);
-						self.newEntries.push(parsedIndexEntry);
+					var parsedIndexEntry = null;
+					try {
+						parsedIndexEntry = JSON.parse(indexEntry);
+					} catch (e) {
+						console.log("Problem parsing JSON", indexEntry, e);
+					}
+					if (parsedIndexEntry != null) {
+						if (i === 0 && self.content ==="" && self.header === "") {
+							// Handle the header on the first line as a special case
+							self.header = lines[0];
+							self.headerObject = parsedIndexEntry;
+						} else {
+							self.entries.push(parsedIndexEntry);
+							self.newEntries.push(parsedIndexEntry);
+						}
 					}
 				}
 				self.content = self.content + self.newContent;
@@ -305,10 +312,20 @@ function PointrelIndex(archiver, indexName, indexType, fetchResources) {
 			return;
 		}
 		var entry = newEntries[entryIndex];
-		var resourceURI = entry.resource;
+		var resourceURI = entry.resourceUUID;
 		console.log("fetchNewEntries about to request", resourceURI);
 		if (!resourceURI) {
-			console.log("No resourceURI", entry);
+			console.log("No resourceUUID", entry);
+			self.fetchEntries(self, entryIndex + 1, newEntries, callback);
+		} else if (entry.xContent !== undefined) {
+			// Handle situation where resource data was directly embedded in index (to save network lookups)
+			var data = base64_decode(entry.xContent);
+			try {
+				var resourceParsed = JSON.parse(data);
+				entry.resourceContent = resourceParsed;
+			} catch (e) {
+				console.log("Problem parsing xContent as JSON", resource.xContent, data, e);
+			}
 			self.fetchEntries(self, entryIndex + 1, newEntries, callback);
 		} else {
 			self.archiver.resource_get(resourceURI, function (error, data) {

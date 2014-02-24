@@ -253,9 +253,29 @@ function appendDataToFile($fullFileName, $dataToAppend) {
 // If there is only one newline, then most likely the previous line is incomplete
 // TODO: Instead of userID, should have an array of receiving steps like in email headers, to track how data gets pushed into system across distributed network
 
-function createIndexEntry($indexString, $shortFileNameForResource, $timestamp, $userID) {
+function createIndexFileIfMissing($fullFileName, $shortFileName) {
+	if (!file_exists($fullFileName)) {
+		$randomUUID = uniqid('pointrelIndex:', true);
+		$jsonForIndex = '{"indexFormat":"index","indexName":"' . $shortFileName . '","versionUUID":"' . $randomUUID . '"}';
+		$firstLineHeader = "$jsonForIndex\n";
+		createFile($fullFileName, $firstLineHeader);
+	}	
+}
+
+function addIndexEntryToIndex($fullIndexFileName, $shortFileNameForResource, $trace, $encodedContent) {
+	global $pointrelIndexesEmbedContentSizeLimitInBytes;
+	if (strlen($encodedContent) < $pointrelIndexesEmbedContentSizeLimitInBytes) {
+		$resourceContentIfEmbedding = ',"xContent":"' . $encodedContent . '"';
+	} else {
+		$resourceContentIfEmbedding = "";
+	}
+	$jsonForIndex = "\n" . '{"operation":"add","resourceUUID":"pointrel://' . $shortFileNameForResource . '","trace":' . $trace . $resourceContentIfEmbedding . '}' . "\n";
+	appendDataToFile($fullIndexFileName, $jsonForIndex);
+	
+}
+
+function createIndexEntry($indexString, $shortFileNameForResource, $trace, $encodedContent) {
 	global $pointrelIndexesDirectory;
-	// echo "createIndexEntry '$indexString' '$shortFileName' $timestamp $userID\n";
 	$shortFileNameForIndexName = preg_replace(array('/\s/', '/\.[\.]+/', '/[^\w_\.\-]/'), array('_', '_', '_'), $indexString);
 	
 	$hexDigits = md5($shortFileNameForIndexName);
@@ -263,20 +283,11 @@ function createIndexEntry($indexString, $shortFileNameForResource, $timestamp, $
 	$storagePath = calculateStoragePath($pointrelIndexesDirectory, $hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, $createSubdirectories);
 	$fullIndexFileName = $storagePath . "index_" . $hexDigits . "_" . $shortFileNameForIndexName . '.pointrelIndex';
 	
-	// TODO: Ideally should just do this once when install, not every time we add a resource
-	if (!file_exists($fullIndexFileName)) {
-		$randomUUID = uniqid('pointrelIndex:', true);
-		$jsonForIndex = '{"indexFormat":"index","indexName":"' . $shortFileNameForIndexName . '","versionUUID":"' . $randomUUID . '"}';
-		$firstLineHeader = "$jsonForIndex\n";
-		createFile($fullIndexFileName, $firstLineHeader);
-	}
-	
-	$jsonForIndex = "\n" . '{"operation":"add","resource":"pointrel://' . $shortFileNameForResource . '","timestamp":"' . $timestamp . '","userID":"' . $userID . '"}' . "\n";
-	appendDataToFile($fullIndexFileName, $jsonForIndex);
-	// echo "done making index\n";
+	createIndexFileIfMissing($fullIndexFileName, $shortFileNameForIndexName);
+	addIndexEntryToIndex($fullIndexFileName, $shortFileNameForResource, $trace, $encodedContent);
 }
 
-function addToIndexes($shortFileName, $timestamp, $userID, $content) {
+function addToIndexes($shortFileName, $timestamp, $userID, $content, $encodedContent) {
 	global $pointrelIndexesMaintain, $pointrelIndexesDirectory, $pointrelIndexesCustomFunction;
 	
 	if ($pointrelIndexesMaintain !== true) {
@@ -286,20 +297,17 @@ function addToIndexes($shortFileName, $timestamp, $userID, $content) {
 	$shortFileNameForMainIndex = POINTREL_ALL_INDEX_FILE_NAME;
 	$fullMainIndexFileName = $pointrelIndexesDirectory . $shortFileNameForMainIndex;
 	
+	// This trace would get more complex for items received from other servers (similar to email received: headers)
+	$trace = '[{"timestamp":"' . $timestamp . '","userID":"' . $userID . '"}]';
+	
 	// TODO: Ideally should just do this once when install, not every time we add a resource
-	if (!file_exists($fullMainIndexFileName)) {
-		$randomUUID = uniqid('pointrelIndex:', true);
-		$jsonForIndex = '{"indexFormat":"index","indexName":"' . $shortFileNameForMainIndex . '","versionUUID":"' . $randomUUID . '"}';
-		$firstLineHeader = "\n$jsonForIndex\n";
-		createFile($fullMainIndexFileName, $firstLineHeader);
-	}
+	createIndexFileIfMissing($fullMainIndexFileName, $shortFileNameForMainIndex);
 	
 	// TODO: Implement recovery plan if fails while writing, like keeping resource in temp directory until finished indexing
-	$jsonForIndex = '{"operation":"add","resource":"pointrel://' . $shortFileName . '","timestamp":"' . $timestamp . '","userID":"' . $userID . '"}' . "\n";
-	appendDataToFile($fullMainIndexFileName, $jsonForIndex);
+	addIndexEntryToIndex($fullMainIndexFileName, $shortFileName, $trace, $encodedContent);
 	
-	// TODO: What kind of files to index?
-	if (endsWith($shortFileName, ".pointrel-indexed.json")) {
+	// TODO: What kind of files to index? All JSON
+	if (endsWith($shortFileName, ".json")) {
 		// echo "indexable; trying to decode json\n";
 		// Do indexing
 		$json = json_decode($content, true);
@@ -308,13 +316,13 @@ function addToIndexes($shortFileName, $timestamp, $userID, $content) {
 		if ($json) {
 			if (is_array($json)) {
 				// echo "trying to index\n";
-				$indexing = $json["_indexing"];
+				$indexing = $json["_pointrelIndexing"];
 				// echo "the array is: $indexing";
 				if ($indexing) {
 					foreach ($indexing as $indexString) {
 						// echo "Index on: $indexString/n";
 						// Create index entry for item
-						createIndexEntry($indexString, $shortFileName, $timestamp, $userID);
+						createIndexEntry($indexString, $shortFileName, $trace, $encodedContent);
 					}
 				} else {
 					// echo "No indexes\n";

@@ -19,4 +19,6 @@ $pointrelPublishingAllow = true;
 
 $pointrelIndexesDirectory = "../../pointrel-data/indexes/";
 $pointrelIndexesMaintain = true;
+// Set to 0 to turn off, 2048 for probably a reasonable size (the content is base 64 encoded so takes somewhat more space)
+$pointrelIndexesEmbedContentSizeLimitInBytes = 2048;
 $pointrelIndexesCustomFunction = null;
