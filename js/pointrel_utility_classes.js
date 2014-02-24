@@ -251,7 +251,7 @@ function PointrelIndex(archiver, indexName, indexType, fetchResources) {
 				return;
 			}
 			self.newContent = indexGetResult.result;
-			console.log("start", start, "content.length", content.length, "self.newContent.length", self.newContent.length, "getNewEntries result", self.newContent);
+			console.log("start", start, "content.length", self.content.length, "self.newContent.length", self.newContent.length, "getNewEntries result", self.newContent);
 			self.newEntries = [];
 			self.newResources = [];
 			if (self.newContent) {
