@@ -33,6 +33,8 @@ To use this software, copy it to a web server supporting PHP. You also need to m
   /yoursite
   /yoursite/pointrel-app (the contents of this project go here)
   /yoursite/pointrel-data
+  /yoursite/pointrel-data/indexes
+  /yoursite/pointrel-data/journals
   /yoursite/pointrel-data/logs
   /yoursite/pointrel-data/resources
   /yoursite/pointrel-data/variables
