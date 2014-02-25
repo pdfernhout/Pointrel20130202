@@ -96,7 +96,7 @@ function PointrelVariable(archiver, variableName) {
 //                    alert("Error happened on variable get");
 //                    self.latestVersionURI = null;
 //                    self.latestVersion = null;
-//                    callback(error, null);
+//                    callback(error, variableGetResult);
 //                    return;
 //                }
 //                self.latestVersionURI = variableGetResult.currentValue;
@@ -106,7 +106,7 @@ function PointrelVariable(archiver, variableName) {
 //                        alert("Error happened on versionContents get");
 //                        self.latestVersionURI = null;
 //                        self.latestVersion = null;
-//                        callback(error, null);
+//                        callback(error, versionContents);
 //                        return;
 //                    }
 //                    console.log("versionContents:", versionContents);
@@ -127,7 +127,7 @@ function PointrelVariable(archiver, variableName) {
             if (error) {
                 alert("Error happened on variable get");
                 // self.latestVariableVersionURI = null;
-                if (typeof(callback) == "function") callback(error, null);
+                if (typeof(callback) == "function") callback(error, variableGetResult);
                 return;
             }
             self.latestVariableVersionURI = variableGetResult.currentValue;
@@ -201,7 +201,7 @@ function PointrelJournal(archiver, journalName) {
             if (error) {
                 alert("Error happened on journal get");
                 // self.latestVariableVersionURI = null;
-                if (typeof(callback) == "function") callback(error, null);
+                if (typeof(callback) == "function") callback(error, journalGetResult);
                 return;
             }
             self.newContent = journalGetResult.result;
@@ -247,7 +247,7 @@ function PointrelIndex(archiver, indexName, indexType, fetchResources) {
 			if (error) {
 				alert("Error happened on index get");
 				// self.latestVariableVersionURI = null;
-				if (typeof(callback) == "function") callback(error, null);
+				if (typeof(callback) == "function") callback(error, indexGetResult);
 				return;
 			}
 			self.newContent = indexGetResult.result;
