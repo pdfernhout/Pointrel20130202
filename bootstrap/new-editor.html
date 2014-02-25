@@ -289,7 +289,7 @@
             if (extension === "") extension = "html";
             
             // Build a map of extensions to editor types
-            var supportedTypes = "coffee css html javascript/js json less lisp markdown/md php sh tex text xml xquery yaml".split(" ");
+            var supportedTypes = "coffee css html javascript/js json/json-pi less lisp markdown/md php sh tex text xml xquery yaml".split(" ");
             var map = {}
             for (var index in supportedTypes) {
                 var aliases = supportedTypes[index].split("/");
