@@ -307,7 +307,7 @@ function addToIndexes($shortFileName, $timestamp, $userID, $content, $encodedCon
 	addIndexEntryToIndex($fullMainIndexFileName, $shortFileName, $trace, $encodedContent);
 	
 	// TODO: What kind of files to index? All JSON
-	if (endsWith($shortFileName, ".json")) {
+	if (endsWith($shortFileName, ".json-pi")) {
 		// echo "indexable; trying to decode json\n";
 		// Do indexing
 		$json = json_decode($content, true);
