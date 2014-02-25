@@ -71,7 +71,7 @@
         for (var i in messagesReversed) {
             //noinspection JSUnfilteredForInLoop
             var oldMessage = messagesReversed[i];
-            output = output + displayStringForTimestamp(oldMessage.timestamp) + " " + oldMessage.userID + " " + oldMessage.message + "<br/>";
+            output = output + "<b>" + oldMessage.message + "</b><i> -- " + oldMessage.userID + " " + displayStringForTimestamp(oldMessage.timestamp) + "</i><br/>";
         }
         $("#div_messages").html(output);
     }
