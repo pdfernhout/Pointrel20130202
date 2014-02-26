@@ -65,7 +65,8 @@
                 archiver.resource_get(versionURI, function (error, versionContents) {
                     console.log("in callback from resource_get");
                     if (error) {
-                        alert("Error happened on versionContents get");
+                    	console.log("versionContents get error", error, versionContents);
+                        alert("Error happened on versionContents get: " + error);
                         return;
                     }
                     console.log("versionContents:", versionContents);
