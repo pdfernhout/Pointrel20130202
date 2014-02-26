@@ -36,7 +36,11 @@ function PointrelVersionFollower(archiver, startingVersionURI, stopAtVersionURI,
         this.errorStatus = error;
         console.log("endingStatus", this.endingStatus);
         console.log("errorStatus", this.errorStatus);
-        if (typeof(this.callbackForAllVersions) == "function") this.callbackForAllVersions(this.errorStatus, this.versions, this.endingStatus, this);
+        if (typeof(this.callbackForAllVersions) == "function") {
+        	this.callbackForAllVersions(this.errorStatus, this.versions, this.endingStatus, this);
+        } else {
+        	alert("Some kind of error happened in VersionFollower");
+        }
     };
 
     // TODO: Could be an issue if this function is called a second time by someone else before it is done? May need guard variable to fail if called while running (or some other approach to pass around state through the recursion).
@@ -55,7 +59,7 @@ function PointrelVersionFollower(archiver, startingVersionURI, stopAtVersionURI,
                 console.log("callback from archiver.resource_get", versionURI);
                 if (error) {
                     var message = "Error happened on versionContents get";
-                    alert(message);
+                    console.log("error in getPreviousVersionsRecursively", message, error, versionContents);
                     self.doneBecauseOfError(message);
                     return;
                 }
@@ -125,9 +129,12 @@ function PointrelVariable(archiver, variableName) {
         this.archiver.variable_get(this.variableName, function (error, variableGetResult) {
             console.log("callback for archiver.variable_get in getLatestVariableVersionURI");
             if (error) {
-                alert("Error happened on variable get");
-                // self.latestVariableVersionURI = null;
-                if (typeof(callback) == "function") callback(error, variableGetResult);
+            	console.log("error in getLastestVariableVersionURI", error);
+                if (typeof(callback) == "function") { 
+                	callback(error, variableGetResult);
+                } else {
+                	alert("Error happened on variable get");
+                }
                 return;
             }
             self.latestVariableVersionURI = variableGetResult.currentValue;
@@ -141,8 +148,12 @@ function PointrelVariable(archiver, variableName) {
         console.log("newVersionsDone in variable", error, endingStatus, versions);
         console.log("newVersionsDone this", this);
         if (error) {
-            alert("error");
-            if (typeof(this.callbackWhenVersionsLoaded) == "function") this.callbackWhenVersionsLoaded(error, versions, endingStatus, follower);
+            console.log("error in NewVersionsDone", error, versions, endingStatus, follower);
+            if (typeof(this.callbackWhenVersionsLoaded) == "function") {
+            	this.callbackWhenVersionsLoaded(error, versions, endingStatus, follower);
+            } else {
+            	 alert("error in nevVersionsDone");
+            }
             return;
         }
         if (versions) {
@@ -161,8 +172,12 @@ function PointrelVariable(archiver, variableName) {
         this.getLatestVariableVersionURI(function (error, variableGetResult) {
             console.log("callback in getNewVersions after getLatestVariableVersionURI", variableGetResult);
             if (error) {
-                alert("error getting latest value of variable");
-                // TODO: No callback for this situation?
+                log("error getting latest value of variable");
+                if (typeof(this.callbackWhenVersionsLoaded) == "function") {
+                	this.callbackWhenVersionsLoaded(error, null, null, null);
+                } else {
+                	 alert("error in getNewVersions when getting latest value of variable");
+                }
                 return;
             }
             self.follower = new PointrelVersionFollower(this.archiver, self.latestVariableVersionURI, self.mostRecentlyLoadedVersionURI, 100, self.newVersionsDone.bind(self), null);
@@ -175,7 +190,12 @@ function PointrelVariable(archiver, variableName) {
         var self = this;
         this.archiver.variable_set(this.variableName, this.latestVariableVersionURI, newVersionURI, function (error, status) {
             if (error) {
-                alert("Error happened when trying to set variable: " + JSON.stringify(status));
+            	console.log("Error in setNewVersionURI", error, status)
+            	if (typeof(callback) == "function") {
+            		callback(error, status, null);
+            	} else {
+            		alert("Error happened when trying to set variable: " + JSON.stringify(status));
+            	}
                 return;
             }
             console.log("after updating to: ", newVersionURI);
@@ -198,9 +218,13 @@ function PointrelJournal(archiver, journalName) {
         this.archiver.journal_get(this.journalName, this.content.length, "END", function (error, journalGetResult) {
             console.log("callback for archiver.journal_get in getNewContents");
             if (error) {
-                alert("Error happened on journal get");
+                console.log("Error happened on journal get", error, journalGetResult);
                 // self.latestVariableVersionURI = null;
-                if (typeof(callback) == "function") callback(error, journalGetResult);
+                if (typeof(callback) == "function") { 
+                	callback(error, journalGetResult);
+                } else {
+                	alert("Error happened on journal get");
+                }
                 return;
             }
             
@@ -244,9 +268,13 @@ function PointrelIndex(archiver, indexName, indexType, fetchResources) {
 		this.archiver.index_get(this.indexName, this.indexType, start, "END", function (error, indexGetResult) {
 			console.log("callback for archiver.index_get in getNewEntries");
 			if (error) {
-				alert("Error happened on index get");
+				console.log("Error happened on index get", error, indexGetResult);
 				// self.latestVariableVersionURI = null;
-				if (typeof(callback) == "function") callback(error, indexGetResult);
+				if (typeof(callback) == "function") {
+					callback(error, indexGetResult);
+				} else {
+					alert("Error happened on index get");
+				}
 				return;
 			}
 			var newContent = indexGetResult.result;
