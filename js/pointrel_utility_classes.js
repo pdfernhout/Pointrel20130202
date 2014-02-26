@@ -190,8 +190,7 @@ function PointrelJournal(archiver, journalName) {
     this.journalName = journalName;
     this.header = "";
     this.content = "";
-    this.newContent = "";
-
+    
     this.getNewContents = function(callback) {
         console.log("geNewContents -- callback", callback);
         var self = this;
@@ -204,17 +203,18 @@ function PointrelJournal(archiver, journalName) {
                 if (typeof(callback) == "function") callback(error, journalGetResult);
                 return;
             }
-            self.newContent = journalGetResult.result;
-            // console.log("getLatestVariableVersionURI result", self.newContent);
-            if (self.newContent) {
+            
+            var newContent = journalGetResult.result;
+            // console.log("getLatestVariableVersionURI result", newContent);
+            if (newContent) {
                 if (!self.content) {
                     // Record the header
-                    self.header = self.newContent.split("\n")[0];
+                    self.header = newContent.split("\n")[0];
                 }
-                self.content = self.content + self.newContent;
+                self.content = self.content + newContent;
             }
             console.log("Callback", callback);
-            if (typeof(callback) == "function") callback(null, self.content, self.newContent);
+            if (typeof(callback) == "function") callback(null, self.content, newContent);
         });
     };
 }
@@ -232,7 +232,6 @@ function PointrelIndex(archiver, indexName, indexType, fetchResources) {
 	this.header = "";
 	this.headerObject = null;
 	this.content = "";
-	this.newContent = "";
 	this.entries = [];
 	this.newEntries = [];
 
@@ -250,13 +249,13 @@ function PointrelIndex(archiver, indexName, indexType, fetchResources) {
 				if (typeof(callback) == "function") callback(error, indexGetResult);
 				return;
 			}
-			self.newContent = indexGetResult.result;
-			console.log("start", start, "content.length", self.content.length, "self.newContent.length", self.newContent.length, "getNewEntries result", self.newContent);
+			var newContent = indexGetResult.result;
+			console.log("start", start, "content.length", self.content.length, "newContent.length", newContent.length, "getNewEntries result", newContent);
 			self.newEntries = [];
 			self.newResources = [];
-			if (self.newContent) {
+			if (newContent) {
 				// TODO: Error handling if there is only one new line or if JSON parse fails due to data corruption or failure while writing to index
-				var lines = self.newContent.split("\n\n");
+				var lines = newContent.split("\n\n");
 				for (var i = 0; i < lines.length; i++) {
 					var indexEntry = lines[i];
 					var parsedIndexEntry = null;
@@ -276,7 +275,7 @@ function PointrelIndex(archiver, indexName, indexType, fetchResources) {
 						}
 					}
 				}
-				self.content = self.content + self.newContent;
+				self.content = self.content + newContent;
 			}
 			
 			if (fetchResources) {
