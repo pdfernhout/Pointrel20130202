@@ -33,15 +33,15 @@
                 var contents = event.target.result;
                 console.log("loaded contents",  contents.length, contents.substring(0, 50));
                 var pointrelURI = archiver.resource_add(contents, extension, function(error, status) {
-                    if (error) { alert("could not write resource: " + JSON.stringify(status)); return }
-                    console.log("wrote", pointrelURI);
                     $("#form_uri").text("URI: " + pointrelURI);
-                    var url = "resource-get.php?userID=" + pointrel_authentication.getUserIDOrAnonymous()
+                    var url = "../server/resource-get.php?userID=" + pointrel_authentication.getUserIDOrAnonymous()
                             + "&resourceURI=" + pointrelURI
                             + "&contentType=" + file.type
-                            + "&attachmentName=" + file.name
                             + "&charset=utf-8";
-                    $("a#form_downloadURL").prop("href", url);
+                    $("a#form_displayURL").prop("href", url);
+                    $("a#form_downloadURL").prop("href", url + "&attachmentName=" + file.name);
+                    if (error) { alert("could not write resource: " + JSON.stringify(status)); return }
+                    console.log("wrote", pointrelURI);
                 });
             };
             // Start the loading process going
@@ -64,6 +64,7 @@ If you forge the URL, you can upload the file again and you should get the same 
     <span id="form_loginStatus">Not logged in</span> <a href="login.html">login page</a><br/><br/>
     <span id="form_uri">URI: ???</span><br/>
     Download URL: <a id="form_downloadURL" href="#">link</a><br/>
+    Display URL: <a id="form_displayURL" href="#">link</a><br/>
 </form>
 </body>
 </html>
