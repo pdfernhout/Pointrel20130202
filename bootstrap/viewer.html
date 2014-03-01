@@ -57,11 +57,11 @@
                 // var tempArray = url.split("?");
                 // var baseURL = tempArray[0];
                 var baseURL = "viewer.html";
-                baseURL = baseURL.replace("viewer.html", "editor.html");
+                baseURL = baseURL.replace("viewer.html", "new-editor.html");
                 var newURI = baseURL + "?documentName=" + encodeURI(variableName);
                 console.log("Updating editor link URI to:", newURI);
                 $("a#editLink").prop("href", newURI);
-                newURI = newURI.replace("editor.html", "versions.html");
+                newURI = newURI.replace("new-editor.html", "versions.html");
                 console.log("Updating versionsLink URI to:", newURI);
                 $("a#versionsLink").prop("href", newURI);
             }
@@ -260,11 +260,11 @@
 Document: <b id="documentName">documentName</b> Time: <b id="timestamp">Timestamp</b> User: <b id="userID">userID</b><br/>
 <div id="refreshAndEdit">
 <input type="button" onclick="latest()" value="Refresh with markdown"/> 
-<input type="button" onclick="latest('plain')" value="Refresh as plain text"/> 
-<a id="editLink" href="editor.html?documentName=test">edit</a> 
+<input type="button" onclick="publish()" value="Publish with markdown"/> 
+<a id="editLink" href="new-editor.html?documentName=test">edit</a> 
 <a id="versionsLink" href="">versions</a> 
 <a id="publishLink" href="">published to</a>
-<input type="button" onclick="publish()" value="Publish with markdown"/> 
+<input type="button" onclick="latest('plain')" value="Refresh as plain text"/> 
 <input type="button" onclick="publishPlain()" value="Publish plain text"/> <br/>
 </div>
 <hr/>
