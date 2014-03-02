@@ -7,7 +7,6 @@
 
     <style type="text/css" media="screen">
         #editor {
-            position: relative !important;
             height: 375px;
             /* width: 800px; */
             border: 1px solid #DDD;
@@ -246,11 +245,19 @@
             editor.clearSelection();
             editor.moveCursorTo(0, 0);
         }
+        
+        function resizeAce() {
+        	var editorDiv = $("#editor:last");
+        	console.log("editorDiv.offset()", editorDiv.offset());
+        	var newHeight = $(window).height()  - editorDiv.offset().top - 10;
+        	console.log("newHeight", newHeight);
+			return $("#editor").height(newHeight);
+        };
 
         function startEditor() {
             // Needed when using CDN to host ace
-            //var path = "../libs/ace-worker";
-            //ace.config.set("workerPath", path);
+            // var path = "../libs/ace-worker";
+            // ace.config.set("workerPath", path);
             // Ace editor source available from: https://github.com/ajaxorg/ace-builds/
 
             var dom = require("ace/lib/dom");
@@ -274,15 +281,6 @@
 
             editor.setTheme("ace/theme/chrome");
             
-            // mentioned here: https://github.com/ajaxorg/ace/issues/1629
-            editor.setOption("minLines", 10);
-            editor.setOption("maxLines", 1000);
-            editor.setAutoScrollEditorIntoView();
-            
-            // editor.getSession().on('change', function() {
-      	    // editor.updateHeight();
-      	   // });
-            
          	// enable autocompletion and snippets -- not working; get "misplelled option"
          	// http://ajaxorg.github.io/ace/demo/autocompletion.html
          	// editor.setOption('enableBasicAutocompletion', true);
@@ -298,6 +296,9 @@
             } else {
                 resetEditorForLoadedData("");
             }
+            
+            $(window).resize(resizeAce);
+            resizeAce();
         }
         
         function setEditorMode(extension) {
