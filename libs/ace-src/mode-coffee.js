@@ -41,7 +41,7 @@ var WorkerClient = require("../worker/worker_client").WorkerClient;
 var oop = require("../lib/oop");
 
 function Mode() {
-    this.$tokenizer = new Tokenizer(new Rules().getRules());
+    this.HighlightRules = Rules;
     this.$outdent = new Outdent();
     this.foldingRules = new FoldMode();
 }
@@ -57,7 +57,7 @@ oop.inherits(Mode, TextMode);
     
     this.getNextLineIndent = function(state, line, tab) {
         var indent = this.$getIndent(line);
-        var tokens = this.$tokenizer.getLineTokens(line, state).tokens;
+        var tokens = this.getTokenizer().getLineTokens(line, state).tokens;
     
         if (!(tokens.length && tokens[tokens.length - 1].type === 'comment') &&
             state === 'start' && indenter.test(line))
@@ -107,6 +107,7 @@ oop.inherits(Mode, TextMode);
         return worker;
     };
 
+    this.$id = "ace/mode/coffee";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -126,7 +127,7 @@ define('ace/mode/coffee_highlight_rules', ['require', 'exports', 'module' , 'ace
 
         var keywords = (
             "this|throw|then|try|typeof|super|switch|return|break|by|continue|" +
-            "catch|class|in|instanceof|is|isnt|if|else|extends|for|forown|" +
+            "catch|class|in|instanceof|is|isnt|if|else|extends|for|own|" +
             "finally|function|while|when|new|no|not|delete|debugger|do|loop|of|off|" +
             "or|on|unless|until|and|yes"
         );
@@ -184,7 +185,7 @@ define('ace/mode/coffee_highlight_rules', ['require', 'exports', 'module' , 'ace
                     token : "string", regex : "'''", next : [
                         {token : "string", regex : "'''", next : "start"},
                         {token : "constant.language.escape", regex : stringEscape},
-                        {defaultToken: "string"},
+                        {defaultToken: "string"}
                     ]
                 }, {
                     stateName: "qqdoc",
@@ -192,6 +193,7 @@ define('ace/mode/coffee_highlight_rules', ['require', 'exports', 'module' , 'ace
                     regex : '"""',
                     next : [
                         {token : "string", regex : '"""', next : "start"},
+                        {token : "paren.string", regex : '#{', push : "start"},
                         {token : "constant.language.escape", regex : stringEscape},
                         {defaultToken: "string"}
                     ]
@@ -200,22 +202,38 @@ define('ace/mode/coffee_highlight_rules', ['require', 'exports', 'module' , 'ace
                     token : "string", regex : "'", next : [
                         {token : "string", regex : "'", next : "start"},
                         {token : "constant.language.escape", regex : stringEscape},
-                        {defaultToken: "string"},
+                        {defaultToken: "string"}
                     ]
                 }, {
                     stateName: "qqstring",
                     token : "string.start", regex : '"', next : [
                         {token : "string.end", regex : '"', next : "start"},
+                        {token : "paren.string", regex : '#{', push : "start"},
                         {token : "constant.language.escape", regex : stringEscape},
-                        {defaultToken: "string"},
+                        {defaultToken: "string"}
                     ]
                 }, {
                     stateName: "js",
                     token : "string", regex : "`", next : [
                         {token : "string", regex : "`", next : "start"},
                         {token : "constant.language.escape", regex : stringEscape},
-                        {defaultToken: "string"},
+                        {defaultToken: "string"}
                     ]
+                }, {
+                    regex: "[{}]", onMatch: function(val, state, stack) {
+                        this.next = "";
+                        if (val == "{" && stack.length) {
+                            stack.unshift("start", state);
+                            return "paren";
+                        }
+                        if (val == "}" && stack.length) {
+                            stack.shift();
+                            this.next = stack.shift();
+                            if (this.next.indexOf("string") != -1)
+                                return "paren.string";
+                        }
+                        return "paren";
+                    }
                 }, {
                     token : "string.regex",
                     regex : "///",
@@ -289,7 +307,7 @@ define('ace/mode/coffee_highlight_rules', ['require', 'exports', 'module' , 'ace
                 regex : '###',
                 next : "start"
             }, {
-                defaultToken : "comment",
+                defaultToken : "comment"
             }]
         };
         this.normalizeRules();
@@ -330,12 +348,7 @@ var MatchingBraceOutdent = function() {};
     };
 
     this.$getIndent = function(line) {
-        var match = line.match(/^(\s+)/);
-        if (match) {
-            return match[1];
-        }
-
-        return "";
+        return line.match(/^\s*/)[0];
     };
 
 }).call(MatchingBraceOutdent.prototype);

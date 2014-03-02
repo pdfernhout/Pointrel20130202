@@ -38,13 +38,14 @@ var HighlightRules = require("./diff_highlight_rules").DiffHighlightRules;
 var FoldMode = require("./folding/diff").FoldMode;
 
 var Mode = function() {
-    this.$tokenizer = new Tokenizer(new HighlightRules().getRules(), "i");
+    this.HighlightRules = HighlightRules;
     this.foldingRules = new FoldMode(["diff", "index", "\\+{3}", "@@|\\*{5}"], "i");
 };
 oop.inherits(Mode, TextMode);
 
 (function() {
 
+    this.$id = "ace/mode/diff";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
@@ -57,7 +58,7 @@ define('ace/mode/diff_highlight_rules', ['require', 'exports', 'module' , 'ace/l
 var oop = require("../lib/oop");
 var TextHighlightRules = require("./text_highlight_rules").TextHighlightRules;
 
-var DiffHighlightRules = function() {
+var DiffHighlightRules = function() {
 
     this.$rules = {
         "start" : [{
@@ -110,10 +111,14 @@ var DiffHighlightRules = function() {
                 regex: "^Index.+$",
                 token: "variable"
             }, {
+                regex: "^\\s+$",
+                token: "text"
+            }, {
                 regex: "\\s*$",
                 token: "invalid"
             }, {
-                defaultToken: "invisible"
+                defaultToken: "invisible",
+                caseInsensitive: true
             }
         ]
     };

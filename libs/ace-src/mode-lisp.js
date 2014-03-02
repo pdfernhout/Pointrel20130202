@@ -27,10 +27,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * Contributor(s):
- * 
- *
- *
  * ***** END LICENSE BLOCK ***** */
 
 define('ace/mode/lisp', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/mode/text', 'ace/tokenizer', 'ace/mode/lisp_highlight_rules'], function(require, exports, module) {
@@ -42,13 +38,15 @@ var Tokenizer = require("../tokenizer").Tokenizer;
 var LispHighlightRules = require("./lisp_highlight_rules").LispHighlightRules;
 
 var Mode = function() {
-    var highlighter = new LispHighlightRules();
-    
-    this.$tokenizer = new Tokenizer(highlighter.getRules());
+    this.HighlightRules = LispHighlightRules;
 };
 oop.inherits(Mode, TextMode);
 
 (function() {
+       
+    this.lineCommentStart = ";";
+    
+    this.$id = "ace/mode/lisp";
 }).call(Mode.prototype);
 
 exports.Mode = Mode;
