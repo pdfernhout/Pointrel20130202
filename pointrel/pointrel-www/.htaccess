@@ -1,0 +1,4 @@
+# disable any cgi in this directory or subdirectories (for Apache, other servers might need something different)
+<Files *>
+    SetHandler default-handler
+</Files>
