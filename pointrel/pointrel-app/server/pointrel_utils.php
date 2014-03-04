@@ -93,16 +93,24 @@ function currentTimeStamp() {
 function validateURIOrExit($pointrelURI, $sendHeader=NO_FAILURE_HEADER) {
     // TODO: Sanitize error messages as they repeat user input
     $pointrelAndRest = explode("//", $pointrelURI, 2);
-    $shortName = $pointrelAndRest[1];
-
-    // TODO: Check it does not have a third segment
-
+    
     if ($pointrelAndRest[0] != "pointrel:") {
-        exitWithJSONStatusMessage("URI does not start with pointrel://", $sendHeader, 406);
+    	exitWithJSONStatusMessage("URI does not start with pointrel://", $sendHeader, 406);
     }
-
-    if (count($pointrelAndRest) != 2) {
-        exitWithJSONStatusMessage('URI is malformed with extra "//"', $sendHeader, 406);
+    
+    if (count($pointrelAndRest) < 2) {
+    	exitWithJSONStatusMessage('URI is malformed with missing "//"', $sendHeader, 406);
+    }
+    
+    
+    if (count($pointrelAndRest) > 2) {
+    	exitWithJSONStatusMessage('URI is malformed with extra "//"', $sendHeader, 406);
+    }
+    
+    $shortName = $pointrelAndRest[1];
+    
+    if (strlen($shortName) === 0) {
+    	exitWithJSONStatusMessage('URI is missing the section after pointrel://', $sendHeader, 406);
     }
 
     // sha256_HEX_SIZE.extension
