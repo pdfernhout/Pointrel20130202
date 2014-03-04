@@ -1,4 +1,5 @@
 <?php
+chdir("../server/");
 include "pointrel_utils.php";
 header("Content-Type: text/plain");
 
