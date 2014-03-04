@@ -1,4 +1,6 @@
 <?php
+chdir("../../pointrel/pointrel-app/server/");
+
 $_POST['userID'] = "pdfernhout@example.com";
 $_POST['journalName'] = "test_foo";
 $_POST['operation'] = "put";
@@ -8,4 +10,4 @@ $encodedJSON = base64_encode($testJSON);
 
 $_POST['encodedContent'] = $encodedJSON;
 
-include "../../server/journal-store.php";
+include "journal-store.php";

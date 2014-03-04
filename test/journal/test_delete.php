@@ -1,4 +1,6 @@
 <?php
+chdir("../../pointrel/pointrel-app/server/");
+
 $_POST['userID'] = "pdfernhout@example.com";
 $_POST['journalName'] = "test_foo";
 $_POST['operation'] = "delete";
@@ -7,4 +9,4 @@ $_POST['operation'] = "delete";
 $_POST['userSuppliedSize'] = 130;
 $_POST['userSuppliedHeader'] = "{\"journalName\":\"foo\",\"versionUUID\":\"jsonArchiveInstance:52fe53661e8540.35129252\"}";
 
-include "../../server/journal-store.php";
+include "journal-store.php";
