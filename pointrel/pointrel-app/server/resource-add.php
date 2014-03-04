@@ -33,6 +33,7 @@ $uriSpecifiedLength = $urlInfo["length"];
 
 $content = base64_decode($encodedContent);
 $contentLength = strlen($content);
+$contentSHA256Actual = hash("sha256", $content);
 
 if ($uriSpecifiedLength != $contentLength) {
     // for debugging -- send back content
@@ -40,7 +41,11 @@ if ($uriSpecifiedLength != $contentLength) {
     exitWithJSONStatusMessage("Lengths do not agree from URI: $uriSpecifiedLength and from content: $contentLength", NO_FAILURE_HEADER, 0);
 }
 
-// TODO: Validate shortName is OK for files; validate the SHA256 agrees
+if ($hexDigits !== $contentSHA256Actual) {
+	exitWithJSONStatusMessage("SHA256 values do not agree from URI: $uriSpecifiedLength and from content", NO_FAILURE_HEADER, 0);
+}
+
+// TODO: Validate shortName is OK for files
 
 $createSubdirectories = true;
 $storagePath = calculateStoragePath($pointrelResourcesDirectory, $hexDigits, RESOURCE_STORAGE_LEVEL_COUNT, RESOURCE_STORAGE_SEGMENT_LENGTH, $createSubdirectories);

@@ -11,6 +11,7 @@ $_POST['userID'] = "pdfernhout@example.com";
 $resourceContent = "Hello world test at: " . time();
 $resourceLength = strlen($resourceContent);
 $resourceExtension = "txt";
+// $resourceSHA256 = hash("sha256", $resourceContent + "ERROR");
 $resourceSHA256 = hash("sha256", $resourceContent);
 
 // $_POST['resourceURI'] = "foo";

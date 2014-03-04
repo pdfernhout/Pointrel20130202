@@ -126,8 +126,8 @@ function validateURIOrExit($pointrelURI, $sendHeader=NO_FAILURE_HEADER) {
         exitWithJSONStatusMessage("URI does have 64 sha256 characters", $sendHeader, 406);
     }
 
-    // TODO: Make sanitization stricter for hexDigits, size, and probably also for extension
-    if (strpos($shortName, "/") !== false || strpos($shortName, "'") !== false || strpos($shortName, '"') !== false) {
+    // TODO: Make sanitization stricter for extension; size and hexDigits are probably good enough as they are compared with actual values from the content
+    if (strpos($shortName, "/") !== false || strpos($shortName, "'") !== false || strpos($shortName, '"') !== false || strpos($shortName, '\\') !== false || strpos($shortName, '..') !== false) {
         exitWithJSONStatusMessage("Bad characters in URI", $sendHeader, 406);
     }
 
