@@ -6,7 +6,7 @@ chdir("../../pointrel/pointrel-app/server/");
 $_SERVER['REQUEST_METHOD'] = "POST";
 $_SERVER['REMOTE_ADDR'] = "localhost-TEST";
 
-$_POST['userID'] = "pdfernhout@example.com";
+$_POST['userID'] = "tester@example.com";
 
 $resourceContent = "Hello world test at: " . time();
 $resourceLength = strlen($resourceContent);
