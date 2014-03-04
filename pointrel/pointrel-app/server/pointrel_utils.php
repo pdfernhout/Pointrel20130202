@@ -314,8 +314,10 @@ function addToIndexes($shortFileName, $timestamp, $userID, $content, $encodedCon
 	// TODO: Implement recovery plan if fails while writing, like keeping resource in temp directory until finished indexing
 	addIndexEntryToIndex($fullMainIndexFileName, $shortFileName, $trace, $encodedContent);
 	
-	// TODO: What kind of files to index? All JSON
-	if (endsWith($shortFileName, ".json-pi")) {
+	// TODO: What kind of files to index? All JSON? Seem wasteful of CPU time and will strain memory.
+	// So, only doing ones with ".pce.json", which are in effect "pieces" of a larger hyperdocument.
+	// PCE could also be seen to stand for "Pointrel Content Engine".
+	if (endsWith($shortFileName, ".pce.json")) {
 		// echo "indexable; trying to decode json\n";
 		// Do indexing
 		$json = json_decode($content, true);
