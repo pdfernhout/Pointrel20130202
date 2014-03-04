@@ -21,15 +21,24 @@ The version you are looking at uses JavaScript/HTML/CSS for the client and PHP f
 The upper level is called "Twirlip" and represents applications, content, processes, and users that (hopefully) support collective civic sensemaking
 in a co-evolutionary way. That level is largely unfinished at this point. It is the hope to collectively build it using the Pointrel tools here as its base.
 
-## Conceptual overview
+## Services provided
 
-The Pointrel System currently supports these services:
+The Pointrel System currently supports these services on the server side in PHP (accessed via CGI):
 
-* Permanently archiving files retrievable by their SHA-256 hash, size, and extension.
+* Storing files which are then retrievable by a combination of their SHA-256 hash, size, and file-type extension.
 * Automatically creating indexes of some of those files that are in JSON with a specific indexing field and a specific extension.
 * Copying specific resources into a web-server accessible location and giving them new names (the "publish" part).
-* Adding to user-created append-only journal files
+* Adding to user-created append-only "journal" files
 * Changing "variables" which are tags that refer to some specific resource
+
+The server side does not use a database.
+It mainly creates and appends to files stored in a regular file system of directory hierarchies.
+It can also change and delete variable files and also delete journal files in some client-requested situations.
+
+The client side in JavaScript defines interfaces to communicate with those services using AJAX techniques by passing JSON messages. 
+A few demonstration mini-applications are included mostly for testing and bootstrapping purposes in the "bootstrap" directory.
+These include an editor (using ace) which can store new versions of HTML, CSS, and JavaScript resource files
+and also publish them to a web-server-accessible area of the site.
 
 ## Major "to do" items:
 
@@ -62,15 +71,20 @@ To use the Pointrel software, copy it to a web server supporting PHP.
 The directory structure should like this (unless you make changes to pointrel_config.php which specifies these directory names).
 Note that "yoursite" is located somewhere on your webserver directory.
 
-        /yoursite  (the contents of the pointrel directory of this project go here)
-        /yoursite/pointrel-app
-        /yoursite/pointrel-data
-        /yoursite/pointrel-data/indexes
-        /yoursite/pointrel-data/journals
-        /yoursite/pointrel-data/logs
-        /yoursite/pointrel-data/resources
-        /yoursite/pointrel-data/variables
-        /yoursite/pointrel-www
+        /yoursite                          (The contents of the "pointrel" directory of this project would be copied here on your webserver directory to create the directories below.)
+        /yoursite/pointrel-app             (There is an index.html file here which links to some utility applications in subdirectories.)
+        /yoursite/pointrel-app/bootstrap   (This contains test and utility apps useful for bootstrapping the system.)
+        /yoursite/pointrel-app/js          (These are JavaScript files specific to the Pointrel System or Twirlip.)
+        /yoursite/pointrel-app/libs        (These are some third-party FOSS JavaScript libraries such as the ace editor, jQuery, jStorage, knockout, marked, mustache, and so on.)
+        /yoursite/pointrel-app/server      (The PHP CGI scripts are here which are called using AJAX.)
+        /yoursite/pointrel-app/test        (Some more simple test applications.)
+        /yoursite/pointrel-data            (This directory and subdirectories will have data you add while using the system.)
+        /yoursite/pointrel-data/indexes    (Various server-generated append-only index files are written here.)
+        /yoursite/pointrel-data/journals   (Various user-generated append-only "journal" files are written here.)
+        /yoursite/pointrel-data/logs       (Various logs about acess to the system are written here.)
+        /yoursite/pointrel-data/resources  (Archived resources are written to subdirectories of this directory.)
+        /yoursite/pointrel-data/variables  (Various "variable" files are written here which associate a text tag with a current Pointrel resource as the value.)
+        /yoursite/pointrel-www             (This is the default location where web resources get "published".)
 
 Make sure the "pointrel-data" and the "pointrel-www" directory is writeable by your web server process. 
 Making directories writeable generally requires using a "chown" command to change ownership such as:
@@ -79,21 +93,23 @@ Making directories writeable generally requires using a "chown" command to chang
 
 On a Mac, you may have to use "_www" instead of "www". Or the new file owner name needed there may be different for your system, like "apache" or "www-data".
 There are also security issues to consider when changing ownership of files on shared hosting.
+Another option on some web servers is to use ["suEXEC"](http://en.wikipedia.org/wiki/SuEXEC) or similar to have the web server process run as your user id when serving your files.
 Consult your webserver documentation for more details on file ownership and security issues.
 
-If your site is public or otherwise allows use by non-trusted users, you should have a .htaccess file like so (for Apache)
+If your site is public or otherwise allows use by non-trusted users, you should have a .htaccess file like the example below (for Apache)
 in the /yoursite/pointrel-www directory and pointrel-data directory to prevent executing uploaded cgi scripts (like .php files).
 You might need another approach with a different web server like lighttpd.
-Such .htaccess files are included already in those directories currently, but double check that they are there if needed.
-The server-side publishing script currently checks if a user is trying to write a .htaccss file and will disallow that, so such a file should not be overwriteable by a client
-Of course, if you have a private site, like on a local web server, you may want to change the .htaccess file for the pointrel-www directory so you can work on and publish server-side scripts.
-Perhaps a future version of the system will have fine-grained authorization to allow only specifcally authorized users to create or change server-side scripts. 
 
         # Example .htaccess file for Apache to prevent server-side cgi scripts from running
         # disable any cgi in this directory or subdirectories (for Apache, other servers might need something different)
         <Files *>
             SetHandler default-handler
         </Files>
+  
+Such .htaccess files are included already in those directories currently, but double check that they are there if needed.
+The server-side publishing script currently checks if a user is trying to write a .htaccss file and will disallow that, so such a file should not be overwriteable by a client
+Of course, if you have a private site, like on a local web server, you may want to change the .htaccess file for the pointrel-www directory so you can work on and publish server-side scripts.
+Perhaps a future version of the system will have fine-grained authorization to allow only specifcally authorized users to create or change server-side scripts. 
   
 You could also add the following to the pointrel-data directory .htaccess file (or to various subdirectiories)
 depending on whether you are willing to permit web crawling or alternative access to data files via the web server outside of the server scripts.
