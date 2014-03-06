@@ -350,7 +350,11 @@ function PointrelIndex(archiver, indexName, indexType, fetchResources) {
 			return;
 		}
 		var entry = newEntries[entryIndex];
-		var resourceURI = entry.resourceUUID;
+		var resourceURI = entry.name;
+		
+		// Support some legacy data from initial testing and development
+		if (resourceURI === undefined) resourceURI = entry.resourceUUID;
+		
 		console.log("fetchNewEntries about to request", resourceURI);
 		if (!resourceURI) {
 			console.log("No resourceUUID", entry);

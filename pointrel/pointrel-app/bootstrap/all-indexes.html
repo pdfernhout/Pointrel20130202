@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset='utf-8'>
+    <title>Pointrel all variables</title>
+    <script type="text/javascript" src="../../pointrel-app/libs/jquery-1.9.1.min.js"></script>
+
+    <script type="text/javascript" src="../../pointrel-app/libs/sha256.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/js/utils_common.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/libs/jstorage.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/js/pointrel_authentication.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/js/pointrel_utility_classes.js"></script>
+
+    <script type="text/javascript">
+        var archiveURL = "../../pointrel-app/server/";
+        var credentials = pointrel_authentication.getUserIDOrAnonymous();
+        var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
+        var indexer = new PointrelIndex(archiver, "allIndexes", "allIndexes", false);
+
+        $(pointrel_authentication.loginPageLoaded);
+        $(latestButtonPressed);
+
+        function latestButtonPressed() {
+            console.log("starting to load");
+
+            indexer.getNewEntries(function (error, response) {
+            	console.log("done loading", error);
+                if (error) {
+                    alert("Error when fetching:" + JSON.stringify(response));
+                    return;
+                }
+                // $("#currentContent").val(indexer.content);
+                // result = "";
+                html = "";
+                // make a copy of the array so we can sort it (which modifies the array)
+                var entries = indexer.entries.slice(0);
+                //console.log("unsorted", entries);
+                entries.sort(function(x, y) {var a = x.name.toLowerCase(); var b = y.name.toLowerCase(); return a < b ? -1 : a > b ? 1 : 0;});
+                // console.log("sorted", entries);
+                for (i in entries) {
+                    var entry = entries[i];
+                    // result = result + entry.name + "\n";
+                    html = html + '<a href="journal.html?documentName=' + entry.name + '&journalType=index">' + entry.name + '</a><br>\n';
+                }
+                // $("#currentContent").val(result);
+                $("#links").html(html);
+            });
+        }
+
+    </script>
+</head>
+<body>
+<b>Pointrel all indexes list</b><br/>
+You can also try the <a href="journal.html?documentName=all&journalType=allIndexes">journal app on allIndexes</a> to view this content.<br>
+<!--
+<form accept-charset="UTF-8">
+    <input type="button" onclick="latestButtonPressed()" value="Latest"/>
+    <label for="currentContent">Current content:<br/></label>
+    <textarea id="currentContent" style="width:800px; height:500px; overflow: auto;" readonly></textarea><br/>
+    <a href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span><br/>
+</form>
+-->
+<div id="links"></div>
+<hr>
+<b>Help</b>
+This tests Pointrel functionality for listing all variables.
+<br/><br/>
+</body>
+</html>

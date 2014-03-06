@@ -22,6 +22,8 @@
         
         var lastInfo = "";
         var lastSize = "END";
+        
+        var journalType = "journal";
 
         $(document).ready(loadLatestFromParameter);
         $(pointrel_authentication.loginPageLoaded);
@@ -35,6 +37,19 @@
                 lastSize = "END";
                 latestButtonPressed("ignoreMissing");
             }
+            var chosenJournalType = getParameter("journalType");
+            if (chosenJournalType) {
+            	console.log("Chosen journal type: " + chosenJournalType);
+            	journalType = chosenJournalType;
+            	$("#journalType").val(journalType);
+            	if (journalType != "journal") {
+            		$("#newContentLabel").hide();
+            		$("#newContent").hide();
+            		$("#createButton").hide();
+            		$("#deleteButton").hide();
+            		$("#appendButton").hide();
+            	}
+            }
         }
 
         function latestButtonPressed(ignoreIfMissing) {
@@ -47,7 +62,7 @@
             
             console.log("start", start, "length", length);
 
-            archiver.journal_get(journalName, start, length, function (error, response) {
+            archiver.index_get(journalName, journalType, start, length, function (error, response) {
             	progress("done loading", error);
                 if (error) {
                     if (!ignoreIfMissing) alert("Error when fetching:" + JSON.stringify(response));
@@ -81,7 +96,7 @@
         function existsButtonPressed() {
         	progress("starting to call exists");
             var journalName = $("#journalName").val();
-            archiver.journal_exists(journalName, function (error, response) {
+            archiver.index_exists(journalName, journalType, function (error, response) {
             	progress("done with exists", error);
                 if (error) {
                 	$("#exists").val("");
@@ -126,7 +141,7 @@
         function infoButtonPressed() {
         	progress("starting to call info");
             var journalName = $("#journalName").val();
-            archiver.journal_info(journalName, function (error, response) {
+            archiver.index_info(journalName, journalType, function (error, response) {
             	progress("done with info", error);
                 if (error) {
                     $("#header").val("");
@@ -162,10 +177,11 @@
 <b>Pointrel journal support test</b><br/>
 <form accept-charset="UTF-8">
     <label for="journalName">Journal name: </label><input type="text" id="journalName" style="width:300px;" value="journal-test"/>
+    <label for="journalType">type: </label><input type="text" id="journalType" style="width:100px;" value="journal" readonly/>
     <label for="journalFormat">format: </label><input type="text" id="journalFormat" style="width:100px;" value="freeform"/>
     <input type="button" onclick="latestButtonPressed()" value="Latest"/>
-    <input type="button" onclick="createButtonPressed()" value="Create"/>
-    <input type="button" onclick="deleteButtonPressed()" value="Delete"/><br/>
+    <input id="createButton" type="button" onclick="createButtonPressed()" value="Create"/>
+    <input id="deleteButton" type="button" onclick="deleteButtonPressed()" value="Delete"/><br/>
     <label for="exists">Exists: </label><input type="text" id="exists" style="width:50px;" readonly/>
     <input type="button" onclick="existsButtonPressed()" value="Exists"/><br/>
     <label for="header">Header: </label><input type="text" id="header" style="width:600px;" readonly/>
@@ -173,21 +189,23 @@
     <input type="button" onclick="infoButtonPressed()" value="Info"/><br/>
     <label for="currentContent">Current content:<br/></label>
     <textarea id="currentContent" style="width:800px; height:500px; overflow: auto;" readonly></textarea><br/>
-    <label for="newContent">New content:<br/></label>
+    <label id="newContentLabel" for="newContent">New content:<br/></label>
     <textarea id="newContent" style="width:800px; height:50px; overflow: auto;"></textarea><br/>
-    <input type="button" onclick="appendButtonPressed()" value="Append to journal"/><br/>
+    <input id="appendButton" type="button" onclick="appendButtonPressed()" value="Append to journal"/><br/>
     Progress: <span id="progress"></span><br/>
     <a href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span><br/>
 </form>
 <hr>
 <b>Help</b>
-This tests Pointrel functionality for appending to a journal.
+This tests Pointrel functionality for appending to a journal or for viewing an journal or index.
 Add some later versions by typing text in the newContent box at the bottom and then clicking "Append to journal".
 Click the "Latest" button to get the latest version of a journal document for some journal name.
 To add a new journal, change the journal name then click Create.
 Click Delete to delete a journal (after having previously loaded current infoButtonPressed());
 Exists says whether the journal exists.
 Info provides header infoButtonPressed() for the journal.
+Note that if you are viewing a type other "journal" (such as "index", "allIndexes", "allJournals", "allVariables", or "allResources")
+you won't be able to create, delete, or append to it manually (that is done by the system in response to adding certain resources).
 JavaScript must be enabled for this page for this test to work.
 <br/><br/>
 </body>
