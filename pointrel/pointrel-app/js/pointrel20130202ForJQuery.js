@@ -38,12 +38,12 @@ var Pointrel = (function () {
 					}
 				}
 			},
-			error : function(xhr, ajaxOptions, thrownError) {
-				console.log("sendRequest error", xhr, ajoxOptions, thrownError);
+			error : function(xhr, textStatus, errorThrown) {
+				console.log("sendRequest error", xhr, textStatus, errorThrown);
 				if (typeof (callback) === "function") {
-					callback("ERROR", xhr);
+					callback("ERROR", xhr, errorThrown);
 				} else {
-					alert("Failed POST to " + remoteScript + " xhr.status: " + xhr.status);
+					alert("Failed POST to " + remoteScript + " xhr.status: " + xhr.status + " textStatus: " + textStatus);
 				}
 			}
 		};

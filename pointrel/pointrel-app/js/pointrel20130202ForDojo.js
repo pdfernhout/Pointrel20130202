@@ -43,9 +43,9 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
 				}
 			},
 			error : function(error, other) {
-				console.log("sendRequest error", xhr, ajoxOptions, thrownError);
+				console.log("sendRequest error", error, other);
 				if (typeof (callback) === "function") {
-					callback("ERROR", error);
+					callback("ERROR", error, other);
 				} else {
 					alert("Failed POST to " + remoteScript + " error: " + JSON.stringify(error));
 				}
