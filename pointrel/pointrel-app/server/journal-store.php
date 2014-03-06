@@ -79,13 +79,13 @@ if (!in_array($journalType, $journalTypes)) {
 $shortFileNameForJournalName = preg_replace(array('/\s/', '/\.[\.]+/', '/[^\w_\.\-]/'), array('_', '_', '_'), $journalName);
 
 if ($journalType === "allResources") {
-	$fullJournalFileName = $pointrelIndexesDirectory . POINTREL_ALL_INDEX_FILE_NAME;
+	$fullJournalFileName = $pointrelIndexesDirectory . POINTREL_ALL_RESOURCES_INDEX_FILE_NAME;
 } else if ($journalType === "allIndexes") {
-	$fullJournalFileName = $pointrelIndexesDirectory . POINTREL_ALL_INDEX_FILE_NAME;
+	$fullJournalFileName = $pointrelIndexesDirectory . POINTREL_ALL_INDEXES_INDEX_FILE_NAME;
 } else if ($journalType === "allJournals") {
-	$fullJournalFileName = $pointrelIndexesDirectory . POINTREL_ALL_INDEX_FILE_NAME;
+	$fullJournalFileName = $pointrelIndexesDirectory . POINTREL_ALL_JOURNALS_INDEX_FILE_NAME;
 } else if ($journalType === "allVariables") {
-	$fullJournalFileName = $pointrelIndexesDirectory . POINTREL_ALL_INDEX_FILE_NAME;
+	$fullJournalFileName = $pointrelIndexesDirectory . POINTREL_ALL_VARIABLES_INDEX_FILE_NAME;
 } else {
 	if ($journalType === "index") {
 		$baseDirectory = $pointrelIndexesDirectory;
