@@ -46,7 +46,9 @@ if ($createIfMissing == "f" || $createIfMissing == "false" || $createIfMissing =
 
 $remoteAddress = $_SERVER['REMOTE_ADDR'];
 
-error_log('{"timeStamp": "' . currentTimeStamp() . '", "remoteAddress": "' . $remoteAddress . '", "request": "variable-change", "variableName": "' . $variableName . '", "operation": "' . $operation . '", "newValue": "' . $newValue . '", "currentValue": "' . $currentValue . '", "userID": "' . $userID . '", "session": "' . $session . '"}' . "\n", 3, $fullLogFileName);
+$logTimeStamp = currentTimeStamp();
+
+error_log('{"timeStamp": "' . $logTimeStamp . '", "remoteAddress": "' . $remoteAddress . '", "request": "variable-change", "variableName": "' . $variableName . '", "operation": "' . $operation . '", "newValue": "' . $newValue . '", "currentValue": "' . $currentValue . '", "userID": "' . $userID . '", "session": "' . $session . '"}' . "\n", 3, $fullLogFileName);
 
 if ($pointrelVariablesAllow !== true) {
 	exitWithJSONStatusMessage("Variables not allowed", SEND_FAILURE_HEADER, 400);
@@ -99,6 +101,7 @@ if ($operation == "new") {
     }
     validateURIOrExit($newValue, NO_FAILURE_HEADER);
 
+    addNewVariableToIndexes($variableName, $logTimeStamp, $userID);
     writeVariableToNewFile($fullVariableFileName, $newValue);
     $variableValueAfterOperation = $newValue;
 }
@@ -124,6 +127,7 @@ if ($operation == "delete") {
     unlink($fullVariableFileName);
     // TODO: Perhaps should return JSON null, not a string?
     $variableValueAfterOperation = "DELETED";
+    removeVariableFromIndexes($variableName, $logTimeStamp, $userID);
 }
 
 if ($operation == "set") {
@@ -139,6 +143,7 @@ if ($operation == "set") {
             exit('{"status": "FAIL", "message": "Variable file does not exist and currentValue is not empty: ' . $fullVariableFileName . '", "createIfMissing": "' . $createIfMissing . '", "currentValue": "' . $currentValue . '"}');
         } else {
             // TODO: Window of vulnerability where another user could create the file???
+        	addNewVariableToIndexes($variableName, $logTimeStamp, $userID);
             writeVariableToNewFile($fullVariableFileName, $newValue);
             $variableValueAfterOperation = $newValue;
         }

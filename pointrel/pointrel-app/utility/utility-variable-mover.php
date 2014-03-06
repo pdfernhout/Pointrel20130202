@@ -13,6 +13,8 @@ echo "moving all variable files from: $needingToBeMovedDirectoryFullPath\n\n";
 
 if (!file_exists($needingToBeMovedDirectoryFullPath)) exit("No such directory: $needingToBeMovedDirectoryFullPath");
 
+// TODO: These would not be put in the index of all variables
+
 function move($entry) {
     echo "going to move resource file from: $entry\n";
     global $pointrelVariablesDirectory;

@@ -11,6 +11,8 @@ echo "moving all pointrel resources from: $needingToBeMovedDirectoryFullPath\n\n
 
 if (!file_exists($needingToBeMovedDirectoryFullPath)) exit("No such directory: $needingToBeMovedDirectoryFullPath");
 
+// TODO: These would not be put in the index of all resources
+
 function move($entry, $urlInfo) {
     echo "going to move resource file from: $entry\n";
     global $pointrelResourcesDirectory;

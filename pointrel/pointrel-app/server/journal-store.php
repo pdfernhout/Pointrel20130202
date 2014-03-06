@@ -68,7 +68,7 @@ if (!in_array($operation, $operations)) {
 	exitWithJSONStatusMessage("Unsupported operation: '$operation'", NO_FAILURE_HEADER, 400);
 }
 
-$journalTypes = array("journal", "index", "all");
+$journalTypes = array("journal", "index", "allResources", "allIndexes", "allJournals", "allVariables");
 if (!in_array($journalType, $journalTypes)) {
 	exitWithJSONStatusMessage("Unsupported journalType: '$journalType'", NO_FAILURE_HEADER, 400);
 }
@@ -78,7 +78,13 @@ if (!in_array($journalType, $journalTypes)) {
 // From: http://stackoverflow.com/questions/2668854/sanitizing-strings-to-make-them-url-and-filename-safe but changed to change dots to underscores
 $shortFileNameForJournalName = preg_replace(array('/\s/', '/\.[\.]+/', '/[^\w_\.\-]/'), array('_', '_', '_'), $journalName);
 
-if ($journalType === "all") {
+if ($journalType === "allResources") {
+	$fullJournalFileName = $pointrelIndexesDirectory . POINTREL_ALL_INDEX_FILE_NAME;
+} else if ($journalType === "allIndexes") {
+	$fullJournalFileName = $pointrelIndexesDirectory . POINTREL_ALL_INDEX_FILE_NAME;
+} else if ($journalType === "allJournals") {
+	$fullJournalFileName = $pointrelIndexesDirectory . POINTREL_ALL_INDEX_FILE_NAME;
+} else if ($journalType === "allVariables") {
 	$fullJournalFileName = $pointrelIndexesDirectory . POINTREL_ALL_INDEX_FILE_NAME;
 } else {
 	if ($journalType === "index") {
@@ -131,9 +137,10 @@ if ($operation == "create") {
 	// TODO: Should also put journalName in somehow
 	$randomUUID = uniqid('pointrelJournalInstance:', true);
 	// TODO: Maybe should use journalName passed in, but with replacement for any double quotes in it? Same for journalFormat?
-	$jsonForJournal = '{"journalFormat":"' . $journalFormat . '","journalName":"' . $shortFileNameForJournalName . '","versionUUID":"' . $randomUUID . '"}';
+	$jsonForJournal = '{"journalFormat":"' . $journalFormat . '","journalName":' . json_encode($journalName) . ',"versionUUID":"' . $randomUUID . '"}';
 	$firstLineHeader = "$jsonForJournal\n";
 
+	addNewJournalToIndexes($journalName, $jsonForJournal, $logTimeStamp, $userID);
 	createFile($fullJournalFileName, $firstLineHeader);
 	// Return a nested json object instead of a string
 	$jsonToReturn = rtrim($firstLineHeader);
@@ -165,6 +172,7 @@ if ($operation == "delete") {
 		exitWithJSONStatusMessage("No userSuppliedSize was specified", NO_FAILURE_HEADER, 400);
 	}
 	
+	
 	$fh = fopen($fullJournalFileName, 'r+b');
 	if (flock($fh, LOCK_EX)) {
 		$stat = fstat($fh);
@@ -192,7 +200,8 @@ if ($operation == "delete") {
 	} else {
 		exitWithJSONStatusMessage("Could not lock the journal file for deleting: '$fullJournalFileName'", NO_FAILURE_HEADER, 500);
 	}
-		
+    
+	removeJournalFromIndexes($journalName, $userSuppliedHeader, $logTimeStamp, $userID);
 }
 
 // operation: info

@@ -12,7 +12,10 @@ define("VARIABLE_STORAGE_LEVEL_COUNT", 3);
 define("VARIABLE_STORAGE_SEGMENT_LENGTH", 2);
 
 // The short name of the main index of all resources added to the archive
-define("POINTREL_ALL_INDEX_FILE_NAME", "__PointrelMainIndex.pointrelIndex");
+define("POINTREL_ALL_RESOURCES_INDEX_FILE_NAME", "__PointrelAllResources.pointrelIndex");
+define("POINTREL_ALL_INDEXES_INDEX_FILE_NAME", "__PointrelAllIndexes.pointrelIndex");
+define("POINTREL_ALL_JOURNALS_INDEX_FILE_NAME", "__PointrelAllJournals.pointrelIndex");
+define("POINTREL_ALL_VARIABLES_INDEX_FILE_NAME", "__PointrelAllVariables.pointrelIndex");
 
 // Calculate today's log file name
 $fullLogFileName = $pointrelLogsDirectory . gmdate("Y-m-d") . ".log";
@@ -261,63 +264,161 @@ function appendDataToFile($fullFileName, $dataToAppend) {
 // If there is only one newline, then most likely the previous line is incomplete
 // TODO: Instead of userID, should have an array of receiving steps like in email headers, to track how data gets pushed into system across distributed network
 
-function createIndexFileIfMissing($fullFileName, $shortFileName) {
-	if (!file_exists($fullFileName)) {
+// "All" indexes are for all resources, all indexes, all journals, and all variables
+// TODO: Add support for recording when a journal or variable is deleted
+
+function addIndexEntryToAllIndexesIndex($allIndexShortFileName, $indexName, $randomUUID) {
+	global $pointrelIndexesDirectory;
+	$fullAllIndexFileName = $pointrelIndexesDirectory . $allIndexShortFileName;
+
+	createIndexFileIfMissing($fullAllIndexFileName, $allIndexShortFileName, false);
+	
+	// Create special index entry for the allIndexes index
+	$jsonForIndex = "\n" . '{"operation":"add","name":' . json_encode($indexName) . ',"versionUUID":"' . $randomUUID . '"}' . "\n";
+	appendDataToFile($fullAllIndexFileName, $jsonForIndex);
+}
+
+function createIndexFileIfMissing($fullIndexFileName, $indexName, $addToAllIndexesIndex) {
+	if (!file_exists($fullIndexFileName)) {
 		$randomUUID = uniqid('pointrelIndex:', true);
-		$jsonForIndex = '{"indexFormat":"index","indexName":"' . $shortFileName . '","versionUUID":"' . $randomUUID . '"}';
+		$jsonForIndex = '{"indexFormat":"index","indexName":' . json_encode($indexName) . ',"versionUUID":"' . $randomUUID . '"}';
 		$firstLineHeader = "$jsonForIndex\n";
-		createFile($fullFileName, $firstLineHeader);
+		if ($addToAllIndexesIndex) addIndexEntryToAllIndexesIndex(POINTREL_ALL_INDEXES_INDEX_FILE_NAME, $indexName, $randomUUID);
+		createFile($fullIndexFileName, $firstLineHeader);
 	}	
 }
 
-function addIndexEntryToIndex($fullIndexFileName, $shortFileNameForResource, $trace, $encodedContent) {
+function addResourceIndexEntryToIndex($fullIndexFileName, $resourceURI, $trace, $encodedContent) {
 	global $pointrelIndexesEmbedContentSizeLimitInBytes;
-	if (strlen($encodedContent) < $pointrelIndexesEmbedContentSizeLimitInBytes) {
+	if (is_string($encodedContent) && strlen($encodedContent) < $pointrelIndexesEmbedContentSizeLimitInBytes) {
 		$resourceContentIfEmbedding = ',"xContent":"' . $encodedContent . '"';
 	} else {
 		$resourceContentIfEmbedding = "";
 	}
-	$jsonForIndex = "\n" . '{"operation":"add","resourceUUID":"pointrel://' . $shortFileNameForResource . '","trace":' . $trace . $resourceContentIfEmbedding . '}' . "\n";
-	appendDataToFile($fullIndexFileName, $jsonForIndex);
-	
+	$jsonForIndex = "\n" . '{"operation":"add","name":"' . $resourceURI . '","trace":' . $trace . $resourceContentIfEmbedding . '}' . "\n";
+	appendDataToFile($fullIndexFileName, $jsonForIndex);	
 }
 
-function createIndexEntry($indexString, $shortFileNameForResource, $trace, $encodedContent) {
+function createResourceIndexEntry($indexName, $resourceURI, $trace, $encodedContent) {
 	global $pointrelIndexesDirectory;
-	$shortFileNameForIndexName = preg_replace(array('/\s/', '/\.[\.]+/', '/[^\w_\.\-]/'), array('_', '_', '_'), $indexString);
+	$shortFileNameForIndexName = preg_replace(array('/\s/', '/\.[\.]+/', '/[^\w_\.\-]/'), array('_', '_', '_'), $indexName);
 	
 	$hexDigits = md5($shortFileNameForIndexName);
 	$createSubdirectories = true;
 	$storagePath = calculateStoragePath($pointrelIndexesDirectory, $hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, $createSubdirectories);
 	$fullIndexFileName = $storagePath . "index_" . $hexDigits . "_" . $shortFileNameForIndexName . '.pointrelIndex';
 	
-	createIndexFileIfMissing($fullIndexFileName, $shortFileNameForIndexName);
-	addIndexEntryToIndex($fullIndexFileName, $shortFileNameForResource, $trace, $encodedContent);
+	createIndexFileIfMissing($fullIndexFileName, $indexName, true);
+	addResourceIndexEntryToIndex($fullIndexFileName, $resourceURI, $trace, $encodedContent);
 }
 
-function addToIndexes($shortFileName, $timestamp, $userID, $content, $encodedContent) {
+function makeTrace($timestamp, $userID) {
+	return '[{"timestamp":"' . $timestamp . '","userID":' . json_encode($userID) . '}]';
+}
+
+function addNewJournalToIndexes($journalName, $header, $timestamp, $userID) {
+	global $pointrelIndexesMaintain, $pointrelIndexesDirectory;
+
+	if ($pointrelIndexesMaintain !== true) {
+		return;
+	}
+	
+	$shortFileNameForAllIndex = POINTREL_ALL_JOURNALS_INDEX_FILE_NAME;
+	$fullAllIndexFileName = $pointrelIndexesDirectory . $shortFileNameForAllIndex;
+	
+	// This trace would get more complex for items received from other servers (similar to email received: headers)
+	$trace = makeTrace($timestamp, $userID);
+	
+	// TODO: Ideally should just do this once when install, not every time we add a journal
+	createIndexFileIfMissing($fullAllIndexFileName, $shortFileNameForAllIndex, false);
+	
+	$jsonForIndex = "\n" . '{"operation":"add","name":' . json_encode($journalName) . ',"header":' . json_encode($header) . ',"trace":' . $trace . '}' . "\n";
+	appendDataToFile($fullAllIndexFileName, $jsonForIndex);
+}
+
+function removeJournalFromIndexes($journalName, $header, $timestamp, $userID) {
+	global $pointrelIndexesMaintain, $pointrelIndexesDirectory;
+
+	if ($pointrelIndexesMaintain !== true) {
+		return;
+	}
+	
+	$shortFileNameForAllIndex = POINTREL_ALL_JOURNALS_INDEX_FILE_NAME;
+	$fullAllIndexFileName = $pointrelIndexesDirectory . $shortFileNameForAllIndex;
+	
+	// This trace would get more complex for items received from other servers (similar to email received: headers)
+	$trace = makeTrace($timestamp, $userID);
+	
+	// TODO: Ideally should just do this once when install, not every time we add a journal
+	createIndexFileIfMissing($fullAllIndexFileName, $shortFileNameForAllIndex, false);
+	
+	$jsonForIndex = "\n" . '{"operation":"remove","name":' . json_encode($journalName) . ',"header":' . json_encode($header) . ',"trace":' . $trace . '}' . "\n";
+	appendDataToFile($fullAllIndexFileName, $jsonForIndex);
+}
+
+function addNewVariableToIndexes($variableName, $timestamp, $userID) {
+	global $pointrelIndexesMaintain, $pointrelIndexesDirectory;
+
+	if ($pointrelIndexesMaintain !== true) {
+		return;
+	}
+	
+	$shortFileNameForAllIndex = POINTREL_ALL_VARIABLES_INDEX_FILE_NAME;
+	$fullAllIndexFileName = $pointrelIndexesDirectory . $shortFileNameForAllIndex;
+	
+	// This trace would get more complex for items received from other servers (similar to email received: headers)
+	$trace = makeTrace($timestamp, $userID);
+	
+	// TODO: Ideally should just do this once when install, not every time we add a variable
+	createIndexFileIfMissing($fullAllIndexFileName, $shortFileNameForAllIndex, false);
+	
+	$jsonForIndex = "\n" . '{"operation":"add","name":' . json_encode($variableName) . ',"trace":' . $trace . '}' . "\n";
+	appendDataToFile($fullAllIndexFileName, $jsonForIndex);
+}
+	
+function removeVariableFromIndexes($variableName, $timestamp, $userID) {
+	global $pointrelIndexesMaintain, $pointrelIndexesDirectory;
+
+	if ($pointrelIndexesMaintain !== true) {
+		return;
+	}
+	
+	$shortFileNameForAllIndex = POINTREL_ALL_VARIABLES_INDEX_FILE_NAME;
+	$fullAllIndexFileName = $pointrelIndexesDirectory . $shortFileNameForAllIndex;
+	
+	// This trace would get more complex for items received from other servers (similar to email received: headers)
+	$trace = makeTrace($timestamp, $userID);
+	
+	// TODO: Ideally should just do this once when install, not every time we add a variable
+	createIndexFileIfMissing($fullAllIndexFileName, $shortFileNameForAllIndex, false);
+	
+	$jsonForIndex = "\n" . '{"operation":"remove","name":' . json_encode($variableName) . ',"trace":' . $trace . '}' . "\n";
+	appendDataToFile($fullAllIndexFileName, $jsonForIndex);
+}
+
+function addResourceToIndexes($resourceURI, $timestamp, $userID, $content, $encodedContent) {
 	global $pointrelIndexesMaintain, $pointrelIndexesDirectory, $pointrelIndexesCustomFunction;
 	
 	if ($pointrelIndexesMaintain !== true) {
 		return;
 	}
 	
-	$shortFileNameForMainIndex = POINTREL_ALL_INDEX_FILE_NAME;
-	$fullMainIndexFileName = $pointrelIndexesDirectory . $shortFileNameForMainIndex;
+	$shortFileNameForAllIndex = POINTREL_ALL_RESOURCES_INDEX_FILE_NAME;
+	$fullAllIndexFileName = $pointrelIndexesDirectory . $shortFileNameForAllIndex;
 	
 	// This trace would get more complex for items received from other servers (similar to email received: headers)
-	$trace = '[{"timestamp":"' . $timestamp . '","userID":"' . $userID . '"}]';
+	$trace = makeTrace($timestamp, $userID);
 	
 	// TODO: Ideally should just do this once when install, not every time we add a resource
-	createIndexFileIfMissing($fullMainIndexFileName, $shortFileNameForMainIndex);
+	createIndexFileIfMissing($fullAllIndexFileName, $shortFileNameForAllIndex, false);
 	
 	// TODO: Implement recovery plan if fails while writing, like keeping resource in temp directory until finished indexing
-	addIndexEntryToIndex($fullMainIndexFileName, $shortFileName, $trace, $encodedContent);
+	addResourceIndexEntryToIndex($fullAllIndexFileName, $resourceURI, $trace, $encodedContent);
 	
 	// TODO: What kind of files to index? All JSON? Seem wasteful of CPU time and will strain memory.
 	// So, only doing ones with ".pce.json", which are in effect "pieces" of a larger hyperdocument.
 	// PCE could also be seen to stand for "Pointrel Content Engine".
-	if (endsWith($shortFileName, ".pce.json")) {
+	if (endsWith($resourceURI, ".pce.json")) {
 		// echo "indexable; trying to decode json\n";
 		// Do indexing
 		$json = json_decode($content, true);
@@ -332,7 +433,7 @@ function addToIndexes($shortFileName, $timestamp, $userID, $content, $encodedCon
 					foreach ($indexing as $indexString) {
 						// echo "Index on: $indexString/n";
 						// Create index entry for item
-						createIndexEntry($indexString, $shortFileName, $trace, $encodedContent);
+						createResourceIndexEntry($indexString, $resourceURI, $trace, $encodedContent);
 					}
 				} else {
 					// echo "No indexes\n";
@@ -343,8 +444,9 @@ function addToIndexes($shortFileName, $timestamp, $userID, $content, $encodedCon
 			}
 		}
 	}
+	// echo "Done indexing";
 
 	if ($pointrelIndexesCustomFunction !== null) {
-		call_user_func($pointrelIndexesCustomFunction, $shortFileName, $timestamp, $userID, $contents);
+		call_user_func($pointrelIndexesCustomFunction, $resourceURI, $timestamp, $userID, $contents);
 	}
 }

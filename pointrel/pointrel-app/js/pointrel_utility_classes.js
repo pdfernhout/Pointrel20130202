@@ -243,11 +243,22 @@ function PointrelJournal(archiver, journalName) {
 	};
 }
 
-// indexType can be "all" (for all resources), "index" (for a specific index) or also "journal" (but for that you could use PointrelJournal)
+// The indexType can be: 
+// "journal" (but for that you could use PointrelJournal)
+// "index" (for a specific named index, returns a list of all resources and who added them)
+// "allResources" (for a list of all resources in the system and who added them)
+// "allIndexes" (for a list of all indexes)
+// "allJournals (for a list of all journals and who created them)
+// "allVariables" (for a list of all variables and who created them)
+// TODO: The allResources list or potentially other all lists could eventually be so big as to cause out-of-memory errors or similar problems like excessive CPU use delays, so need to use incremental loading to limit requests
 function PointrelIndex(archiver, indexName, indexType, fetchResources) {
 	// Default some parameters
 	if (indexType === undefined) indexType = "index";
-	if (fetchResources === undefined) fetchResources = true;
+	if (fetchResources === undefined && indexType === "index") {
+		fetchResources = true;
+	} else {
+		fetchResources = false;
+	}
 	
 	this.archiver = archiver;
 	this.indexName = indexName;
