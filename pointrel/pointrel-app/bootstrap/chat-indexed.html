@@ -13,7 +13,11 @@
     <script type="text/javascript" src="../../pointrel-app/js/pointrel_utility_classes.js"></script>
 </head>
 <body>
-<b>Chat program (using an Index)</b> <a href="../../pointrel-app/bootstrap/login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span><br/>
+<b>Chat program (using an Index)</b>
+<a href="../../pointrel-app/bootstrap/login.html">login/logout page</a> 
+<span id="form_loginStatus">Not logged in</span>
+<label for="hyperdocumentID">hyperdocumentID: </label><input type="text" id="hyperdocumentID" style="width:200px;" value="" readonly/><br>
+
 <!--suppress HtmlFormInputWithoutLabel -->
 
 <input type="text" id="message_to_send" size="63"/>
@@ -111,6 +115,15 @@
                 $("#button_send").click();
             }
         });
+        
+        var chosenHyperdocumentID = getParameter("hyperdocumentID");
+        if (chosenHyperdocumentID) {
+        	console.log("Chosen hyperdocumentID: ", chosenHyperdocumentID);
+        	hyperdocumentID = chosenHyperdocumentID;
+        	// TODO:  A little wasteful to create a new index object, although nothing has been loaded from it yet
+        	index = new PointrelIndex(archiver, hyperdocumentID);
+        }
+    	$("#hyperdocumentID").val(hyperdocumentID);
     }
     
     // jQuery -- run initialize when everything is loaded
