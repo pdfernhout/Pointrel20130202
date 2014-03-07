@@ -385,7 +385,21 @@ function PointrelIndex(archiver, indexName, indexType, fetchResources) {
 			});
 		}
 	};
+	
 }
+
+// Useful for use by other code which would want to sort the index entries
+PointrelIndex.compareIndexEntriesByName = function(entry1, entry2) {
+	var a = entry1.name;
+	// Support some legacy data from initial testing and development
+	if (a === undefined) a = entry1.resourceUUID;
+	if (a) a = a.toLowerCase();
+	var b = entry2.name;
+	// Support some legacy data from initial testing and development
+	if (b === undefined) b = entry2.resourceUUID;
+	if (b) b = b.toLowerCase();
+	return a < b ? -1 : a > b ? 1 : 0;
+};
 
 function PointrelArchiver(Pointrel, serverURL, credentials) {
     this.serverURL = serverURL;

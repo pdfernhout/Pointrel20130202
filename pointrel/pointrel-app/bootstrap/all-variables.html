@@ -36,7 +36,7 @@
                 // make a copy of the array so we can sort it (which modifies the array)
                 var entries = indexer.entries.slice(0);
                 //console.log("unsorted", entries);
-                entries.sort(function(x, y) {var a = x.name.toLowerCase(); var b = y.name.toLowerCase(); return a < b ? -1 : a > b ? 1 : 0;});
+                entries.sort(PointrelIndex.compareIndexEntriesByName);
                 // console.log("sorted", entries);
                 for (i in entries) {
                     var entry = entries[i];

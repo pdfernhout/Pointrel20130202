@@ -20,7 +20,7 @@
 
         $(pointrel_authentication.loginPageLoaded);
         $(latestButtonPressed);
-
+        
         function latestButtonPressed() {
             console.log("starting to load");
 
@@ -36,12 +36,18 @@
                 // make a copy of the array so we can sort it (which modifies the array)
                 var entries = indexer.entries.slice(0);
                 //console.log("unsorted", entries);
-                entries.sort(function(x, y) {var a = x.name.toLowerCase(); var b = y.name.toLowerCase(); return a < b ? -1 : a > b ? 1 : 0;});
+                entries.sort(PointrelIndex.compareIndexEntriesByName);
                 // console.log("sorted", entries);
                 for (i in entries) {
                     var entry = entries[i];
+                    var name = entry.name;
+                    // console.log("entry", entry);
+                    // Support some legacy data from initial testing and development
+                    if (name === undefined) name = entry.resourceUUID;
+                    // if (name === undefined) name = entry.resource;
+                    if (name === undefined) continue;
                     // result = result + entry.name + "\n";
-                    html = html + '<a href="viewer.html?documentName=' + entry.name + '">' + entry.name + '</a><br>\n';
+                    html = html + '<a href="viewer.html?documentName=' + name + '">' +name + '</a><br>\n';
                 }
                 // $("#currentContent").val(result);
                 $("#links").html(html);
@@ -64,7 +70,7 @@ You can also try the <a href="journal.html?documentName=all&journalType=allResou
 <div id="links"></div>
 <hr>
 <b>Help</b>
-This tests Pointrel functionality for listing all variables.
+This tests Pointrel functionality for listing all resources.
 <br/><br/>
 </body>
 </html>
