@@ -6,6 +6,41 @@
 <body>
   <a href="http://www.twirlip.com">Twirlip version 0.2.0</a> using the Pointrel Data Repository System <a href="https://github.com/pdfernhout/Pointrel20130202">(Pointrel20130202)</a>
   <br><br>
+The Pointrel System can be seen as a dynamic Content Management System (CMS) and can support user-extensible data types and client-side JavaScript applications to process that data.
+A first aspiration for this system is to support small workgroups collaborating on some project using an archive,
+where the archive could potentially be replicated among participants in a git-like DVCS way.
+A second aspiration is eventually making possible federating those workgroup archives as desired into global-scale knowledge repositories.
+As a brief conceptual overview, this version of the Pointrel system supports five broad services on the server side.
+<ul>
+<li>Storing files which are then retrievable by a combination of their SHA-256 hash, size, and file-type extension.</li>
+<li>Automatically creating indexes of some of those files that are in JSON with a specific indexing field and a specific extension.</li>
+<li>Copying specific resources into a web-server accessible location and giving them new names (the "publish" part).</li>
+<li>Adding to user-created append-only "journal" files.</li>
+<li>Changing "variables" which are tags that refer to some specific resource;
+these resources are typically JSON which can be interpreted as if it were an object pointing to other resources,
+such as an element in a linked list of versions of some file being edited.</li>
+</ul>
+<p>The client side in JavaScript defines interfaces to communicate with those services using AJAX techniques by passing JSON messages.
+A few demonstration mini-applications are included mostly for testing and bootstrapping purposes in the "bootstrap" directory.
+These include an editor (using ace) which can store new versions of HTML, CSS, and JavaScript resource files
+and also publish them to a web-server-accessible area of the site.</p>
+<p>
+Together, these services provide the infrastructure of what might be thought of as an open-ended <a href="http://c2.com/cgi/wiki?PointrelWiki">wiki-like</a> system.
+One thing that differentiates this from a convential text-based wiki is the inclusion of tools to support client-side JavaScript
+applications that process user-contributed data in dynamic ways.
+It is hoped that a community of interested individuals will use these tools to expand a system for public intelligence and civic sensemaking named "Twirlip".
+The Twirlip collaboration will hopefully be a co-evolution of knowledge, tools, processes, and human learning to support creating and maintaining secure healthy communities,
+such as talked about by <a href="http://www.dougengelbart.org/about/vision-highlights.html"></a>Doug Engelbart</a>" in regards to
+Dynamic Knowledge Repositories, Open Hyperdocument Systems, Bootstrapping, and Augment, and also as represented by
+Dee Hock's <a href="http://www.chaordicinitiatives.org/wiki.htm/5908/User_Agreement">Chaordic Commons</a>.
+</p>
+<p>
+Below are some initial links to use in bootstrapping the Twirlip application on top of the Pointrel system.
+</p>
+
+    <a href="bootstrap/viewer.html?documentName=index">Manually-maintained index of interesting content on the site (editable)</a><br>
+  <a href="bootstrap/versions.html?documentName=index">Versions of Index</a><br>
+  <br>
   Sample pages related to Twirlip:<br>
   <a href="bootstrap/login.html">Login page</a><br>
   <a href="bootstrap/chat.html">Chat -- implemented using a Variable</a><br>
@@ -32,8 +67,6 @@
   <a href="test/test-ace.html">Ace editor test</a><br>
   <a href="test/test-knockoutjs-intro.html">Test of knockoutjs GUI binding library</a><br>
   <br>
-  <a href="bootstrap/viewer.html?documentName=index">Index</a><br>
-  <a href="bootstrap/versions.html?documentName=index">Versions of Index</a><br>
   Shorter list of <a href="bootstrap/">bootstrapping apps</a> 
   Note that the referenced documents will not exist here unless you have added the sample data.<br>
 </body>
