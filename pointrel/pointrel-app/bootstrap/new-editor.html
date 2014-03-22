@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/html">
 <head>
@@ -56,9 +55,7 @@
         var viewerAppBaseURL = appPath + "viewer.html";
     	var versionsAppBaseURL = appPath + "versions.html";
         var loginAppBaseURL = appPath + "login.html";
-                
-        $("a#loginLink").prop("href", loginAppBaseURL);
-        
+
         var credentials = pointrel_authentication.getUserIDOrAnonymous();
         var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
 
@@ -83,6 +80,8 @@
         }
 
         function updateURI() {
+            $("a#loginLink").prop("href", loginAppBaseURL);
+
             var queryPart = "?documentName=" + encodeURI(variableName);
             $("a#editorLink").prop("href", editorAppBaseURL + queryPart);
             $("a#viewerLink").prop("href", viewerAppBaseURL + queryPart);
@@ -494,7 +493,7 @@
 <label for="versionURI">Version: </label><input type="text" id="versionURI" style="width:900px;"/><input type="button" onclick="previous()" value="Previous"/><br/>
 <label for="textURI">Text resource URI: </label><input type="text" id="textURI" style="width:900px;"/><input type="button" onclick="fetch()" value="Fetch"/><br/>
 <input type="button" id="button_sample" onclick="loadSampleData();" value="Load example code"/>
-<a id="loginURL" href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span>  <input type="button" onclick="store()" value="Store new version of text"/>
+<a id="loginLink" href="login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span>  <input type="button" onclick="store()" value="Store new version of text"/>
 <br/>
 
 <input type="button" id="button_run_main" onclick="control_run_main()" value="Run main"/>
