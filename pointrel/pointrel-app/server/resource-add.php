@@ -1,24 +1,26 @@
 <?php
 include "pointrel_utils.php";
 
-$resourceURI = getPost('resourceURI');
-$encodedContent = getPost('resourceContent');
-$userID = getPost('userID');
+$resourceURI = getCGIField('resourceURI');
+$encodedContent = getCGIField('resourceContent');
+$userID = getCGIField('userID');
 
 // For later use
-$session = getPost('session');
-$authentication = getPost('authentication');
+$session = getCGIField('session');
+$authentication = getCGIField('authentication');
 
 $remoteAddress = $_SERVER['REMOTE_ADDR'];
 
 $timestamp = currentTimeStamp();
 error_log('{"timeStamp": "' . $timestamp . '", "remoteAddress": "' . $remoteAddress . '", "request": "resource-add", "resourceURI": "' . $resourceURI . '", "userID": "' . $userID . '", "session": "' . $session . '"}' . "\n", 3, $fullLogFileName);
 
+exitIfCGIRequestMethodIsNotPost();
+
 if (empty($resourceURI)) {
   exitWithJSONStatusMessage("No resourceURI was specified", SEND_FAILURE_HEADER, 400);
 }
 
-if (!array_key_exists('resourceContent', $_POST)) {
+if ($encodedContent === null) {
   exitWithJSONStatusMessage("No resourceContent was specified", SEND_FAILURE_HEADER, 400);
 }
 

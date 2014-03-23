@@ -3,17 +3,19 @@
 
 include "pointrel_utils.php";
 
-$resourceURI = getPost('resourceURI');
-$destinationURL = getPost('destinationURL');
-$userID = getPost('userID');
+$resourceURI = getCGIField('resourceURI');
+$destinationURL = getCGIField('destinationURL');
+$userID = getCGIField('userID');
 
 // For later use
-$session = getPost('session');
-$authentication = getPost('authentication');
+$session = getCGIField('session');
+$authentication = getCGIField('authentication');
 
 $remoteAddress = $_SERVER['REMOTE_ADDR'];
 
 error_log('{"timeStamp": "' . currentTimeStamp() . '", "remoteAddress": "' . $remoteAddress . '", "request": "resource-publish", "resourceURI": "' . $resourceURI . '", "destinationURL": "' . $destinationURL . '", "userID": "' . $userID . '", "session": "' . $session . '"}' . "\n", 3, $fullLogFileName);
+
+exitIfCGIRequestMethodIsNotPost();
 
 if ($pointrelPublishingAllow !== true) {
 	exitWithJSONStatusMessage("Publishing not allowed", SEND_FAILURE_HEADER, 400);

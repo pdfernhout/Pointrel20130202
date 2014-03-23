@@ -25,17 +25,17 @@ function writeVariableToNewFile($fullVariableFileName, $newValue) {
 // Buffer should be big enough for version info...
 $MaximumVariableVersionBufferSize = 8192;
 
-$variableName = getPost('variableName');
-$operation = getPost('operation');
-$createIfMissing = getPost('createIfMissing');
-$operation = getPost('operation');
-$newValue = getPost('newValue');
-$currentValue = getPost('currentValue');
-$userID = getPost('userID');
+$variableName = getCGIField('variableName');
+$operation = getCGIField('operation');
+$createIfMissing = getCGIField('createIfMissing');
+$operation = getCGIField('operation');
+$newValue = getCGIField('newValue');
+$currentValue = getCGIField('currentValue');
+$userID = getCGIField('userID');
 
 // For later use
-$session = getPost('session');
-$authentication = getPost('authentication');
+$session = getCGIField('session');
+$authentication = getCGIField('authentication');
 
 // Default createIfMissing to true unless explicitly set to false
 if ($createIfMissing == "f" || $createIfMissing == "false" || $createIfMissing == "F" || $createIfMissing == "FALSE") {
@@ -51,10 +51,10 @@ $logTimeStamp = currentTimeStamp();
 error_log('{"timeStamp": "' . $logTimeStamp . '", "remoteAddress": "' . $remoteAddress . '", "request": "variable-change", "variableName": "' . $variableName . '", "operation": "' . $operation . '", "newValue": "' . $newValue . '", "currentValue": "' . $currentValue . '", "userID": "' . $userID . '", "session": "' . $session . '"}' . "\n", 3, $fullLogFileName);
 
 if ($pointrelVariablesAllow !== true) {
-	exitWithJSONStatusMessage("Variables not allowed", SEND_FAILURE_HEADER, 400);
+    exitWithJSONStatusMessage("Variables not allowed", SEND_FAILURE_HEADER, 400);
 }
 
-if (!array_key_exists('operation', $_POST)) {
+if ($operation === null) {
     exitWithJSONStatusMessage("No operation was specified", NO_FAILURE_HEADER, 400);
 }
 
@@ -82,6 +82,10 @@ $shortFileNameForVariableName = preg_replace(array('/\s/', '/\.[\.]+/', '/[^\w_\
 $hexDigits = md5($shortFileNameForVariableName);
 
 $createSubdirectories = ($operation == "new") || ($operation == "set" && $currentValue === "");
+if ($createSubdirectories) {
+	exitIfCGIRequestMethodIsNotPost();
+}
+
 $storagePath = calculateStoragePath($pointrelVariablesDirectory, $hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, $createSubdirectories);
 
 $fullVariableFileName = $storagePath . "variable_" . $hexDigits . "_" . $shortFileNameForVariableName . '.txt';
@@ -96,6 +100,8 @@ if ($operation == "exists") {
 }
 
 if ($operation == "new") {
+	exitIfCGIRequestMethodIsNotPost();
+	
     if (file_exists($fullVariableFileName)) {
         exitWithJSONStatusMessage("Variable file already exists: '" . $fullVariableFileName . "'", NO_FAILURE_HEADER, 400);
     }
@@ -107,6 +113,8 @@ if ($operation == "new") {
 }
 
 if ($operation == "delete") {
+	exitIfCGIRequestMethodIsNotPost();
+	
 	if ($pointrelVariablesDeleteAllow !== true) {
 		exitWithJSONStatusMessage("Variables delete not allowed", SEND_FAILURE_HEADER, 400);
 	}
@@ -131,6 +139,8 @@ if ($operation == "delete") {
 }
 
 if ($operation == "set") {
+	exitIfCGIRequestMethodIsNotPost();
+	
     if ($currentValue !== "") validateURIOrExit($currentValue, NO_FAILURE_HEADER);
     if ($newValue !== "") validateURIOrExit($newValue, NO_FAILURE_HEADER);
     if (!file_exists($fullVariableFileName)) {

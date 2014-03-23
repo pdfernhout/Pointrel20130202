@@ -13,10 +13,10 @@ include "pointrel_utils.php";
 // There could be concurrency issues in between the time a check for existency is done for a file and when it is modified?
 
 // the userID making the request
-$userID = getPost('userID');
+$userID = getCGIField('userID');
 
 // the name of the journal
-$journalName = getPost('journalName');
+$journalName = getCGIField('journalName');
 
 // Operations and operands: 
 //   exists -- see if journal exists
@@ -25,18 +25,18 @@ $journalName = getPost('journalName');
 //   info -- returns data from the first line of the journal (which has a uuid) and the journal's size
 //   get start length -- retrieves a number of bytes starting from start and ending at start + length - 1
 //   put hash size type path data -- adds data to the journal, verifying the hash
-$operation = getPost('operation');
+$operation = getCGIField('operation');
 
 // can be journal, index, or all
-$journalType = getPost('journalType');
+$journalType = getCGIField('journalType');
 if (!$journalType) $journalType = "journal";
 
 $remoteAddress = $_SERVER['REMOTE_ADDR'];
 $logTimeStamp = currentTimeStamp();
 
 // Ideas for later use; need to add to log
-// $session = getPost('session');
-// $authentication = getPost('authentication');
+// $session = getCGIField('session');
+// $authentication = getCGIField('authentication');
 
 // Log what was requested
 error_log('{"timeStamp": "' . $logTimeStamp . '", "remoteAddress": "' . $remoteAddress . '", "request": "journal-store", journalName": "' . $journalName . '", "operation": "' . $operation . '", "userID": "' . $userID . '"}' . "\n", 3, $fullLogFileName);
@@ -59,7 +59,7 @@ if (strlen($journalName) > 100) {
 	exitWithJSONStatusMessage("Journal name is too long (maximum 100 characters)", NO_FAILURE_HEADER, 400);
 }
 
-if (!array_key_exists('operation', $_POST)) {
+if ($operation === null) {
 	exitWithJSONStatusMessage("No operation was specified", NO_FAILURE_HEADER, 400);
 }
 
@@ -93,7 +93,12 @@ if ($journalType === "allResources") {
 		$baseDirectory = $pointrelJournalsDirectory;
 	}
 	$hexDigits = md5($shortFileNameForJournalName);
+	
 	$createSubdirectories = ($operation == "create" && $journalType !== "index");
+	if ($createSubdirectories) {
+		exitIfCGIRequestMethodIsNotPost();
+	}
+	
 	$storagePath = calculateStoragePath($baseDirectory, $hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, $createSubdirectories);
 	if ($journalType === "index") {
 		$fullJournalFileName = $storagePath . "index_" . $hexDigits . "_" . $shortFileNameForJournalName . '.pointrelIndex';
@@ -120,6 +125,8 @@ if ($operation == "exists") {
 // Creates the journal, with the first entry being a JSON object that has a unique ID for this journal instance
 
 if ($operation == "create") {
+	exitIfCGIRequestMethodIsNotPost();
+	
 	if ($journalType !== "journal") {
 		exitWithJSONStatusMessage("Only journalType of journal can be created", NO_FAILURE_HEADER, 400);
 	}
@@ -128,7 +135,7 @@ if ($operation == "create") {
 		exitWithJSONStatusMessage("Journal file already exists: '" . $fullJournalFileName . "'", NO_FAILURE_HEADER, 400);
 	}
 	
-	$journalFormat = getPost('journalFormat');
+	$journalFormat = getCGIField('journalFormat');
 	
 	if (empty($journalFormat)) {
 		exitWithJSONStatusMessage("No journalFormat was specified", NO_FAILURE_HEADER, 400);
@@ -149,6 +156,8 @@ if ($operation == "create") {
 // operation: delete userSuppliedHeader userSuppliedSize
 
 if ($operation == "delete") {
+	exitIfCGIRequestMethodIsNotPost();
+	
 	if ($pointrelJournalsDeleteAllow !== true) {
 		exitWithJSONStatusMessage("Journals delete not allowed", SEND_FAILURE_HEADER, 400);
 	}
@@ -160,13 +169,13 @@ if ($operation == "delete") {
 	validateFileExistsOrExit($fullJournalFileName);
 	
 	// Check that header info and size are correct; header must be in canonical form as supplied
-	$userSuppliedHeader = getPost('userSuppliedHeader');
+	$userSuppliedHeader = getCGIField('userSuppliedHeader');
 	
 	if (empty($userSuppliedHeader)) {
 		exitWithJSONStatusMessage("No userSuppliedHeader was specified", NO_FAILURE_HEADER, 400);
 	}
 	
-	$userSuppliedSize = getPost('userSuppliedSize');
+	$userSuppliedSize = getCGIField('userSuppliedSize');
 	
 	if ($userSuppliedSize == "") {
 		exitWithJSONStatusMessage("No userSuppliedSize was specified", NO_FAILURE_HEADER, 400);
@@ -232,7 +241,7 @@ if ($operation == "info") {
 if ($operation == "get") {
 	validateFileExistsOrExit($fullJournalFileName);
 	
-	$start = getPost('start');
+	$start = getCGIField('start');
 	
 	if ($start === '') {
 		exitWithJSONStatusMessage("No start was specified", NO_FAILURE_HEADER, 400);
@@ -240,7 +249,7 @@ if ($operation == "get") {
 	
 	$start = intval($start);
 	
-	$length = getPost('length');
+	$length = getCGIField('length');
 	
 	if (empty($length)) {
 		exitWithJSONStatusMessage("No length was specified", NO_FAILURE_HEADER, 400);
@@ -287,13 +296,15 @@ if ($operation == "get") {
 // operation: put
 
 if ($operation == "put") {
+	exitIfCGIRequestMethodIsNotPost();
+	
 	if ($journalType !== "journal") {
 		exitWithJSONStatusMessage("Only journalType of journal can be appended", NO_FAILURE_HEADER, 400);
 	}
 	
 	validateFileExistsOrExit($fullJournalFileName);
 	
-	$encodedContent = getPost('encodedContent');
+	$encodedContent = getCGIField('encodedContent');
 	if (empty($encodedContent)) {
 		exitWithJSONStatusMessage("No encodedContent was specified", NO_FAILURE_HEADER, 400);
 	}	
