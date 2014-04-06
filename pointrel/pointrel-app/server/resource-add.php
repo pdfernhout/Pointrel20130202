@@ -44,7 +44,7 @@ if ($uriSpecifiedLength != $contentLength) {
 }
 
 if ($hexDigits !== $contentSHA256Actual) {
-	exitWithJSONStatusMessage("SHA256 values do not agree from URI: $uriSpecifiedLength and from content", NO_FAILURE_HEADER, 0);
+	exitWithJSONStatusMessage("SHA256 values do not agree from URI: $hexDigits and computed from content: $contentSHA256Actual", NO_FAILURE_HEADER, 0);
 }
 
 // TODO: Validate shortName is OK for files
