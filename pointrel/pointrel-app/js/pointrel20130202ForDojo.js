@@ -64,24 +64,15 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
     // TODO: Might need to think about decoding URLs passed back to user and encoding them for variables
 
     // Data passed to this needs to be only characters in the range 0-255 (byte)
-    // That means you should encode and decode text using the UTF8 functions above if needed
-    function pointrel_resource_add(serverURL, credentials, originalDataString, extension, callback) {
+    // That means you should encode and decode arbitrary JavaScript string text using the UTF8 functions if needed
+	function pointrel_resource_add(serverURL, credentials, originalDataString, extension, callback) {
         console.log("pointrel_resource_add extension: ", extension);
         // special validation for now
         if (!validateBinaryData(originalDataString)) { callback("FAILED Not Binary Data", null); return ""; }
 
-        // var shortExtension = extension.split(".").pop();
-        // Maybe need a parameter -- expect these to be encoded as they go over the network
-	    //    if (shortExtension === "txt" || shortExtension === "json") {
-	    //        var encodedContent = EncodeAsUTF8(originalDataString);
-	    //    } else {
-	    //        encodedContent = originalDataString;
-	    //    }
-        // var encodedExtension = EncodeAsUTF8(extension);
-        // var hash = CryptoJS.SHA3(encodedContent, { outputLength: 256 });
-        // var myName = "pointrel://sha3-256_" + hash + "_" + encodedContent.length + "." + encodedExtension;
-        var hash = CryptoJS.SHA256(originalDataString);
-        // var hash = CryptoJS.SHA256(encodedContent);
+        var stringInCryptoJSWords = CryptoJS.enc.Latin1.parse(originalDataString);
+        var hash = CryptoJS.SHA256(stringInCryptoJSWords);
+
         var extensionSeperator = ".";
         if (extension === "") extensionSeperator = "";
         var uri = "pointrel://sha256_" + hash + "_" + originalDataString.length + extensionSeperator + extension;
