@@ -1,6 +1,28 @@
 // Test at: http://localhost:8080/pointrel/pointrel-app/
 "use strict";
 
+function journalStore(request, response) {
+	response.send('{"response": "Unfinished!!!!"}');
+}
+
+function resourceAdd(request, response) {
+	response.send('{"response": "Unfinished!!!!"}');
+}
+
+function resourceGet(request, response) {
+	response.send('{"response": "Unfinished!!!!"}');
+}
+
+function resourcePublish(request, response) {
+	response.send('{"response": "Unfinished!!!!"}');
+}
+
+function variableQuery(request, response) {
+	response.send('{"response": "Unfinished!!!!"}');
+}
+
+// Main code
+
 console.log("Pointrel20130202 server for nodejs started: " + Date());
 
 console.log("__dirname", __dirname);
@@ -21,9 +43,25 @@ app.get("/", function (request, response) {
   response.send('Hello World!');
 });
 
-app.post("/pointrel/pointrel-app/server/variable-query.php", function (request, response) {
-	response.send('{"response": "BAD!!!!"}');
+app.post("/pointrel/pointrel-app/server/journal-store.php", function (request, response) {
+	journalStore(request, response);
+})
+
+app.post("/pointrel/pointrel-app/server/resource-add.php", function (request, response) {
+	resourceAdd(request, response);
 });
+
+app.post("/pointrel/pointrel-app/server/resource-get.php", function (request, response) {
+	resourceGet(request, response);
+})
+
+app.post("/pointrel/pointrel-app/server/resource-publish.php", function (request, response) {
+	resourcePublish(request, response);
+})
+
+app.post("/pointrel/pointrel-app/server/variable-query.php", function (request, response) {
+	variableQuery(request, response);
+})
 
 var server = app.listen(8080, function () {
 
