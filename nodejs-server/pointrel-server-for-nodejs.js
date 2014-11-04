@@ -8,16 +8,27 @@ console.log("__dirname", __dirname);
 var express = require('express');
 var app = express();
 
-app.use("/pointrel", express.static(__dirname + '/pointrel'));
+var logger = function(request, response, next) {
+    console.log("Requesting:", request.url);
+    next();
+}
 
-app.get('/', function (request, response) {
+app.use(logger);
+
+app.use("/pointrel", express.static(__dirname + "/../pointrel"));
+
+app.get("/", function (request, response) {
   response.send('Hello World!');
 });
-	
-var server = app.listen(8080,function () {
+
+app.post("/pointrel/pointrel-app/server/variable-query.php", function (request, response) {
+	response.send('{"response": "BAD!!!!"}');
+});
+
+var server = app.listen(8080, function () {
 
   var host = server.address().address;
   var port = server.address().port;
 
-  console.log('Pointrel20130202 app listening at http://%s:%s', host, port);
+  console.log("Pointrel20130202 app listening at http://%s:%s", host, port);
 });
