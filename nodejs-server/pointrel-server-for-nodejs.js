@@ -17,6 +17,8 @@ var mime = require("mime");
 //Note the need for a trailing slash for these directory names
 
 var baseDirectory = __dirname + "/" + "..";
+var baseDirectoryNormalized = path.normalize(baseDirectory + "/");
+console.log("baseDirectoryNormalized", baseDirectoryNormalized);
 
 var pointrelResourcesDirectory = path.normalize(baseDirectory + "/pointrel/pointrel-data/resources/");
 
@@ -394,8 +396,12 @@ var logger = function(request, response, next) {
 app.use(logger);
 
 app.get("/", function (request, response) {
-  response.send('Hello World!');
+  response.sendFile(baseDirectoryNormalized + "index.html");
 });
+
+app.get("/index.html", function (request, response) {
+	  response.sendFile(baseDirectoryNormalized + "index.html");
+	});
 
 app.get("/pointrel/pointrel-app/server/journal-store.php", function (request, response) {
 	journalStore(request, response);
