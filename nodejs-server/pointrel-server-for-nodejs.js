@@ -208,11 +208,6 @@ function explode(separator, source, limit)
   return result;
 }
 
-////// Indexing support
-
-// Functions used by journals and by indexes
-// There could be concurrency issues in between the time a check for existency is done for a file and when it is modified?
-
 function createFile(fullFileName, contents) {
 	try {
 		fs.writeFileSync(fullFileName, contents);
@@ -231,15 +226,17 @@ function appendDataToFile(fullFileName, dataToAppend) {
     return true;	
 }
 
-//Index entries have a newline at the start as well as at the end to make it easier to recover from partial writes of an index entry
-//If there is only one newline, then most likely the previous line is incomplete
-//TODO: Instead of userID, should have an array of receiving steps like in email headers, to track how data gets pushed into system across distributed network
+////// Indexing support
 
-//"All" indexes are for all resources, all indexes, all journals, and all variables
-//TODO: Add support for recording when a journal or variable is deleted
+// There could be concurrency issues in between the time a check for existency is done for a file and when it is modified?
+// Index entries have a newline at the start as well as at the end to make it easier to recover from partial writes of an index entry
+// If there is only one newline, then most likely the previous line is incomplete
+// TODO: Instead of userID, should have an array of receiving steps like in email headers, to track how data gets pushed into system across distributed network
+
+// "All" indexes are for all resources, all indexes, all journals, and all variables
+// TODO: Add support for recording when a journal or variable is deleted
 
 function addIndexEntryToAllIndexesIndex(allIndexShortFileName, indexName, randomUUID) {
-	global pointrelIndexesDirectory;
 	fullAllIndexFileName = pointrelIndexesDirectory + allIndexShortFileName;
 
 	createIndexFileIfMissing(fullAllIndexFileName, allIndexShortFileName, false);
@@ -260,7 +257,6 @@ function createIndexFileIfMissing(fullIndexFileName, indexName, addToAllIndexesI
 }
 
 function addResourceIndexEntryToIndex(fullIndexFileName, resourceURI, trace, encodedContent) {
-	global pointrelIndexesEmbedContentSizeLimitInBytes;
 	if (is_string(encodedContent) && strlen(encodedContent) < pointrelIndexesEmbedContentSizeLimitInBytes) {
 		resourceContentIfEmbedding = ',"xContent":"' + encodedContent + '"';
 	} else {
@@ -271,7 +267,6 @@ function addResourceIndexEntryToIndex(fullIndexFileName, resourceURI, trace, enc
 }
 
 function createResourceIndexEntry(indexName, resourceURI, trace, encodedContent) {
-	global pointrelIndexesDirectory;
 	shortFileNameForIndexName = preg_replace(array('/\s/', '/\.[\.]+/', '/[^\w_\.\-]/'), array('_', '_', '_'), indexName);
 	
 	hexDigits = md5(shortFileNameForIndexName);
@@ -288,8 +283,6 @@ function makeTrace(timestamp, userID) {
 }
 
 function addNewJournalToIndexes(journalName, header, timestamp, userID) {
-	global pointrelIndexesMaintain, pointrelIndexesDirectory;
-
 	if (pointrelIndexesMaintain !== true) {
 		return;
 	}
@@ -308,8 +301,6 @@ function addNewJournalToIndexes(journalName, header, timestamp, userID) {
 }
 
 function removeJournalFromIndexes(journalName, header, timestamp, userID) {
-	global pointrelIndexesMaintain, pointrelIndexesDirectory;
-
 	if (pointrelIndexesMaintain !== true) {
 		return;
 	}
@@ -328,8 +319,6 @@ function removeJournalFromIndexes(journalName, header, timestamp, userID) {
 }
 
 function addNewVariableToIndexes(variableName, timestamp, userID) {
-	global pointrelIndexesMaintain, pointrelIndexesDirectory;
-
 	if (pointrelIndexesMaintain !== true) {
 		return;
 	}
@@ -348,8 +337,6 @@ function addNewVariableToIndexes(variableName, timestamp, userID) {
 }
 	
 function removeVariableFromIndexes(variableName, timestamp, userID) {
-	global pointrelIndexesMaintain, pointrelIndexesDirectory;
-
 	if (pointrelIndexesMaintain !== true) {
 		return;
 	}
@@ -368,8 +355,6 @@ function removeVariableFromIndexes(variableName, timestamp, userID) {
 }
 
 function addResourceToIndexes(resourceURI, timestamp, userID, content, encodedContent) {
-	global pointrelIndexesMaintain, pointrelIndexesDirectory, pointrelIndexesCustomFunction;
-	
 	if (pointrelIndexesMaintain !== true) {
 		return;
 	}
