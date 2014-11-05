@@ -23,6 +23,8 @@ var fsExtra = require("fs-extra");
 //Change these options as appropriate for your system
 //Note the need for a trailing slash for these directory names
 
+var pointrelRepositoryIsReadOnly = false;
+
 var baseDirectory = __dirname + "/" + "..";
 var baseDirectoryNormalized = path.normalize(baseDirectory + "/");
 console.log("baseDirectoryNormalized", baseDirectoryNormalized);
@@ -466,6 +468,11 @@ function addResourceToIndexes(response, resourceURI, timestamp, userID, content,
 //Handling CGI requests
 
 function journalStore(request, response) {
+	
+    // if (pointrelRepositoryIsReadOnly) {
+    // 	return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
+    //}
+    
     response.send('{"response": "journalStore Unfinished!!!!"}');
 }
 
@@ -495,6 +502,10 @@ function resourceAdd(request, response) {
 
     if (!userID) {
       return exitWithJSONStatusMessage(response, "No userID was specified", SEND_FAILURE_HEADER, 400);
+    }
+    
+    if (pointrelRepositoryIsReadOnly) {
+    	return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
     }
 
     var urlInfo = validateURIOrExit(response, resourceURI, NO_FAILURE_HEADER);
@@ -625,6 +636,10 @@ function resourcePublish(request, response) {
     if (!userID) {
         return exitWithJSONStatusMessage(response, "No userID was specified", SEND_FAILURE_HEADER, 400);
     }
+    
+    if (pointrelRepositoryIsReadOnly) {
+    	return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
+    }
 
     var urlInfo = validateURIOrExit(response, resourceURI, SEND_FAILURE_HEADER);
     var shortName = urlInfo.shortName;
@@ -742,9 +757,13 @@ function variableQuery(request, response) {
         return exitWithJSONStatusMessage(response, "No operation was specified", NO_FAILURE_HEADER, 400);
     }
 
-    var operations = {"exists": 1, "new": 1, "delete": 1, "get": 1, "set": 1, "query": 1};
+    var operations = {"exists": 1, "new": 2, "delete": 2, "get": 1, "set": 2, "query": 1};
     if (!(operation in operations)) {
         return exitWithJSONStatusMessage(response, "Unsupported operation: '" + operation + "'", NO_FAILURE_HEADER, 400);
+    }
+    
+    if (pointrelRepositoryIsReadOnly && operations[operation] === 2) {
+    	return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
     }
 
     if (!userID) {
