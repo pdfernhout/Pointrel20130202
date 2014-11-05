@@ -74,6 +74,14 @@ function exitWithJSONStatusMessage(response, message, sendFailureHeader, errorNu
     return false;
 }
 
+function exitIfCGIRequestMethodIsNotPost(request, response) {
+	if (request.method !== 'POST') {
+		exitWithJSONStatusMessage(response, "Request to change data must be a POST", SEND_FAILURE_HEADER, 400);
+		return true;
+	}
+	return false;
+}
+
 function validateFileExistsOrExit(response, fullFileName) {
 	if (!fs.existsSync(fullFileName)) {
 		// TODO: Can't replace with exitWithJSONStatusMessage because has extra value
@@ -82,31 +90,6 @@ function validateFileExistsOrExit(response, fullFileName) {
 		return false;
 	}
 	return true;
-}
-
-//Returns the path where this file would go
-function calculateStoragePath(baseDirectory, hexDigits, levelCount, segmentLength, createSubdirectories) {
-	// console.log("calculateStoragePath", baseDirectory, hexDigits, levelCount, segmentLength, createSubdirectories);
-    var fullPath = baseDirectory;
-    for (var level = 0; level < levelCount; level++) {
-        var startOfSegment = level * segmentLength;
-        var segment = hexDigits.substring(startOfSegment, startOfSegment + segmentLength);
-        fullPath = fullPath + segment + "/";
-        if (createSubdirectories) fs.mkdirSync(fullPath);
-    }
-
-    // console.log("calculated path:", fullPath);
-    return fullPath;
-}
-
-function explode(separator, source, limit)
-{
-    var result = source.split(separator);
-    if (limit) {
-    	var extra = result.splice(limit - 1);
-    	result.push(extra.join(separator));
-    }
-    return result;
 }
 
 //TODO: add option to validate for SHA256 content
@@ -156,11 +139,11 @@ function validateURIOrExit(response, pointrelURI, sendHeader) {
 	var lengthAndRest = explode(".", shaAndRest[2]);
 	var lengthString = lengthAndRest[0];
 
-	if (lengthString.length == 0) {
+	if (lengthString.length === 0) {
 		return exitWithJSONStatusMessage(response, "URI does have a length field", sendHeader, 406);
 	}
 
-	var length = parseInt(lengthString);
+	var length = parseInt(lengthString, 10);
 
 	if (length < 0) {
 		return exitWithJSONStatusMessage(response, "URI has negative length field", sendHeader, 406);
@@ -179,7 +162,7 @@ function validateURIOrExit(response, pointrelURI, sendHeader) {
 	    "shortName": shortName,
 	    "hexDigits": hexDigits,
 	    // "extension": extension,
-	    "length": length,
+	    "length": length
 	};
 }
 
@@ -193,6 +176,33 @@ function getCGIField(request, fieldName) {
 	}
 	// console.log("getCGIField", request.method, fieldName, result);
 	return result;
+}
+
+// Other support
+
+//Returns the path where this file would go
+function calculateStoragePath(baseDirectory, hexDigits, levelCount, segmentLength, createSubdirectories) {
+	// console.log("calculateStoragePath", baseDirectory, hexDigits, levelCount, segmentLength, createSubdirectories);
+  var fullPath = baseDirectory;
+  for (var level = 0; level < levelCount; level++) {
+      var startOfSegment = level * segmentLength;
+      var segment = hexDigits.substring(startOfSegment, startOfSegment + segmentLength);
+      fullPath = fullPath + segment + "/";
+      if (createSubdirectories) fs.mkdirSync(fullPath);
+  }
+
+  // console.log("calculated path:", fullPath);
+  return fullPath;
+}
+
+function explode(separator, source, limit)
+{
+  var result = source.split(separator);
+  if (limit) {
+  	var extra = result.splice(limit - 1);
+  	result.push(extra.join(separator));
+  }
+  return result;
 }
 
 //Handling CGI requests
@@ -262,7 +272,17 @@ function resourcePublish(request, response) {
 
 function successfulVariableOperation(response, operation, variableName, variableValueAfterOperation) {
 	// ??? header("Content-type: text/json; charset=UTF-8");
-	return response.send('{"status": "OK", "message": "Successful operation: ' + operation + '", "variable": "' + variableName + '", "currentValue": "' + variableValueAfterOperation + '"}');
+	response.send('{"status": "OK", "message": "Successful operation: ' + operation + '", "variable": "' + variableName + '", "currentValue": "' + variableValueAfterOperation + '"}');
+	return true;
+}
+
+function writeVariableToNewFile(response, fullVariableFileName, newValue) {
+	try {
+		fs.writeFileSync(fullVariableFileName, newValue);
+	} catch(err) {
+        return exitWithJSONStatusMessage(response, "Could not create variable file: '" + fullVariableFileName + '"', NO_FAILURE_HEADER, 500);
+    }
+    return true;
 }
 
 function variableQuery(request, response) {
@@ -326,13 +346,14 @@ function variableQuery(request, response) {
 
 	var createSubdirectories = (operation === "new") || (operation === "set" && currentValue === "");
 	if (createSubdirectories) {
-		// TODO: exitIfCGIRequestMethodIsNotPost();
+		if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
 	}
 
 	var storagePath = calculateStoragePath(pointrelVariablesDirectory, hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
 
 	var fullVariableFileName = storagePath + "variable_" + hexDigits + "_" + shortFileNameForVariableName + '.txt';
 	var variableValueAfterOperation = "ERROR";
+	var contents = "";
 	
 	if (operation === "exists") {
 	    if (fs.existsSync(fullVariableFileName)) {
@@ -341,14 +362,84 @@ function variableQuery(request, response) {
 	    }
 	    return exitWithJSONStatusMessage(response, "Variable file does not exist: '" + fullVariableFileName + "'", NO_FAILURE_HEADER, 0);
 	} else if (operation === "new") {
-		// TODO
-		return exitWithJSONStatusMessage(response, "unfinished new", SEND_FAILURE_HEADER, 500);
+		if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
+		
+	    if (fs.existsSync(fullVariableFileName)) {
+	        return exitWithJSONStatusMessage(response, "Variable file already exists: '" + fullVariableFileName + "'", NO_FAILURE_HEADER, 400);
+	    }
+	    if (!validateURIOrExit(newValue, NO_FAILURE_HEADER)) return false;
+
+	    addNewVariableToIndexes(variableName, logTimeStamp, userID);
+	    if (!writeVariableToNewFile(response, fullVariableFileName, newValue)) return false;
+	    variableValueAfterOperation = newValue;
+	    return successfulVariableOperation(response, operation, variableName, variableValueAfterOperation);
     } else if (operation === "delete") {
-		// TODO
-    	return exitWithJSONStatusMessage(response, "unfinished delete", SEND_FAILURE_HEADER, 500);
+        // Code here is more reliable than PHP since we know the entire server is running in a single thread here and so can't be interrupted...
+    	// So do not need to write "DELETE" to file before removing
+      	if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
+    	
+    	if (pointrelVariablesDeleteAllow !== true) {
+    		return exitWithJSONStatusMessage(response, "Variables delete not allowed", SEND_FAILURE_HEADER, 400);
+    	}
+    	
+        if (!validateFileExistsOrDie(response, fullVariableFileName)) return false;
+        if (!validateURIOrExit(response, currentValue, NO_FAILURE_HEADER)) return false;
+        
+        try {
+        	contents = fs.readFileSync(fullVariableFileName, "utf8");
+        } catch (err) {
+        	console.log("file read error", err);
+        	return exitWithJSONStatusMessage(response, "Variables file could not be opened to confirm value", SEND_FAILURE_HEADER, 400);
+        }
+
+        if (contents != currentValue) {
+            return exitWithJSONStatusMessage(response, "Variable value was changed by another user to: " + contents, NO_FAILURE_HEADER, 409);
+        }
+        try {
+        	fs.unlinkSync(fullVariableFileName);
+        } catch (err) {
+        	console.log("file unlink error", err);
+        	return exitWithJSONStatusMessage(response, "Variables file could not be removed for some reason", SEND_FAILURE_HEADER, 400);
+        }        	
+        // TODO: Perhaps should return JSON null, not a string?
+        variableValueAfterOperation = "DELETED";
+        removeVariableFromIndexes(variableName, logTimeStamp, userID);
+        return successfulVariableOperation(response, operation, variableName, variableValueAfterOperation);
     } else if (operation === "set") {
-		// TODO
-    	return exitWithJSONStatusMessage(response, "unfinished set", SEND_FAILURE_HEADER, 500);
+    	if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
+    	
+        if (currentValue !== "" && !validateURIOrExit(currentValue, NO_FAILURE_HEADER)) return false;
+        if (newValue !== "" && !validateURIOrExit(newValue, NO_FAILURE_HEADER)) return false;
+        if (!fs.existSync(fullVariableFileName)) {
+            // Maybe create the file if it does not exists
+            if (createIfMissing === FALSE) {
+                // TODO: Can't replace this as it has extra fields beyond message
+                return response.send('{"status": "FAIL", "message": "Variable file does not exist and createIfMissing is false: ' + fullVariableFileName + '", "createIfMissing": "' + createIfMissing + '", "currentValue": "' + currentValue + '"}');
+            } else if (currentValue !== "") {
+                // TODO: Can't replace this as it has extra fields beyond message
+                return respones.send('{"status": "FAIL", "message": "Variable file does not exist and currentValue is not empty: ' + fullVariableFileName + '", "createIfMissing": "' + createIfMissing + '", "currentValue": "' + currentValue + '"}');
+            } else {
+                // TODO: Window of vulnerability where another user could create the file???
+            	// Not vulnerable under NodeJS if just one process -- but what if more processes?
+            	addNewVariableToIndexes(variableName, logTimeStamp, userID);
+                if (!writeVariableToNewFile(response, fullVariableFileName, newValue)) return false;
+                variableValueAfterOperation = newValue;
+            }
+        } else {
+            try {
+            	contents = fs.readFileSync(fullVariableFileName, "utf8");
+            } catch (err) {
+            	console.log("file read error", err);
+            	return response.send('{"status": "FAIL", "message": "Could not open file for updating: ' + fullVariableFileName + '"}');
+            }
+            if (contents != currentValue) {
+                // header("HTTP/1.1 409 Variable value was changed by another user to: " + contents);
+                return response.send('{"status": "FAIL", "message": "Variable value was changed by another user to: ' + contents + '", "currentValue": "' + contents + '"}');
+            }
+            if (!writeVariableToNewFile(response, fullVariableFileName, "utf8")) return false;
+            variableValueAfterOperation = newValue;
+        }
+        return successfulVariableOperation(response, operation, variableName, variableValueAfterOperation);
     } else if (operation === "get") {
 		if (!validateFileExistsOrExit(response, fullVariableFileName)) {
 			return false;
@@ -370,6 +461,7 @@ function variableQuery(request, response) {
 	} else {
 		return exitWithJSONStatusMessage(response, "Unsupported operation: '" + operation + "'", NO_FAILURE_HEADER, 400);
 	}
+	return false;
 }
 
 // Main code
@@ -396,20 +488,20 @@ var logger = function(request, response, next) {
 app.use(logger);
 
 app.get("/", function (request, response) {
-  response.sendFile(baseDirectoryNormalized + "index.html");
+	response.sendFile(baseDirectoryNormalized + "index.html");
 });
 
 app.get("/index.html", function (request, response) {
-	  response.sendFile(baseDirectoryNormalized + "index.html");
-	});
+	response.sendFile(baseDirectoryNormalized + "index.html");
+});
 
 app.get("/pointrel/pointrel-app/server/journal-store.php", function (request, response) {
 	journalStore(request, response);
-})
+});
 
 app.post("/pointrel/pointrel-app/server/journal-store.php", function (request, response) {
 	journalStore(request, response);
-})
+});
 
 app.get("/pointrel/pointrel-app/server/resource-add.php", function (request, response) {
 	resourceAdd(request, response);
@@ -421,27 +513,27 @@ app.post("/pointrel/pointrel-app/server/resource-add.php", function (request, re
 
 app.get("/pointrel/pointrel-app/server/resource-get.php", function (request, response) {
 	resourceGet(request, response);
-})
+});
 
 app.post("/pointrel/pointrel-app/server/resource-get.php", function (request, response) {
 	resourceGet(request, response);
-})
+});
 
 app.get("/pointrel/pointrel-app/server/resource-publish.php", function (request, response) {
 	resourcePublish(request, response);
-})
+});
 
 app.post("/pointrel/pointrel-app/server/resource-publish.php", function (request, response) {
 	resourcePublish(request, response);
-})
+});
 
 app.get("/pointrel/pointrel-app/server/variable-query.php", function (request, response) {
 	variableQuery(request, response);
-})
+});
 
 app.post("/pointrel/pointrel-app/server/variable-query.php", function (request, response) {
 	variableQuery(request, response);
-})
+});
 
 app.use("/pointrel", express.static(__dirname + "/../pointrel"));
 
