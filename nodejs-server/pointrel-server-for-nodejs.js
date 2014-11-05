@@ -272,6 +272,7 @@ function appendDataToFile(response, fullFileName, dataToAppend) {
 }
 
 function error_log(response, message) {
+	// console.log("log", message);
     // Calculate today's log file name
     var today = new Date().toISOString().substring(0, 10);
     var fullLogFileName = pointrelLogsDirectory + today + ".log";
@@ -725,7 +726,7 @@ function writeVariableToNewFile(response, fullVariableFileName, newValue) {
 }
 
 function variableQuery(request, response) {
-    console.log("variableQuery", request.url, request.body);
+    // console.log("variableQuery", request.url, request.body);
     // var url_parts = url.parse(request.url, true);
     //var query = url_parts.query;
     //console.log("variableQuery", query);
