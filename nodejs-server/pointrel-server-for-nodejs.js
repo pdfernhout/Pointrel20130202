@@ -191,7 +191,7 @@ function getCGIField(request, fieldName) {
 		// Should be GET
 		result = request.query[fieldName];
 	}
-	console.log("getCGIField", request.method, fieldName, result);
+	// console.log("getCGIField", request.method, fieldName, result);
 	return result;
 }
 
@@ -251,7 +251,7 @@ function resourceGet(request, response) {
 
 	response.setHeader("Content-type", contentType + "; charset=" + charset);
 	if (attachmentName) response.setHeader("Content-Disposition", 'attachment; filename="' + attachmentName + '"');
-	console.log("about to sendFile", fullName);
+	// console.log("about to sendFile", fullName);
 	response.sendFile(fullName);
 	return true;
 }
@@ -358,7 +358,7 @@ function variableQuery(request, response) {
 				return exitWithJSONStatusMessage(response, "Could not read variable file: " + fullVariableFileName, SEND_FAILURE_HEADER, 500);
 			}
 			variableValueAfterOperation = data;
-			console.log("variableValueAfterOperation", variableValueAfterOperation);
+			// console.log("variableValueAfterOperation", variableValueAfterOperation);
 			return successfulVariableOperation(response, operation, variableName, variableValueAfterOperation);
 		});
 	    // TODO: Add support for queries to reduce back-and-forth traffic, like to follow previousVersion or retrieve contents of value
