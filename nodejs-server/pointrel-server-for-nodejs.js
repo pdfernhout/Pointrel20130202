@@ -77,7 +77,7 @@ function exitWithJSONStatusMessage(response, message, sendFailureHeader, errorNu
 function validateFileExistsOrExit(response, fullFileName) {
 	if (!fs.existsSync(fullFileName)) {
 		// TODO: Can't replace with exitWithJSONStatusMessage because has extra value
-		// header("HTTP/1.1 400 File does not exist: " . $fullFileName);
+		// header("HTTP/1.1 400 File does not exist: " + fullFileName);
 		response.send('{"status": "FAIL", "message": "File does not exist: ' + fullFileName + '", "currentValue": null}');
 		return false;
 	}
@@ -218,9 +218,9 @@ function resourceGet(request, response) {
 	var session = getCGIField(request, 'session');
 	var authentication = getCGIField(request, 'authentication');
 
-	// var remoteAddress = $_SERVER['REMOTE_ADDR'];
+	// var remoteAddress = _SERVER['REMOTE_ADDR'];
 
-	// error_log('{"timeStamp": "' . currentTimeStamp() . '", "remoteAddress": "' . $remoteAddress . '", "request": "resource-get", "resourceURI": "' . $resourceURI . '", "userID": "' . $userID . '", "session": "' . $session . '"}' . "\n", 3, $fullLogFileName);
+	// error_log('{"timeStamp": "' + currentTimeStamp() + '", "remoteAddress": "' + remoteAddress + '", "request": "resource-get", "resourceURI": "' + resourceURI + '", "userID": "' + userID + '", "session": "' + session + '"}' + "\n", 3, fullLogFileName);
 
 	if (!resourceURI) {
 	    return exitWithJSONStatusMessage(response, "No resourceURI was specified", SEND_FAILURE_HEADER, 400);
@@ -289,9 +289,9 @@ function variableQuery(request, response) {
 	    createIfMissing = true;
 	}
 	
-	// $remoteAddress = $_SERVER['REMOTE_ADDR'];
-	// $logTimeStamp = currentTimeStamp();
-	// error_log('{"timeStamp": "' + logTimeStamp . '", "remoteAddress": "' + remoteAddress + '", "request": "variable-change", "variableName": "' + variableName + '", "operation": "' + operation + '", "newValue": "' + newValue + '", "currentValue": "' + currentValue + '", "userID": "' + userID + '", "session": "' + session + '"}' + "\n", 3, $fullLogFileName);
+	// remoteAddress = _SERVER['REMOTE_ADDR'];
+	// logTimeStamp = currentTimeStamp();
+	// error_log('{"timeStamp": "' + logTimeStamp + '", "remoteAddress": "' + remoteAddress + '", "request": "variable-change", "variableName": "' + variableName + '", "operation": "' + operation + '", "newValue": "' + newValue + '", "currentValue": "' + currentValue + '", "userID": "' + userID + '", "session": "' + session + '"}' + "\n", 3, fullLogFileName);
 
 	if (pointrelVariablesAllow !== true) {
 	    return exitWithJSONStatusMessage(response, "Variables not allowed", SEND_FAILURE_HEADER, 400);
@@ -337,7 +337,7 @@ function variableQuery(request, response) {
 	if (operation === "exists") {
 	    if (fs.existsSync(fullVariableFileName)) {
 	        // TODO: Can't replace this one because it has OK
-	        return response.send('{"status": "OK", "message": "Variable file exists: ' + $fullVariableFileName + '"}');
+	        return response.send('{"status": "OK", "message": "Variable file exists: ' + fullVariableFileName + '"}');
 	    }
 	    return exitWithJSONStatusMessage(response, "Variable file does not exist: '" + fullVariableFileName + "'", NO_FAILURE_HEADER, 0);
 	} else if (operation === "new") {
