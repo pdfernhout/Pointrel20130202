@@ -591,13 +591,13 @@ function resourceGet(request, response) {
 function resourcePublish(request, response) {
     // Publish a resource to the static part of the website
 
-    var resourceURI = getCGIField('resourceURI');
-    var destinationURL = getCGIField('destinationURL');
-    var userID = getCGIField('userID');
+    var resourceURI = getCGIField(request, 'resourceURI');
+    var destinationURL = getCGIField(request, 'destinationURL');
+    var userID = getCGIField(request, 'userID');
 
     // For later use
-    var session = getCGIField('session');
-    // var authentication = getCGIField('authentication');
+    var session = getCGIField(request, 'session');
+    // var authentication = getCGIField(request, 'authentication');
 
     var remoteAddress = getIPAddress(request);
 
