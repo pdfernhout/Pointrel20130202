@@ -1,10 +1,13 @@
 // Test at: http://localhost:8080/pointrel/pointrel-app/
 "use strict";
 
+// TODO: Mostly left in place the synchronized approach to file handling from PHP; need to revisit for nodejs performance
+
 // Standard nodejs modules
 var fs = require('fs');
 var url = require('url');
 var path = require("path");
+var crypto = require('crypto');
 
 // These modules require npm installation
 var express = require('express');
@@ -205,6 +208,221 @@ function explode(separator, source, limit)
   return result;
 }
 
+////// Indexing support
+
+// Functions used by journals and by indexes
+// There could be concurrency issues in between the time a check for existency is done for a file and when it is modified?
+
+function createFile(fullFileName, contents) {
+	try {
+		fs.writeFileSync(fullFileName, contents);
+	} catch(err) {
+        return exitWithJSONStatusMessage(response, "Could not create or write to file: '" + fullVFileName + '"', NO_FAILURE_HEADER, 500);
+    }
+    return true;
+}
+
+function appendDataToFile(fullFileName, dataToAppend) {
+	try {
+		fs.appendFileSync(fullFileName, contents);
+	} catch(err) {
+        return exitWithJSONStatusMessage(response, "Could not append to file: '" + fullVFileName + '"', NO_FAILURE_HEADER, 500);
+    }
+    return true;	
+}
+
+//Index entries have a newline at the start as well as at the end to make it easier to recover from partial writes of an index entry
+//If there is only one newline, then most likely the previous line is incomplete
+//TODO: Instead of userID, should have an array of receiving steps like in email headers, to track how data gets pushed into system across distributed network
+
+//"All" indexes are for all resources, all indexes, all journals, and all variables
+//TODO: Add support for recording when a journal or variable is deleted
+
+function addIndexEntryToAllIndexesIndex(allIndexShortFileName, indexName, randomUUID) {
+	global pointrelIndexesDirectory;
+	fullAllIndexFileName = pointrelIndexesDirectory + allIndexShortFileName;
+
+	createIndexFileIfMissing(fullAllIndexFileName, allIndexShortFileName, false);
+	
+	// Create special index entry for the allIndexes index
+	jsonForIndex = "\n" + '{"operation":"add","name":' + json_encode(indexName) + ',"versionUUID":"' + randomUUID + '"}' + "\n";
+	appendDataToFile(fullAllIndexFileName, jsonForIndex);
+}
+
+function createIndexFileIfMissing(fullIndexFileName, indexName, addToAllIndexesIndex) {
+	if (!file_exists(fullIndexFileName)) {
+		randomUUID = uniqid('pointrelIndex:', true);
+		jsonForIndex = '{"indexFormat":"index","indexName":' + json_encode(indexName) + ',"versionUUID":"' + randomUUID + '"}';
+		firstLineHeader = "jsonForIndex\n";
+		if (addToAllIndexesIndex) addIndexEntryToAllIndexesIndex(POINTREL_ALL_INDEXES_INDEX_FILE_NAME, indexName, randomUUID);
+		createFile(fullIndexFileName, firstLineHeader);
+	}	
+}
+
+function addResourceIndexEntryToIndex(fullIndexFileName, resourceURI, trace, encodedContent) {
+	global pointrelIndexesEmbedContentSizeLimitInBytes;
+	if (is_string(encodedContent) && strlen(encodedContent) < pointrelIndexesEmbedContentSizeLimitInBytes) {
+		resourceContentIfEmbedding = ',"xContent":"' + encodedContent + '"';
+	} else {
+		resourceContentIfEmbedding = "";
+	}
+	jsonForIndex = "\n" + '{"operation":"add","name":"' + resourceURI + '","trace":' + trace + resourceContentIfEmbedding + '}' + "\n";
+	appendDataToFile(fullIndexFileName, jsonForIndex);	
+}
+
+function createResourceIndexEntry(indexName, resourceURI, trace, encodedContent) {
+	global pointrelIndexesDirectory;
+	shortFileNameForIndexName = preg_replace(array('/\s/', '/\.[\.]+/', '/[^\w_\.\-]/'), array('_', '_', '_'), indexName);
+	
+	hexDigits = md5(shortFileNameForIndexName);
+	createSubdirectories = true;
+	storagePath = calculateStoragePath(pointrelIndexesDirectory, hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
+	fullIndexFileName = storagePath + "index_" + hexDigits + "_" + shortFileNameForIndexName + '.pointrelIndex';
+	
+	createIndexFileIfMissing(fullIndexFileName, indexName, true);
+	addResourceIndexEntryToIndex(fullIndexFileName, resourceURI, trace, encodedContent);
+}
+
+function makeTrace(timestamp, userID) {
+	return '[{"timestamp":"' + timestamp + '","userID":' + json_encode(userID) + '}]';
+}
+
+function addNewJournalToIndexes(journalName, header, timestamp, userID) {
+	global pointrelIndexesMaintain, pointrelIndexesDirectory;
+
+	if (pointrelIndexesMaintain !== true) {
+		return;
+	}
+	
+	shortFileNameForAllIndex = POINTREL_ALL_JOURNALS_INDEX_FILE_NAME;
+	fullAllIndexFileName = pointrelIndexesDirectory + shortFileNameForAllIndex;
+	
+	// This trace would get more complex for items received from other servers (similar to email received: headers)
+	trace = makeTrace(timestamp, userID);
+	
+	// TODO: Ideally should just do this once when install, not every time we add a journal
+	createIndexFileIfMissing(fullAllIndexFileName, shortFileNameForAllIndex, false);
+	
+	jsonForIndex = "\n" + '{"operation":"add","name":' + json_encode(journalName) + ',"header":' + json_encode(header) + ',"trace":' + trace + '}' + "\n";
+	appendDataToFile(fullAllIndexFileName, jsonForIndex);
+}
+
+function removeJournalFromIndexes(journalName, header, timestamp, userID) {
+	global pointrelIndexesMaintain, pointrelIndexesDirectory;
+
+	if (pointrelIndexesMaintain !== true) {
+		return;
+	}
+	
+	shortFileNameForAllIndex = POINTREL_ALL_JOURNALS_INDEX_FILE_NAME;
+	fullAllIndexFileName = pointrelIndexesDirectory + shortFileNameForAllIndex;
+	
+	// This trace would get more complex for items received from other servers (similar to email received: headers)
+	trace = makeTrace(timestamp, userID);
+	
+	// TODO: Ideally should just do this once when install, not every time we add a journal
+	createIndexFileIfMissing(fullAllIndexFileName, shortFileNameForAllIndex, false);
+	
+	jsonForIndex = "\n" + '{"operation":"remove","name":' + json_encode(journalName) + ',"header":' + json_encode(header) + ',"trace":' + trace + '}' + "\n";
+	appendDataToFile(fullAllIndexFileName, jsonForIndex);
+}
+
+function addNewVariableToIndexes(variableName, timestamp, userID) {
+	global pointrelIndexesMaintain, pointrelIndexesDirectory;
+
+	if (pointrelIndexesMaintain !== true) {
+		return;
+	}
+	
+	shortFileNameForAllIndex = POINTREL_ALL_VARIABLES_INDEX_FILE_NAME;
+	fullAllIndexFileName = pointrelIndexesDirectory + shortFileNameForAllIndex;
+	
+	// This trace would get more complex for items received from other servers (similar to email received: headers)
+	trace = makeTrace(timestamp, userID);
+	
+	// TODO: Ideally should just do this once when install, not every time we add a variable
+	createIndexFileIfMissing(fullAllIndexFileName, shortFileNameForAllIndex, false);
+	
+	jsonForIndex = "\n" + '{"operation":"add","name":' + json_encode(variableName) + ',"trace":' + trace + '}' + "\n";
+	appendDataToFile(fullAllIndexFileName, jsonForIndex);
+}
+	
+function removeVariableFromIndexes(variableName, timestamp, userID) {
+	global pointrelIndexesMaintain, pointrelIndexesDirectory;
+
+	if (pointrelIndexesMaintain !== true) {
+		return;
+	}
+	
+	shortFileNameForAllIndex = POINTREL_ALL_VARIABLES_INDEX_FILE_NAME;
+	fullAllIndexFileName = pointrelIndexesDirectory + shortFileNameForAllIndex;
+	
+	// This trace would get more complex for items received from other servers (similar to email received: headers)
+	trace = makeTrace(timestamp, userID);
+	
+	// TODO: Ideally should just do this once when install, not every time we add a variable
+	createIndexFileIfMissing(fullAllIndexFileName, shortFileNameForAllIndex, false);
+	
+	jsonForIndex = "\n" + '{"operation":"remove","name":' + json_encode(variableName) + ',"trace":' + trace + '}' + "\n";
+	appendDataToFile(fullAllIndexFileName, jsonForIndex);
+}
+
+function addResourceToIndexes(resourceURI, timestamp, userID, content, encodedContent) {
+	global pointrelIndexesMaintain, pointrelIndexesDirectory, pointrelIndexesCustomFunction;
+	
+	if (pointrelIndexesMaintain !== true) {
+		return;
+	}
+	
+	shortFileNameForAllIndex = POINTREL_ALL_RESOURCES_INDEX_FILE_NAME;
+	fullAllIndexFileName = pointrelIndexesDirectory + shortFileNameForAllIndex;
+	
+	// This trace would get more complex for items received from other servers (similar to email received: headers)
+	trace = makeTrace(timestamp, userID);
+	
+	// TODO: Ideally should just do this once when install, not every time we add a resource
+	createIndexFileIfMissing(fullAllIndexFileName, shortFileNameForAllIndex, false);
+	
+	// TODO: Implement recovery plan if fails while writing, like keeping resource in temp directory until finished indexing
+	addResourceIndexEntryToIndex(fullAllIndexFileName, resourceURI, trace, encodedContent);
+	
+	// TODO: What kind of files to index? All JSON? Seem wasteful of CPU time and will strain memory.
+	// So, only doing ones with ".pce.json", which are in effect "pieces" of a larger hyperdocument.
+	// PCE could also be seen to stand for "Pointrel Content Engine".
+	if (endsWith(resourceURI, ".pce.json")) {
+		// echo "indexable; trying to decode json\n";
+		// Do indexing
+		json = json_decode(content, true);
+		// Error if array: echo "decoded into: 'json'\n";
+		// echo "content: 'content'\n";
+		if (json) {
+			if (is_array(json)) {
+				// echo "trying to index\n";
+				indexing = json["_pointrelIndexing"];
+				// echo "the array is: indexing";
+				if (indexing) {
+					for (var i = 0; index < indexing.length; i++) {
+						var indexString = indexing[i];
+						// echo "Index on: indexString/n";
+						// Create index entry for item
+						createResourceIndexEntry(indexString, resourceURI, trace, encodedContent);
+					}
+				} else {
+					// echo "No indexes\n";
+				}
+			} else {
+				// json_printable = print_r(json, true);
+				// echo "not array 'json_printable'\n";
+			}
+		}
+	}
+	// echo "Done indexing";
+
+	if (pointrelIndexesCustomFunction !== null) {
+		call_user_func(pointrelIndexesCustomFunction, resourceURI, timestamp, userID, contents);
+	}
+}
+
 //Handling CGI requests
 
 function journalStore(request, response) {
@@ -212,7 +430,69 @@ function journalStore(request, response) {
 }
 
 function resourceAdd(request, response) {
-	response.send('{"response": "resourceAdd Unfinished!!!!"}');
+	var resourceURI = getCGIField(request, 'resourceURI');
+	var encodedContent = getCGIField(request, 'resourceContent');
+	var userID = getCGIField(request, 'userID');
+
+	// For later use
+	// var session = getCGIField(request, 'session');
+	// var authentication = getCGIField(request, 'authentication');
+
+	// remoteAddress = _SERVER['REMOTE_ADDR'];
+	// timestamp = currentTimeStamp();
+	// error_log('{"timeStamp": "' + timestamp + '", "remoteAddress": "' + remoteAddress + '", "request": "resource-add", "resourceURI": "' + resourceURI + '", "userID": "' + userID + '", "session": "' + session + '"}' + "\n", 3, fullLogFileName);
+
+	if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
+
+	if (!resourceURI) {
+	  return exitWithJSONStatusMessage(response, "No resourceURI was specified", SEND_FAILURE_HEADER, 400);
+	}
+
+	if (encodedContent === null) {
+	  return exitWithJSONStatusMessage(response, "No resourceContent was specified", SEND_FAILURE_HEADER, 400);
+	}
+
+	if (!userID) {
+	  return exitWithJSONStatusMessage(response, "No userID was specified", SEND_FAILURE_HEADER, 400);
+	}
+
+	var urlInfo = validateURIOrExit(resourceURI, NO_FAILURE_HEADER);
+	var shortName = urlInfo["shortName"];
+	var hexDigits = urlInfo["hexDigits"];
+	var uriSpecifiedLength = urlInfo["length"];
+
+	// TODO -- confirm the content is converted correctly and then hashed correctly
+	var content = new Buffer(encodedContent, "based64");
+	var contentLength = content.length;
+	var contentSHA256Actual = crypto.createHash("sh256").update(content).digest("hex");
+
+	if (uriSpecifiedLength != contentLength) {
+	    // for debugging -- send back content
+	    // return exitWithJSONStatusMessage(response, "Lengths do not agree from URI: uriSpecifiedLength and from content: contentLength with content: 'content''", NO_FAILURE_HEADER, 0);
+	    return exitWithJSONStatusMessage(response, "Lengths do not agree from URI: uriSpecifiedLength and from content: contentLength", NO_FAILURE_HEADER, 0);
+	}
+
+	if (hexDigits !== contentSHA256Actual) {
+		return exitWithJSONStatusMessage(response, "SHA256 values do not agree from URI: hexDigits and computed from content: contentSHA256Actual", NO_FAILURE_HEADER, 0);
+	}
+
+	// TODO: Validate shortName is OK for files
+
+	var createSubdirectories = true;
+	var storagePath = calculateStoragePath(pointrelResourcesDirectory, hexDigits, RESOURCE_STORAGE_LEVEL_COUNT, RESOURCE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
+	var fullName = storagePath + shortName;
+
+	if (fs.existsSync(fullName)) {
+	  return exitWithJSONStatusMessage('File already exists: "' + fullName + '"', NO_FAILURE_HEADER, 0);
+	}
+
+	// TODO; Is it good enough to create indexes before writing file, with the implication it is OK if an index entry can't be found or is corrupt?
+	addResourceToIndexes("pointrel://" + shortName, timestamp, userID, content, encodedContent);
+
+	if (!createFile(response, fullName, content)) return false;
+
+	// ??? header("Content-type: text/json; charset=UTF-8");
+	response.send('{"status": "OK", "message": "Wrote ' + fullName + '"}');
 }
 
 function resourceGet(request, response) {
@@ -225,8 +505,8 @@ function resourceGet(request, response) {
 	var attachmentName = getCGIField(request, 'attachmentName');
 
 	// For later use
-	var session = getCGIField(request, 'session');
-	var authentication = getCGIField(request, 'authentication');
+	// var session = getCGIField(request, 'session');
+	// var authentication = getCGIField(request, 'authentication');
 
 	// var remoteAddress = _SERVER['REMOTE_ADDR'];
 
@@ -299,8 +579,8 @@ function variableQuery(request, response) {
 	var userID = getCGIField(request, 'userID');
 
 	// For later use
-	var session = getCGIField(request, 'session');
-	var authentication = getCGIField(request, 'authentication');
+	// var session = getCGIField(request, 'session');
+	// var authentication = getCGIField(request, 'authentication');
 
 	// Default createIfMissing to true unless explicitly set to false
 	if (createIfMissing === "f" || createIfMissing === "false" || createIfMissing === "F" || createIfMissing === "FALSE") {
@@ -321,7 +601,7 @@ function variableQuery(request, response) {
 	    return exitWithJSONStatusMessage(response, "No operation was specified", NO_FAILURE_HEADER, 400);
 	}
 
-	var operations =  {"exists": 1, "new": 1, "delete": 1, "get": 1, "set": 1, "query": 1};
+	var operations = {"exists": 1, "new": 1, "delete": 1, "get": 1, "set": 1, "query": 1};
 	if (!operation in operations) {
 	    return exitWithJSONStatusMessage(response, "Unsupported operation: '" + operation + "'", NO_FAILURE_HEADER, 400);
 	}
