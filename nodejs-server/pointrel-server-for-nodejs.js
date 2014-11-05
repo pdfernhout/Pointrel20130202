@@ -2,6 +2,8 @@
 /*jslint node: true */
 "use strict";
 
+// TODO: Review error handling
+
 // TODO: Mostly left in place the synchronized approach to file handling from PHP; need to revisit for nodejs performance
 
 // Standard nodejs modules
@@ -206,7 +208,7 @@ function calculateStoragePath(baseDirectory, hexDigits, levelCount, segmentLengt
       var startOfSegment = level * segmentLength;
       var segment = hexDigits.substring(startOfSegment, startOfSegment + segmentLength);
       fullPath = fullPath + segment + "/";
-      if (createSubdirectories) fsExtra.ensureDir(fullPath);
+      if (createSubdirectories) fsExtra.ensureDirSync(fullPath);
   }
 
   // console.log("calculated path:", fullPath);
@@ -253,6 +255,7 @@ function createFile(response, fullFileName, contents) {
     try {
         fs.writeFileSync(fullFileName, contents);
     } catch(err) {
+    	console.log("error creating file", fullFileName, err);
         return exitWithJSONStatusMessage(response, "Could not create or write to file: '" + fullFileName + '"', NO_FAILURE_HEADER, 500);
     }
     return true;
@@ -262,6 +265,7 @@ function appendDataToFile(response, fullFileName, dataToAppend) {
     try {
         fs.appendFileSync(fullFileName, dataToAppend);
     } catch(err) {
+    	console.log("error appending to file", fullFileName, err);
         return exitWithJSONStatusMessage(response, "Could not append to file: '" + fullFileName + '"', NO_FAILURE_HEADER, 500);
     }
     return true;    
