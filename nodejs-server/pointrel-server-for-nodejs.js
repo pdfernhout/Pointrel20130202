@@ -204,7 +204,7 @@ function calculateStoragePath(baseDirectory, hexDigits, levelCount, segmentLengt
       var startOfSegment = level * segmentLength;
       var segment = hexDigits.substring(startOfSegment, startOfSegment + segmentLength);
       fullPath = fullPath + segment + "/";
-      if (createSubdirectories) fs.mkdirSync(fullPath);
+      if (createSubdirectories) fsExtra.ensureDir(fullPath);
   }
 
   // console.log("calculated path:", fullPath);
@@ -267,7 +267,7 @@ function appendDataToFile(response, fullFileName, dataToAppend) {
 
 function error_log(response, message) {
     // Calculate today's log file name
-    var today = Date.now().toISOString().substring(0, 10);
+    var today = new Date().toISOString().substring(0, 10);
     var fullLogFileName = pointrelLogsDirectory + today + ".log";
     if (!fs.existsSync(fullLogFileName)) {
         return createFile(response, fullLogFileName, message);
@@ -497,15 +497,15 @@ function resourceAdd(request, response) {
       return exitWithJSONStatusMessage(response, "No userID was specified", SEND_FAILURE_HEADER, 400);
     }
 
-    var urlInfo = validateURIOrExit(resourceURI, NO_FAILURE_HEADER);
+    var urlInfo = validateURIOrExit(response, resourceURI, NO_FAILURE_HEADER);
     var shortName = urlInfo.shortName;
     var hexDigits = urlInfo.hexDigits;
     var uriSpecifiedLength = urlInfo.length;
 
     // TODO -- confirm the content is converted correctly and then hashed correctly
-    var content = new Buffer(encodedContent, "based64");
+    var content = new Buffer(encodedContent, "base64");
     var contentLength = content.length;
-    var contentSHA256Actual = crypto.createHash("sh256").update(content).digest("hex");
+    var contentSHA256Actual = crypto.createHash("sha256").update(content).digest("hex");
 
     if (uriSpecifiedLength != contentLength) {
         // for debugging -- send back content
@@ -524,7 +524,7 @@ function resourceAdd(request, response) {
     var fullName = storagePath + shortName;
 
     if (fs.existsSync(fullName)) {
-      return exitWithJSONStatusMessage('File already exists: "' + fullName + '"', NO_FAILURE_HEADER, 0);
+      return exitWithJSONStatusMessage(response, 'File already exists: "' + fullName + '"', NO_FAILURE_HEADER, 0);
     }
 
     // TODO; Is it good enough to create indexes before writing file, with the implication it is OK if an index entry can't be found or is corrupt?
@@ -626,7 +626,7 @@ function resourcePublish(request, response) {
         return exitWithJSONStatusMessage(response, "No userID was specified", SEND_FAILURE_HEADER, 400);
     }
 
-    var urlInfo = validateURIOrExit(resourceURI, SEND_FAILURE_HEADER);
+    var urlInfo = validateURIOrExit(response, resourceURI, SEND_FAILURE_HEADER);
     var shortName = urlInfo.shortName;
     var hexDigits = urlInfo.hexDigits;
 
@@ -635,7 +635,7 @@ function resourcePublish(request, response) {
     var fullName = storagePath + shortName;
 
     if (!fs.existsSync(fullName)) {
-        return exitWithJSONStatusMessage('File does not exist: "' + fullName + '"', SEND_FAILURE_HEADER, 404);
+        return exitWithJSONStatusMessage(response, 'File does not exist: "' + fullName + '"', SEND_FAILURE_HEADER, 404);
     }
 
     var extension = getFileExtension(shortName);
@@ -643,7 +643,7 @@ function resourcePublish(request, response) {
     var destinationFileName = pointrelPublishingDirectory + destinationURL;
 
     if (!endsWith(destinationFileName, extension)) {
-        return exitWithJSONStatusMessage('File "' + destinationFileName + '" does not end with the same extension "' + extension + '" as the resource: "' + shortName + '"', NO_FAILURE_HEADER, 404);
+        return exitWithJSONStatusMessage(response, 'File "' + destinationFileName + '" does not end with the same extension "' + extension + '" as the resource: "' + shortName + '"', NO_FAILURE_HEADER, 404);
     }
 
     // Inspired by: http://stackoverflow.com/questions/1911382/sanitize-file-path-in-php
@@ -652,19 +652,19 @@ function resourcePublish(request, response) {
     var desiredPath = path.resolve(destinationFileName);
 
     if (desiredPath.indexOf(baseDir) !== 0) {
-        return exitWithJSONStatusMessage('File has an invalid path: "' + desiredPath + '"', NO_FAILURE_HEADER, 404);
+        return exitWithJSONStatusMessage(response, 'File has an invalid path: "' + desiredPath + '"', NO_FAILURE_HEADER, 404);
     }
 
     // Overwritting .htaccess and .htpasswd should not be possible if these files are owned by root or a another webserver owner, but adding this as extra check
 
     // Disable overwriting the .htaccess file
     if (endsWith(desiredPath, ".htaccess")) {
-        return exitWithJSONStatusMessage('File has an invalid path (2): "' + desiredPath + '"', NO_FAILURE_HEADER, 404);
+        return exitWithJSONStatusMessage(response, 'File has an invalid path (2): "' + desiredPath + '"', NO_FAILURE_HEADER, 404);
     }
 
     // Disable overwriting the .htpasswd file
     if (endsWith(desiredPath, ".htpasswd")) {
-        return exitWithJSONStatusMessage('File has an invalid path (3): "' + desiredPath + '"', NO_FAILURE_HEADER, 404);
+        return exitWithJSONStatusMessage(response, 'File has an invalid path (3): "' + desiredPath + '"', NO_FAILURE_HEADER, 404);
     }
 
     if (!desiredPath) {
@@ -786,7 +786,7 @@ function variableQuery(request, response) {
         if (fs.existsSync(fullVariableFileName)) {
             return exitWithJSONStatusMessage(response, "Variable file already exists: '" + fullVariableFileName + "'", NO_FAILURE_HEADER, 400);
         }
-        if (!validateURIOrExit(newValue, NO_FAILURE_HEADER)) return false;
+        if (!validateURIOrExit(response, newValue, NO_FAILURE_HEADER)) return false;
 
         addNewVariableToIndexes(response, variableName, logTimeStamp, userID);
         if (!writeVariableToNewFile(response, fullVariableFileName, newValue)) return false;
@@ -827,8 +827,8 @@ function variableQuery(request, response) {
     } else if (operation === "set") {
         if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
         
-        if (currentValue !== "" && !validateURIOrExit(currentValue, NO_FAILURE_HEADER)) return false;
-        if (newValue !== "" && !validateURIOrExit(newValue, NO_FAILURE_HEADER)) return false;
+        if (currentValue !== "" && !validateURIOrExit(response, currentValue, NO_FAILURE_HEADER)) return false;
+        if (newValue !== "" && !validateURIOrExit(response, newValue, NO_FAILURE_HEADER)) return false;
         if (!fs.existSync(fullVariableFileName)) {
             // Maybe create the file if it does not exists
             if (createIfMissing === false) {
