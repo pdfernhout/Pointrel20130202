@@ -15,6 +15,7 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var md5 = require('MD5');
 var mime = require("mime");
+var uuid = require('node-uuid');
 
 // CONFIG
 //Change these options as appropriate for your system
@@ -232,6 +233,16 @@ function explode(separator, source, limit)
   return result;
 }
 
+// From: http://stackoverflow.com/questions/2668854/sanitizing-strings-to-make-them-url-and-filename-safe
+// but changed to change dots to underscores
+function sanitizeFileName(fileName) {
+    return fileName.replace(/\s/g, "_").replace(/\.[\.]+/g, "_").replace(/[^\w_\.\-]/g, "_");
+}
+
+function is_string(something) {
+    return (typeof something == 'string' || something instanceof String);
+}
+
 // File functions
 
 function createFile(response, fullFileName, contents) {
@@ -251,6 +262,19 @@ function appendDataToFile(response, fullFileName, dataToAppend) {
     }
     return true;    
 }
+
+// TODO
+function error_log(response, message) {
+    // Calculate today's log file name
+    var today = Date.now().toISOString().substring(0, 10);
+    var fullLogFileName = pointrelLogsDirectory + today + ".log";
+    if (!fs.existsSync(fullLogFileName)) {
+        return createFile(response, fullLogFileName, message);
+    } else {
+        return appendDataToFile(response, fullLogFileName, message);
+    }
+}
+    
 
 ////// Indexing support
 
@@ -278,9 +302,9 @@ function addIndexEntryToAllIndexesIndex(response, allIndexShortFileName, indexNa
 
 function createIndexFileIfMissing(response, fullIndexFileName, indexName, addToAllIndexesIndex) {
     if (!fs.existsSync(fullIndexFileName)) {
-        var randomUUID = uniqid('pointrelIndex:', true);
+        var randomUUID = 'pointrelIndex:' + uuid.v4();
         var jsonForIndex = '{"indexFormat":"index","indexName":' + JSON.stringify(indexName) + ',"versionUUID":"' + randomUUID + '"}';
-        var firstLineHeader = "jsonForIndex\n";
+        var firstLineHeader = jsonForIndex + "\n";
         if (addToAllIndexesIndex) addIndexEntryToAllIndexesIndex(response, POINTREL_ALL_INDEXES_INDEX_FILE_NAME, indexName, randomUUID);
         createFile(response, fullIndexFileName, firstLineHeader);
     }    
@@ -298,7 +322,7 @@ function addResourceIndexEntryToIndex(response, fullIndexFileName, resourceURI, 
 }
 
 function createResourceIndexEntry(response, indexName, resourceURI, trace, encodedContent) {
-    var shortFileNameForIndexName = preg_replace(array('/\s/', '/\.[\.]+/', '/[^\w_\.\-]/'), array('_', '_', '_'), indexName);
+    var shortFileNameForIndexName = sanitizeFileName(indexName);
     
     var hexDigits = md5(shortFileNameForIndexName);
     var createSubdirectories = true;
@@ -404,15 +428,15 @@ function addResourceToIndexes(response, resourceURI, timestamp, userID, content,
     if (endsWith(resourceURI, ".pce.json")) {
         // echo "indexable; trying to decode json\n";
         // Do indexing
-        var json = json_decode(content, true);
+        var json = JSON.parse(content);
         // Error if array: echo "decoded into: 'json'\n";
         // echo "content: 'content'\n";
         if (json) {
-            if (is_array(json)) {
+            if (typeof json === "object") {
                 // echo "trying to index\n";
-                var indexing = json["_pointrelIndexing"];
+                var indexing = json._pointrelIndexing;
                 // echo "the array is: indexing";
-                if (indexing) {
+                if (indexing && indexing instanceof Array) {
                     for (var i = 0; i < indexing.length; i++) {
                         var indexString = indexing[i];
                         // echo "Index on: indexString/n";
@@ -431,7 +455,7 @@ function addResourceToIndexes(response, resourceURI, timestamp, userID, content,
     // echo "Done indexing";
 
     if (pointrelIndexesCustomFunction !== null) {
-        call_user_func(pointrelIndexesCustomFunction, resourceURI, timestamp, userID, contents);
+        pointrelIndexesCustomFunction(resourceURI, timestamp, userID, content);
     }
 }
 
@@ -452,7 +476,8 @@ function resourceAdd(request, response) {
 
     var remoteAddress = getIPAddress(request);
     var timestamp = currentTimeStamp();
-    error_log('{"timeStamp": "' + timestamp + '", "remoteAddress": "' + remoteAddress + '", "request": "resource-add", "resourceURI": "' + resourceURI + '", "userID": "' + userID + '", "session": "' + session + '"}' + "\n", 3, fullLogFileName);
+    var couldWriteLog = error_log(response, '{"timeStamp": "' + timestamp + '", "remoteAddress": "' + remoteAddress + '", "request": "resource-add", "resourceURI": "' + resourceURI + '", "userID": "' + userID + '", "session": "' + session + '"}' + "\n");
+    if (!couldWriteLog) return false;
 
     if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
 
@@ -522,8 +547,9 @@ function resourceGet(request, response) {
 
     var remoteAddress = getIPAddress(request);
 
-    error_log('{"timeStamp": "' + currentTimeStamp() + '", "remoteAddress": "' + remoteAddress + '", "request": "resource-get", "resourceURI": "' + resourceURI + '", "userID": "' + userID + '", "session": "' + session + '"}' + "\n", 3, fullLogFileName);
-
+    var couldWriteLog = error_log(response, '{"timeStamp": "' + currentTimeStamp() + '", "remoteAddress": "' + remoteAddress + '", "request": "resource-get", "resourceURI": "' + resourceURI + '", "userID": "' + userID + '", "session": "' + session + '"}' + "\n");
+    if (!couldWriteLog) return false;
+    
     if (!resourceURI) {
         return exitWithJSONStatusMessage(response, "No resourceURI was specified", SEND_FAILURE_HEADER, 400);
     }
@@ -591,7 +617,7 @@ function variableQuery(request, response) {
     var userID = getCGIField(request, 'userID');
 
     // For later use
-    // var session = getCGIField(request, 'session');
+    var session = getCGIField(request, 'session');
     // var authentication = getCGIField(request, 'authentication');
 
     // Default createIfMissing to true unless explicitly set to false
@@ -603,8 +629,9 @@ function variableQuery(request, response) {
     
     var remoteAddress = getIPAddress(request);
     var logTimeStamp = currentTimeStamp();
-    error_log('{"timeStamp": "' + logTimeStamp + '", "remoteAddress": "' + remoteAddress + '", "request": "variable-change", "variableName": "' + variableName + '", "operation": "' + operation + '", "newValue": "' + newValue + '", "currentValue": "' + currentValue + '", "userID": "' + userID + '", "session": "' + session + '"}' + "\n", 3, fullLogFileName);
-
+    var couldWriteLog = error_log(response, '{"timeStamp": "' + logTimeStamp + '", "remoteAddress": "' + remoteAddress + '", "request": "variable-change", "variableName": "' + variableName + '", "operation": "' + operation + '", "newValue": "' + newValue + '", "currentValue": "' + currentValue + '", "userID": "' + userID + '", "session": "' + session + '"}' + "\n");
+    if (!couldWriteLog) return false;
+    
     if (pointrelVariablesAllow !== true) {
         return exitWithJSONStatusMessage(response, "Variables not allowed", SEND_FAILURE_HEADER, 400);
     }
@@ -630,9 +657,7 @@ function variableQuery(request, response) {
         return exitWithJSONStatusMessage(response, "Variable name is too long (maximum 100 characters)", NO_FAILURE_HEADER, 400);
     }
     
-    // From: http://stackoverflow.com/questions/2668854/sanitizing-strings-to-make-them-url-and-filename-safe
-    // but changed to change dots to underscores
-    var shortFileNameForVariableName = variableName.replace(/\s/g, "_").replace(/\.[\.]+/g, "_").replace(/[^\w_\.\-]/g, "_");
+    var shortFileNameForVariableName = sanitizeFileName(variableName);
 
     var hexDigits = md5(shortFileNameForVariableName);
 
