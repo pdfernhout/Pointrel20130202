@@ -507,7 +507,7 @@ function resourceAdd(request, response) {
     var contentLength = content.length;
     var contentSHA256Actual = crypto.createHash("sha256").update(content).digest("hex");
 
-    if (uriSpecifiedLength != contentLength) {
+    if (uriSpecifiedLength !== contentLength) {
         // for debugging -- send back content
         // return exitWithJSONStatusMessage(response, "Lengths do not agree from URI: uriSpecifiedLength and from content: contentLength with content: 'content''", NO_FAILURE_HEADER, 0);
         return exitWithJSONStatusMessage(response, "Lengths do not agree from URI: uriSpecifiedLength and from content: contentLength", NO_FAILURE_HEADER, 0);
@@ -698,7 +698,7 @@ function successfulVariableOperation(response, operation, variableName, variable
 
 function writeVariableToNewFile(response, fullVariableFileName, newValue) {
     try {
-        fs.writeFileSync(fullVariableFileName, newValue);
+        fs.writeFileSync(fullVariableFileName, newValue, "utf8");
     } catch(err) {
         return exitWithJSONStatusMessage(response, "Could not create variable file: '" + fullVariableFileName + '"', NO_FAILURE_HEADER, 500);
     }
@@ -811,8 +811,8 @@ function variableQuery(request, response) {
             return exitWithJSONStatusMessage(response, "Variables file could not be opened to confirm value", SEND_FAILURE_HEADER, 400);
         }
 
-        if (contents != currentValue) {
-            return exitWithJSONStatusMessage(response, "Variable value was changed by another user to: " + contents, NO_FAILURE_HEADER, 409);
+        if (contents !== currentValue) {
+            return exitWithJSONStatusMessage(response, "Variable value was changed by another user to (1): " + contents, NO_FAILURE_HEADER, 409);
         }
         try {
             fs.unlinkSync(fullVariableFileName);
@@ -829,7 +829,7 @@ function variableQuery(request, response) {
         
         if (currentValue !== "" && !validateURIOrExit(response, currentValue, NO_FAILURE_HEADER)) return false;
         if (newValue !== "" && !validateURIOrExit(response, newValue, NO_FAILURE_HEADER)) return false;
-        if (!fs.existSync(fullVariableFileName)) {
+        if (!fs.existsSync(fullVariableFileName)) {
             // Maybe create the file if it does not exists
             if (createIfMissing === false) {
                 // TODO: Can't replace this as it has extra fields beyond message
@@ -851,11 +851,11 @@ function variableQuery(request, response) {
                 console.log("file read error", err);
                 return response.send('{"status": "FAIL", "message": "Could not open file for updating: ' + fullVariableFileName + '"}');
             }
-            if (contents != currentValue) {
+            if (contents !== currentValue) {
                 // header("HTTP/1.1 409 Variable value was changed by another user to: " + contents);
-                return response.send('{"status": "FAIL", "message": "Variable value was changed by another user to: ' + contents + '", "currentValue": "' + contents + '"}');
+                return response.send('{"status": "FAIL", "message": "Variable value was changed by another user to (2): ' + contents + '", "currentValue": "' + contents + '"}');
             }
-            if (!writeVariableToNewFile(response, fullVariableFileName, "utf8")) return false;
+            if (!writeVariableToNewFile(response, fullVariableFileName, newValue)) return false;
             variableValueAfterOperation = newValue;
         }
         return successfulVariableOperation(response, operation, variableName, variableValueAfterOperation);
