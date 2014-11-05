@@ -9,6 +9,7 @@ var fs = require('fs');
 var url = require('url');
 var path = require("path");
 var crypto = require('crypto');
+var path = require('path');
 
 // These modules require npm installation
 var express = require('express');
@@ -16,6 +17,7 @@ var bodyParser = require('body-parser');
 var md5 = require('MD5');
 var mime = require("mime");
 var uuid = require('node-uuid');
+var fsExtra = require("fs-extra");
 
 // CONFIG
 //Change these options as appropriate for your system
@@ -263,7 +265,6 @@ function appendDataToFile(response, fullFileName, dataToAppend) {
     return true;    
 }
 
-// TODO
 function error_log(response, message) {
     // Calculate today's log file name
     var today = Date.now().toISOString().substring(0, 10);
@@ -274,7 +275,10 @@ function error_log(response, message) {
         return appendDataToFile(response, fullLogFileName, message);
     }
 }
-    
+
+function getFileExtension(fileName) {
+    return path.extname(fileName);
+}
 
 ////// Indexing support
 
@@ -585,7 +589,105 @@ function resourceGet(request, response) {
 }
 
 function resourcePublish(request, response) {
-    response.send('{"response": "resourcePublish Unfinished!!!!"}');
+    // Publish a resource to the static part of the website
+
+    var resourceURI = getCGIField('resourceURI');
+    var destinationURL = getCGIField('destinationURL');
+    var userID = getCGIField('userID');
+
+    // For later use
+    var session = getCGIField('session');
+    // var authentication = getCGIField('authentication');
+
+    var remoteAddress = getIPAddress(request);
+
+    var couldWriteLog = error_log(response, '{"timeStamp": "' + currentTimeStamp() + '", "remoteAddress": "' + remoteAddress + '", "request": "resource-publish", "resourceURI": "' + resourceURI + '", "destinationURL": "' + destinationURL + '", "userID": "' + userID + '", "session": "' + session + '"}' + "\n");
+    if (!couldWriteLog) return false;
+    
+    if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
+
+    if (pointrelPublishingAllow !== true) {
+        return exitWithJSONStatusMessage(response, "Publishing not allowed", SEND_FAILURE_HEADER, 400);
+    }
+
+    if (!resourceURI) {
+        return exitWithJSONStatusMessage(response, "No resourceURI was specified", SEND_FAILURE_HEADER, 400);
+    }
+
+    if (!destinationURL) {
+        return exitWithJSONStatusMessage(response, "No destinationURL was specified", SEND_FAILURE_HEADER, 400);
+    }
+
+    if (destinationURL.indexOf("../") !== -1) {
+        return exitWithJSONStatusMessage(response, "Destination URL may not have ../ in it", SEND_FAILURE_HEADER, 400);
+    }
+
+    if (!userID) {
+        return exitWithJSONStatusMessage(response, "No userID was specified", SEND_FAILURE_HEADER, 400);
+    }
+
+    var urlInfo = validateURIOrExit(resourceURI, SEND_FAILURE_HEADER);
+    var shortName = urlInfo.shortName;
+    var hexDigits = urlInfo.hexDigits;
+
+    var createSubdirectories = false;
+    var storagePath = calculateStoragePath(pointrelResourcesDirectory, hexDigits, RESOURCE_STORAGE_LEVEL_COUNT, RESOURCE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
+    var fullName = storagePath + shortName;
+
+    if (!fs.existsSync(fullName)) {
+        return exitWithJSONStatusMessage('File does not exist: "' + fullName + '"', SEND_FAILURE_HEADER, 404);
+    }
+
+    var extension = getFileExtension(shortName);
+
+    var destinationFileName = pointrelPublishingDirectory + destinationURL;
+
+    if (!endsWith(destinationFileName, extension)) {
+        return exitWithJSONStatusMessage('File "' + destinationFileName + '" does not end with the same extension "' + extension + '" as the resource: "' + shortName + '"', NO_FAILURE_HEADER, 404);
+    }
+
+    // Inspired by: http://stackoverflow.com/questions/1911382/sanitize-file-path-in-php
+    // using call to expandPath to deal with relative paths
+    var baseDir = path.resolve(pointrelPublishingDirectory);
+    var desiredPath = path.resolve(destinationFileName);
+
+    if (desiredPath.indexOf(baseDir) !== 0) {
+        return exitWithJSONStatusMessage('File has an invalid path: "' + desiredPath + '"', NO_FAILURE_HEADER, 404);
+    }
+
+    // Overwritting .htaccess and .htpasswd should not be possible if these files are owned by root or a another webserver owner, but adding this as extra check
+
+    // Disable overwriting the .htaccess file
+    if (endsWith(desiredPath, ".htaccess")) {
+        return exitWithJSONStatusMessage('File has an invalid path (2): "' + desiredPath + '"', NO_FAILURE_HEADER, 404);
+    }
+
+    // Disable overwriting the .htpasswd file
+    if (endsWith(desiredPath, ".htpasswd")) {
+        return exitWithJSONStatusMessage('File has an invalid path (3): "' + desiredPath + '"', NO_FAILURE_HEADER, 404);
+    }
+
+    if (!desiredPath) {
+        return exitWithJSONStatusMessage(response, "The desiredPath 'desiredPath' is empty for destinationFileName 'destinationFileName' with baseDir 'baseDir'", NO_FAILURE_HEADER, 400);
+    }
+
+    var targetDirectory = path.dirname(desiredPath);
+
+    // ensure intermediate directories exist
+    try {
+        fsExtra.ensureDirSync(targetDirectory, "0777");
+    } catch (err) {
+        response.send('{"status": "FAILED", "message": "Could not create directories needed for "' + desiredPath + '"}');
+    }
+
+    try {
+        fsExtra.copySync(fullName, desiredPath);
+    } catch (err) {
+        response.send('{"status": "FAILED", "message": "Could not copy ' + fullName + ' to: ' + desiredPath + '"}');
+    }
+
+    // ??? header("Content-type: text/json; charset=UTF-8");
+    response.send('{"status": "OK", "message": "Copied ' + fullName + ' to: ' + desiredPath + '"}');
 }
 
 function successfulVariableOperation(response, operation, variableName, variableValueAfterOperation) {
