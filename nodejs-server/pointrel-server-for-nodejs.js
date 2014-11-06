@@ -293,12 +293,17 @@ function createFile(response, fullFileName, contents) {
 }
 
 function appendDataToFile(response, fullFileName, dataToAppend) {
+	// console.log("appendDataToFile", fullFileName, dataToAppend);
+	if (dataToAppend === undefined) {
+		return exitWithJSONStatusMessage(response, "Could not append undefined data to file: '" + fullFileName + '"', NO_FAILURE_HEADER, 500);
+	}
     try {
         fs.appendFileSync(fullFileName, dataToAppend);
     } catch(err) {
         console.log("error appending to file", fullFileName, err, new Error().stack);
         return exitWithJSONStatusMessage(response, "Could not append to file: '" + fullFileName + '"', NO_FAILURE_HEADER, 500);
     }
+    // console.log("successful appending");
     return true;    
 }
 
@@ -340,11 +345,11 @@ function addIndexEntryToAllIndexesIndex(response, allIndexShortFileName, indexNa
 	// console.log("addIndexEntryToAllIndexesIndex");
     var fullAllIndexFileName = pointrelIndexesDirectory + allIndexShortFileName;
 
-    createIndexFileIfMissing(response, fullAllIndexFileName, allIndexShortFileName, false);
+    if (!createIndexFileIfMissing(response, fullAllIndexFileName, allIndexShortFileName, false)) return false;
     
     // Create special index entry for the allIndexes index
     var jsonForIndex = "\n" + '{"operation":"add","name":' + JSON.strinify(indexName) + ',"versionUUID":"' + randomUUID + '"}' + "\n";
-    appendDataToFile(response, fullAllIndexFileName, jsonForIndex);
+    return appendDataToFile(response, fullAllIndexFileName, jsonForIndex);
 }
 
 function createIndexFileIfMissing(response, fullIndexFileName, indexName, addToAllIndexesIndex) {
@@ -354,8 +359,9 @@ function createIndexFileIfMissing(response, fullIndexFileName, indexName, addToA
         var jsonForIndex = '{"indexFormat":"index","indexName":' + JSON.stringify(indexName) + ',"versionUUID":"' + randomUUID + '"}';
         var firstLineHeader = jsonForIndex + "\n";
         if (addToAllIndexesIndex) addIndexEntryToAllIndexesIndex(response, POINTREL_ALL_INDEXES_INDEX_FILE_NAME, indexName, randomUUID);
-        createFile(response, fullIndexFileName, firstLineHeader);
-    }    
+        return createFile(response, fullIndexFileName, firstLineHeader);
+    }
+    return true;
 }
 
 function addResourceIndexEntryToIndex(response, fullIndexFileName, resourceURI, trace, encodedContent) {
@@ -367,7 +373,7 @@ function addResourceIndexEntryToIndex(response, fullIndexFileName, resourceURI, 
         resourceContentIfEmbedding = "";
     }
     var jsonForIndex = "\n" + '{"operation":"add","name":"' + resourceURI + '","trace":' + trace + resourceContentIfEmbedding + '}' + "\n";
-    appendDataToFile(response, fullIndexFileName, jsonForIndex);    
+    return appendDataToFile(response, fullIndexFileName, jsonForIndex);    
 }
 
 function createResourceIndexEntry(response, indexName, resourceURI, trace, encodedContent) {
@@ -379,14 +385,14 @@ function createResourceIndexEntry(response, indexName, resourceURI, trace, encod
     var storagePath = calculateStoragePath(pointrelIndexesDirectory, hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
     var fullIndexFileName = storagePath + "index_" + hexDigits + "_" + shortFileNameForIndexName + '.pointrelIndex';
     
-    createIndexFileIfMissing(response, fullIndexFileName, indexName, true);
-    addResourceIndexEntryToIndex(response, fullIndexFileName, resourceURI, trace, encodedContent);
+    if (!createIndexFileIfMissing(response, fullIndexFileName, indexName, true)) return false;
+    return addResourceIndexEntryToIndex(response, fullIndexFileName, resourceURI, trace, encodedContent);
 }
 
 function addNewJournalToIndexes(response, journalName, header, timestamp, userID) {
 	// console.log("addNewJournalToIndexes");
     if (pointrelIndexesMaintain !== true) {
-        return;
+        return true;
     }
     
     var shortFileNameForAllIndex = POINTREL_ALL_JOURNALS_INDEX_FILE_NAME;
@@ -396,16 +402,16 @@ function addNewJournalToIndexes(response, journalName, header, timestamp, userID
     var trace = makeTrace(timestamp, userID);
     
     // TODO: Ideally should just do this once when install, not every time we add a journal
-    createIndexFileIfMissing(response, fullAllIndexFileName, shortFileNameForAllIndex, false);
+    if (!createIndexFileIfMissing(response, fullAllIndexFileName, shortFileNameForAllIndex, false)) return false;
     
     var jsonForIndex = "\n" + '{"operation":"add","name":' + JSON.stringify(journalName) + ',"header":' + JSON.stringify(header) + ',"trace":' + trace + '}' + "\n";
-    appendDataToFile(response, fullAllIndexFileName, jsonForIndex);
+    return appendDataToFile(response, fullAllIndexFileName, jsonForIndex);
 }
 
 function removeJournalFromIndexes(response, journalName, header, timestamp, userID) {
 	// console.log("removeJournalFromIndexes");
     if (pointrelIndexesMaintain !== true) {
-        return;
+        return true;
     }
     
     var shortFileNameForAllIndex = POINTREL_ALL_JOURNALS_INDEX_FILE_NAME;
@@ -415,16 +421,16 @@ function removeJournalFromIndexes(response, journalName, header, timestamp, user
     var trace = makeTrace(timestamp, userID);
     
     // TODO: Ideally should just do this once when install, not every time we add a journal
-    createIndexFileIfMissing(response, fullAllIndexFileName, shortFileNameForAllIndex, false);
+    if (!createIndexFileIfMissing(response, fullAllIndexFileName, shortFileNameForAllIndex, false)) return false;
     
     var jsonForIndex = "\n" + '{"operation":"remove","name":' + JSON.stringify(journalName) + ',"header":' + JSON.stringify(header) + ',"trace":' + trace + '}' + "\n";
-    appendDataToFile(response, fullAllIndexFileName, jsonForIndex);
+    return appendDataToFile(response, fullAllIndexFileName, jsonForIndex);
 }
 
 function addNewVariableToIndexes(response, variableName, timestamp, userID) {
 	// console.log("addNewVariableToIndexes");
     if (pointrelIndexesMaintain !== true) {
-        return;
+        return true;
     }
     
     var shortFileNameForAllIndex = POINTREL_ALL_VARIABLES_INDEX_FILE_NAME;
@@ -434,16 +440,16 @@ function addNewVariableToIndexes(response, variableName, timestamp, userID) {
     var trace = makeTrace(timestamp, userID);
     
     // TODO: Ideally should just do this once when install, not every time we add a variable
-    createIndexFileIfMissing(response, fullAllIndexFileName, shortFileNameForAllIndex, false);
+    if (!createIndexFileIfMissing(response, fullAllIndexFileName, shortFileNameForAllIndex, false)) return false;
     
     var jsonForIndex = "\n" + '{"operation":"add","name":' + JSON.stringify(variableName) + ',"trace":' + trace + '}' + "\n";
-    appendDataToFile(response, fullAllIndexFileName, jsonForIndex);
+    return appendDataToFile(response, fullAllIndexFileName, jsonForIndex);
 }
     
 function removeVariableFromIndexes(response, variableName, timestamp, userID) {
 	// console.log("removeVariableFromIndexes");
     if (pointrelIndexesMaintain !== true) {
-        return;
+        return true;
     }
     
     var shortFileNameForAllIndex = POINTREL_ALL_VARIABLES_INDEX_FILE_NAME;
@@ -453,16 +459,16 @@ function removeVariableFromIndexes(response, variableName, timestamp, userID) {
     var trace = makeTrace(timestamp, userID);
     
     // TODO: Ideally should just do this once when install, not every time we add a variable
-    createIndexFileIfMissing(response, fullAllIndexFileName, shortFileNameForAllIndex, false);
+    if (!createIndexFileIfMissing(response, fullAllIndexFileName, shortFileNameForAllIndex, false)) return false;
     
     var jsonForIndex = "\n" + '{"operation":"remove","name":' + JSON.stringify(variableName) + ',"trace":' + trace + '}' + "\n";
-    appendDataToFile(response, fullAllIndexFileName, jsonForIndex);
+    return appendDataToFile(response, fullAllIndexFileName, jsonForIndex);
 }
 
 function addResourceToIndexes(response, resourceURI, timestamp, userID, content, encodedContent) {
 	// console.log("addResourceToIndexes");
     if (pointrelIndexesMaintain !== true) {
-        return;
+        return true;
     }
     
     var shortFileNameForAllIndex = POINTREL_ALL_RESOURCES_INDEX_FILE_NAME;
@@ -472,10 +478,10 @@ function addResourceToIndexes(response, resourceURI, timestamp, userID, content,
     var trace = makeTrace(timestamp, userID);
     
     // TODO: Ideally should just do this once when install, not every time we add a resource
-    createIndexFileIfMissing(response, fullAllIndexFileName, shortFileNameForAllIndex, false);
+    if (!createIndexFileIfMissing(response, fullAllIndexFileName, shortFileNameForAllIndex, false)) return false;
     
     // TODO: Implement recovery plan if fails while writing, like keeping resource in temp directory until finished indexing
-    addResourceIndexEntryToIndex(response, fullAllIndexFileName, resourceURI, trace, encodedContent);
+    if (!addResourceIndexEntryToIndex(response, fullAllIndexFileName, resourceURI, trace, encodedContent)) return false;
     
     // TODO: What kind of files to index? All JSON? Seem wasteful of CPU time and will strain memory.
     // So, only doing ones with ".pce.json", which are in effect "pieces" of a larger hyperdocument.
@@ -496,7 +502,7 @@ function addResourceToIndexes(response, resourceURI, timestamp, userID, content,
                         var indexString = indexing[i];
                         // echo "Index on: indexString/n";
                         // Create index entry for item
-                        createResourceIndexEntry(response, indexString, resourceURI, trace, encodedContent);
+                        if (!createResourceIndexEntry(response, indexString, resourceURI, trace, encodedContent)) return false;
                     }
                 } else {
                     // echo "No indexes\n";
@@ -512,6 +518,8 @@ function addResourceToIndexes(response, resourceURI, timestamp, userID, content,
     if (pointrelIndexesCustomFunction !== null) {
         pointrelIndexesCustomFunction(resourceURI, timestamp, userID, content);
     }
+    
+    return true;
 }
 
 
@@ -738,7 +746,7 @@ function journalStore(request, response) {
         var jsonForJournal = '{"journalFormat":"' + journalFormat + '","journalName":' + JSON.stringify(journalName) + ',"versionUUID":"' + randomUUID + '"}';
         var firstLineHeader = jsonForJournal + "\n";
 
-        addNewJournalToIndexes(response, journalName, jsonForJournal, logTimeStamp, userID);
+        if (!addNewJournalToIndexes(response, journalName, jsonForJournal, logTimeStamp, userID)) return false;
         if (!createFile(response, fullJournalFileName, firstLineHeader)) return false;
         // Return a nested json object instead of a string
         jsonToReturn = rtrim(firstLineHeader);
@@ -791,7 +799,7 @@ function journalStore(request, response) {
             return exitWithJSONStatusMessage(response, "Journal file could not be removed for some reason", SEND_FAILURE_HEADER, 400);
         }
         
-        removeJournalFromIndexes(response, journalName, userSuppliedHeader, logTimeStamp, userID);
+        if (!removeJournalFromIndexes(response, journalName, userSuppliedHeader, logTimeStamp, userID)) return false;
     }
 
     // operation: info
@@ -854,6 +862,7 @@ function journalStore(request, response) {
     // operation: put
 
     if (operation === "put") {
+    	// console.log("journal put");
         if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
         
         if (journalType !== "journal") {
@@ -868,9 +877,12 @@ function journalStore(request, response) {
         }   
         
         var content = base64_decode(encodedContent);
+        // console.log("content", content);
         
         // TODO: Could check that it is valid JSON content
-        appendDataToFile(fullJournalFileName, content);
+        if (!appendDataToFile(response, fullJournalFileName, content)) return false;
+        
+        // console.log("appended data", fullJournalFileName);
         
         jsonToReturn = '"ADDED"';
     }
@@ -878,6 +890,7 @@ function journalStore(request, response) {
     // response.setHeader("Content-type", "application/json; charset=UTF-8");
     response.setHeader("Content-type", "application/json");
     response.send('{"status": "OK", "message": "Successful operation: ' + operation + '", "journalName": "' + journalName + '", "journalType": "' + journalType + '", "result": ' + jsonToReturn + '}');
+    return true;
 }
 
 function resourceAdd(request, response) {
