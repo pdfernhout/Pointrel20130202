@@ -297,7 +297,7 @@ function appendDataToFile(response, fullFileName, dataToAppend) {
 }
 
 function error_log(response, message) {
-    // console.log("log", message);
+    console.log("log", message);
     // Calculate today's log file name
     var today = new Date().toISOString().substring(0, 10);
     var fullLogFileName = pointrelLogsDirectory + today + ".log";
@@ -598,7 +598,7 @@ function journalStore(request, response) {
     // var authentication = getCGIField(request, 'authentication');
 
     // Log what was requested
-    var couldWriteLog = error_log('{"timeStamp": "' + logTimeStamp + '", "remoteAddress": "' + remoteAddress + '", "request": "journal-store", journalName": "' + journalName + '", "operation": "' + operation + '", "userID": "' + userID + '"}' + "\n");
+    var couldWriteLog = error_log(response, '{"timeStamp": "' + logTimeStamp + '", "remoteAddress": "' + remoteAddress + '", "request": "journal-store", journalName": "' + journalName + '", "operation": "' + operation + '", "userID": "' + userID + '"}' + "\n");
     if (!couldWriteLog) return false;
     
     if (pointrelRepositoryIsReadOnly && operations[operation] === 2) {
