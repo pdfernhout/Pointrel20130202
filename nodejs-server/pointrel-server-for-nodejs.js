@@ -80,7 +80,13 @@ function exitWithJSONStatusMessage(response, message, sendFailureHeader, errorNu
     if (errorNumberForHeader === undefined) errorNumberForHeader = 400;
     
     if (sendFailureHeader) response.writeHeader(errorNumberForHeader, message);
-    var messageWithQuotesEscaped = message.replace('"', '\\"');
+    var messageWithQuotesEscaped;
+    try {
+        messageWithQuotesEscaped = message.replace('"', '\\"');
+    } catch(error) {
+        console.log("error during exitWithJSONStatusMessage", error);
+        messageWithQuotesEscaped = "Problem converting message to return it";
+    }
     response.end('{"status": "FAIL", "message": "' + messageWithQuotesEscaped + '"}');
     return false;
 }
@@ -280,7 +286,7 @@ function createFile(response, fullFileName, contents) {
     try {
         fs.writeFileSync(fullFileName, contents);
     } catch(err) {
-        console.log("error creating file", fullFileName, err);
+        console.log("error creating file", fullFileName, err, new Error().stack);
         return exitWithJSONStatusMessage(response, "Could not create or write to file: '" + fullFileName + '"', NO_FAILURE_HEADER, 500);
     }
     return true;
@@ -290,7 +296,7 @@ function appendDataToFile(response, fullFileName, dataToAppend) {
     try {
         fs.appendFileSync(fullFileName, dataToAppend);
     } catch(err) {
-        console.log("error appending to file", fullFileName, err);
+        console.log("error appending to file", fullFileName, err, new Error().stack);
         return exitWithJSONStatusMessage(response, "Could not append to file: '" + fullFileName + '"', NO_FAILURE_HEADER, 500);
     }
     return true;    
@@ -313,7 +319,7 @@ function getFileExtension(fileName) {
 }
 
 function generateRandomUUID(prefix) {
-    return generateRandomUUID(prefix + uuid.v4());
+    return prefix + uuid.v4();
 }
 
 ////// Indexing support
@@ -331,6 +337,7 @@ function makeTrace(timestamp, userID) {
 }
 
 function addIndexEntryToAllIndexesIndex(response, allIndexShortFileName, indexName, randomUUID) {
+	console.log("addIndexEntryToAllIndexesIndex");
     var fullAllIndexFileName = pointrelIndexesDirectory + allIndexShortFileName;
 
     createIndexFileIfMissing(fullAllIndexFileName, allIndexShortFileName, false);
@@ -341,16 +348,23 @@ function addIndexEntryToAllIndexesIndex(response, allIndexShortFileName, indexNa
 }
 
 function createIndexFileIfMissing(response, fullIndexFileName, indexName, addToAllIndexesIndex) {
+	console.log("createIndexFileIfMissing");
     if (!fs.existsSync(fullIndexFileName)) {
+    	console.log("createIndexFileIfMissing 1");
         var randomUUID = generateRandomUUID('pointrelIndex:');
+        console.log("createIndexFileIfMissing 1a");
         var jsonForIndex = '{"indexFormat":"index","indexName":' + JSON.stringify(indexName) + ',"versionUUID":"' + randomUUID + '"}';
+        console.log("createIndexFileIfMissing2");
         var firstLineHeader = jsonForIndex + "\n";
+        console.log("createIndexFileIfMissing 3");
         if (addToAllIndexesIndex) addIndexEntryToAllIndexesIndex(response, POINTREL_ALL_INDEXES_INDEX_FILE_NAME, indexName, randomUUID);
+        console.log("createIndexFileIfMissing about to call creatFile");
         createFile(response, fullIndexFileName, firstLineHeader);
     }    
 }
 
 function addResourceIndexEntryToIndex(response, fullIndexFileName, resourceURI, trace, encodedContent) {
+	console.log("addResourceIndexEntryToIndex");
     var resourceContentIfEmbedding;
     if (is_string(encodedContent) && encodedContent.length < pointrelIndexesEmbedContentSizeLimitInBytes) {
         resourceContentIfEmbedding = ',"xContent":"' + encodedContent + '"';
@@ -362,6 +376,7 @@ function addResourceIndexEntryToIndex(response, fullIndexFileName, resourceURI, 
 }
 
 function createResourceIndexEntry(response, indexName, resourceURI, trace, encodedContent) {
+	console.log("createResourceIndexEntry");
     var shortFileNameForIndexName = sanitizeFileName(indexName);
     
     var hexDigits = md5(shortFileNameForIndexName);
@@ -374,6 +389,7 @@ function createResourceIndexEntry(response, indexName, resourceURI, trace, encod
 }
 
 function addNewJournalToIndexes(response, journalName, header, timestamp, userID) {
+	console.log("addNewJournalToIndexes");
     if (pointrelIndexesMaintain !== true) {
         return;
     }
@@ -392,6 +408,7 @@ function addNewJournalToIndexes(response, journalName, header, timestamp, userID
 }
 
 function removeJournalFromIndexes(response, journalName, header, timestamp, userID) {
+	console.log("removeJournalFromIndexes");
     if (pointrelIndexesMaintain !== true) {
         return;
     }
@@ -410,6 +427,7 @@ function removeJournalFromIndexes(response, journalName, header, timestamp, user
 }
 
 function addNewVariableToIndexes(response, variableName, timestamp, userID) {
+	console.log("addNewVariableToIndexes");
     if (pointrelIndexesMaintain !== true) {
         return;
     }
@@ -428,6 +446,7 @@ function addNewVariableToIndexes(response, variableName, timestamp, userID) {
 }
     
 function removeVariableFromIndexes(response, variableName, timestamp, userID) {
+	console.log("removeVariableFromIndexes");
     if (pointrelIndexesMaintain !== true) {
         return;
     }
@@ -446,6 +465,7 @@ function removeVariableFromIndexes(response, variableName, timestamp, userID) {
 }
 
 function addResourceToIndexes(response, resourceURI, timestamp, userID, content, encodedContent) {
+	console.log("addResourceToIndexes");
     if (pointrelIndexesMaintain !== true) {
         return;
     }
@@ -504,6 +524,7 @@ function getJournalFileSizeAndHeader(fullJournalFileName) {
     var fd = null;
     try {
         fd = fs.openSync(fullJournalFileName, "r");
+        console.log("getJournalFileSizeAndHeader fd", fd);
         var stats = fs.fstatSync(fd);
         var size = stats.size;
         var buffer = new Buffer(1024);
@@ -516,11 +537,13 @@ function getJournalFileSizeAndHeader(fullJournalFileName) {
         fs.closeSync(fd);
         var data = buffer.toString("utf8", 0, bytesRead);
         var segments = data.split("\n");
-        var firstLineHeader = rtrim(segments);
+        var firstLine = segments[0];
+        console.log("firstLine", firstLine);
+        var firstLineHeader = rtrim(firstLine);
         return {size: size, firstLineHeader: firstLineHeader};
-    } catch(err) {
-        console.log("getJournalFileSizeAndHeader error", err);
-        if (fd) fs.close(fd);
+    } catch (err) {
+        console.log("getJournalFileSizeAndHeader error", err, new Error().stack);
+        // if (fd) fs.closeSync(fd);
         return false;
     }
 }
@@ -541,6 +564,7 @@ function getJournalFileSegment(fullJournalFileName, start, length) {
             length = 1024 * 1024;
         }
         fd = fs.openSync(fullJournalFileName, "r");
+        console.log("getJournalFileSegment fd", fd);
         var buffer = new Buffer(length);
         var bytesToRead = length;
         // if (size < bytesToRead) bytesToRead = size;
@@ -551,9 +575,9 @@ function getJournalFileSegment(fullJournalFileName, start, length) {
         fs.closeSync(fd);
         var data = buffer.toString("utf8", 0, bytesRead);
         return data;
-    } catch(err) {
-        console.log("getJournalFileSegment error", err);
-        if (fd) fs.close(fd);
+    } catch (err) {
+        console.log("getJournalFileSegment error", err, new Error().stack);
+        // if (fd) fs.closeSync(fd);
         return false;
     }
 }
@@ -561,6 +585,7 @@ function getJournalFileSegment(fullJournalFileName, start, length) {
 //Handling CGI requests
 
 function journalStore(request, response) {
+	console.log("journalStore", request.url);
     // Not locking file as this server is single threaded; might be an issue on multiple-core machines...
     // Support creating an append-only journal under a specific name;
     // the journal ideally should be mergable with other journals of the same name on other systems
@@ -715,7 +740,7 @@ function journalStore(request, response) {
         var randomUUID = generateRandomUUID('pointrelJournalInstance:');
         // TODO: Maybe should use journalName passed in, but with replacement for any double quotes in it? Same for journalFormat?
         var jsonForJournal = '{"journalFormat":"' + journalFormat + '","journalName":' + JSON.stringify(journalName) + ',"versionUUID":"' + randomUUID + '"}';
-        var firstLineHeader = "jsonForJournal\n";
+        var firstLineHeader = jsonForJournal + "\n";
 
         addNewJournalToIndexes(journalName, jsonForJournal, logTimeStamp, userID);
         if (!createFile(response, fullJournalFileName, firstLineHeader)) return false;
@@ -781,9 +806,10 @@ function journalStore(request, response) {
         if (journalFileInfo === false) {
             return exitWithJSONStatusMessage(response, "Could not read the journal file for info: '" + fullJournalFileName + "'", NO_FAILURE_HEADER, 500);  
         }
+        console.log("journalFileInfo", journalFileInfo);
         // Returning the header as a string, both so it can be used for deletes and also because if the file is corrupt, it might not be valid json
-        var firstLineHeaderWithReplacedQuotes = journalFileInfo.firstLineHeader.replace('"', '\\"');
-        jsonToReturn = '{"header":"' + firstLineHeaderWithReplacedQuotes + '", "size": ' + journalFileInfo.size + "}";
+        var firstLineHeaderWithReplacedQuotes = JSON.stringify(journalFileInfo.firstLineHeader); // journalFileInfo.firstLineHeader.replace('"', '\\"');
+        jsonToReturn = '{"header": ' + firstLineHeaderWithReplacedQuotes + ', "size": ' + journalFileInfo.size + "}";
     }
 
     // operation: get
@@ -815,6 +841,7 @@ function journalStore(request, response) {
         // http://www.coneural.org/florian/papers/04_byteserving.php
         // TODO: Issue with encoding of the results; assuming utf8 and maybe not correct, and also boundary conversion issues
         var contentsPartial = getJournalFileSegment(fullJournalFileName, start, length);
+        console.log("contentsPartial", contentsPartial);
         if (contentsPartial === false) {
             // jsonToReturn = '"FAILED"';
             return exitWithJSONStatusMessage(response, response, "Could not read the journal file for get: '" + fullJournalFileName + "'", NO_FAILURE_HEADER, 500);
@@ -858,6 +885,7 @@ function journalStore(request, response) {
 }
 
 function resourceAdd(request, response) {
+	try {
     var resourceURI = getCGIField(request, 'resourceURI');
     var encodedContent = getCGIField(request, 'resourceContent');
     var userID = getCGIField(request, 'userID');
@@ -888,6 +916,8 @@ function resourceAdd(request, response) {
     if (pointrelRepositoryIsReadOnly) {
         return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
     }
+    
+    console.log("resourceAdd about to validate URI");
 
     var urlInfo = validateURIOrExit(response, resourceURI, NO_FAILURE_HEADER);
     if (urlInfo === false) return false;
@@ -909,6 +939,8 @@ function resourceAdd(request, response) {
     if (hexDigits !== contentSHA256Actual) {
         return exitWithJSONStatusMessage(response, "SHA256 values do not agree from URI: hexDigits and computed from content: contentSHA256Actual", NO_FAILURE_HEADER, 0);
     }
+    
+    console.log("resourceAdd about to create directories if needed");
 
     // TODO: Validate shortName is OK for files
 
@@ -916,17 +948,25 @@ function resourceAdd(request, response) {
     var storagePath = calculateStoragePath(pointrelResourcesDirectory, hexDigits, RESOURCE_STORAGE_LEVEL_COUNT, RESOURCE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
     var fullName = storagePath + shortName;
 
+    console.log("resourceAdd about to check if file exists");
     if (fs.existsSync(fullName)) {
       return exitWithJSONStatusMessage(response, 'File already exists: "' + fullName + '"', NO_FAILURE_HEADER, 0);
     }
 
+    console.log("resourceAdd about to add resource to indexes");
     // TODO; Is it good enough to create indexes before writing file, with the implication it is OK if an index entry can't be found or is corrupt?
     addResourceToIndexes(response, "pointrel://" + shortName, logTimeStamp, userID, content, encodedContent);
 
+    console.log("resourceAdd about to create file");
     if (!createFile(response, fullName, content)) return false;
 
     // ??? header("Content-type: text/json; charset=UTF-8");
     response.send('{"status": "OK", "message": "Wrote ' + fullName + '"}');
+    console.log("resourceAdd sent response");
+	} catch (error) {
+		console.log("error in add", error, error.stack, new Error().stack);
+		throw error;
+	}
 }
 
 function resourceGet(request, response) {
@@ -1357,6 +1397,11 @@ app.post("/pointrel/pointrel-app/server/variable-query.php", function (request, 
 });
 
 app.use("/pointrel", express.static(__dirname + "/../pointrel"));
+
+app.use(function(err, req, res, next){
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
+});
 
 var server = app.listen(8080, function () {
 
