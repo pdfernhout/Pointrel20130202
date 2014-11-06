@@ -340,7 +340,7 @@ function addIndexEntryToAllIndexesIndex(response, allIndexShortFileName, indexNa
 	console.log("addIndexEntryToAllIndexesIndex");
     var fullAllIndexFileName = pointrelIndexesDirectory + allIndexShortFileName;
 
-    createIndexFileIfMissing(fullAllIndexFileName, allIndexShortFileName, false);
+    createIndexFileIfMissing(response, fullAllIndexFileName, allIndexShortFileName, false);
     
     // Create special index entry for the allIndexes index
     var jsonForIndex = "\n" + '{"operation":"add","name":' + JSON.strinify(indexName) + ',"versionUUID":"' + randomUUID + '"}' + "\n";
@@ -350,15 +350,10 @@ function addIndexEntryToAllIndexesIndex(response, allIndexShortFileName, indexNa
 function createIndexFileIfMissing(response, fullIndexFileName, indexName, addToAllIndexesIndex) {
 	console.log("createIndexFileIfMissing");
     if (!fs.existsSync(fullIndexFileName)) {
-    	console.log("createIndexFileIfMissing 1");
         var randomUUID = generateRandomUUID('pointrelIndex:');
-        console.log("createIndexFileIfMissing 1a");
         var jsonForIndex = '{"indexFormat":"index","indexName":' + JSON.stringify(indexName) + ',"versionUUID":"' + randomUUID + '"}';
-        console.log("createIndexFileIfMissing2");
         var firstLineHeader = jsonForIndex + "\n";
-        console.log("createIndexFileIfMissing 3");
         if (addToAllIndexesIndex) addIndexEntryToAllIndexesIndex(response, POINTREL_ALL_INDEXES_INDEX_FILE_NAME, indexName, randomUUID);
-        console.log("createIndexFileIfMissing about to call creatFile");
         createFile(response, fullIndexFileName, firstLineHeader);
     }    
 }
@@ -384,7 +379,7 @@ function createResourceIndexEntry(response, indexName, resourceURI, trace, encod
     var storagePath = calculateStoragePath(pointrelIndexesDirectory, hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
     var fullIndexFileName = storagePath + "index_" + hexDigits + "_" + shortFileNameForIndexName + '.pointrelIndex';
     
-    createIndexFileIfMissing(fullIndexFileName, indexName, true);
+    createIndexFileIfMissing(response, fullIndexFileName, indexName, true);
     addResourceIndexEntryToIndex(response, fullIndexFileName, resourceURI, trace, encodedContent);
 }
 
@@ -742,7 +737,7 @@ function journalStore(request, response) {
         var jsonForJournal = '{"journalFormat":"' + journalFormat + '","journalName":' + JSON.stringify(journalName) + ',"versionUUID":"' + randomUUID + '"}';
         var firstLineHeader = jsonForJournal + "\n";
 
-        addNewJournalToIndexes(journalName, jsonForJournal, logTimeStamp, userID);
+        addNewJournalToIndexes(response, journalName, jsonForJournal, logTimeStamp, userID);
         if (!createFile(response, fullJournalFileName, firstLineHeader)) return false;
         // Return a nested json object instead of a string
         jsonToReturn = rtrim(firstLineHeader);
@@ -795,7 +790,7 @@ function journalStore(request, response) {
             return exitWithJSONStatusMessage(response, "Journal file could not be removed for some reason", SEND_FAILURE_HEADER, 400);
         }
         
-        removeJournalFromIndexes(journalName, userSuppliedHeader, logTimeStamp, userID);
+        removeJournalFromIndexes(response, journalName, userSuppliedHeader, logTimeStamp, userID);
     }
 
     // operation: info
@@ -885,7 +880,6 @@ function journalStore(request, response) {
 }
 
 function resourceAdd(request, response) {
-	try {
     var resourceURI = getCGIField(request, 'resourceURI');
     var encodedContent = getCGIField(request, 'resourceContent');
     var userID = getCGIField(request, 'userID');
@@ -916,8 +910,6 @@ function resourceAdd(request, response) {
     if (pointrelRepositoryIsReadOnly) {
         return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
     }
-    
-    console.log("resourceAdd about to validate URI");
 
     var urlInfo = validateURIOrExit(response, resourceURI, NO_FAILURE_HEADER);
     if (urlInfo === false) return false;
@@ -939,8 +931,6 @@ function resourceAdd(request, response) {
     if (hexDigits !== contentSHA256Actual) {
         return exitWithJSONStatusMessage(response, "SHA256 values do not agree from URI: hexDigits and computed from content: contentSHA256Actual", NO_FAILURE_HEADER, 0);
     }
-    
-    console.log("resourceAdd about to create directories if needed");
 
     // TODO: Validate shortName is OK for files
 
@@ -948,25 +938,17 @@ function resourceAdd(request, response) {
     var storagePath = calculateStoragePath(pointrelResourcesDirectory, hexDigits, RESOURCE_STORAGE_LEVEL_COUNT, RESOURCE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
     var fullName = storagePath + shortName;
 
-    console.log("resourceAdd about to check if file exists");
     if (fs.existsSync(fullName)) {
       return exitWithJSONStatusMessage(response, 'File already exists: "' + fullName + '"', NO_FAILURE_HEADER, 0);
     }
 
-    console.log("resourceAdd about to add resource to indexes");
     // TODO; Is it good enough to create indexes before writing file, with the implication it is OK if an index entry can't be found or is corrupt?
     addResourceToIndexes(response, "pointrel://" + shortName, logTimeStamp, userID, content, encodedContent);
 
-    console.log("resourceAdd about to create file");
     if (!createFile(response, fullName, content)) return false;
 
     // ??? header("Content-type: text/json; charset=UTF-8");
     response.send('{"status": "OK", "message": "Wrote ' + fullName + '"}');
-    console.log("resourceAdd sent response");
-	} catch (error) {
-		console.log("error in add", error, error.stack, new Error().stack);
-		throw error;
-	}
 }
 
 function resourceGet(request, response) {
