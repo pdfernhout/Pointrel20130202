@@ -731,7 +731,7 @@ function journalStore(request, response) {
         }
         
         if (fs.existsSync(fullJournalFileName)) {
-            return exitWithJSONStatusMessage(response, response, "Journal file already exists: '" + fullJournalFileName + "'", NO_FAILURE_HEADER, 400);
+            return exitWithJSONStatusMessage(response, "Journal file already exists: '" + fullJournalFileName + "'", NO_FAILURE_HEADER, 400);
         }
         
         var journalFormat = getCGIField(request, 'journalFormat');
@@ -789,7 +789,7 @@ function journalStore(request, response) {
             return exitWithJSONStatusMessage(response, "Current journal size: size was not as supplied: " + userSuppliedSize, NO_FAILURE_HEADER, 409);
         }
         if (journalFileInfo.firstLineHeader != userSuppliedHeader) {
-            return exitWithJSONStatusMessage(response, response, "Current journal header: firstLineHeader was not as supplied: '" + userSuppliedHeader + "'", NO_FAILURE_HEADER, 409);
+            return exitWithJSONStatusMessage(response, "Current journal header: firstLineHeader was not as supplied: '" + userSuppliedHeader + "'", NO_FAILURE_HEADER, 409);
         }
         
         try {
@@ -848,7 +848,7 @@ function journalStore(request, response) {
         // console.log("contentsPartial: ***", contentsPartial, "***");
         if (contentsPartial === false) {
             // jsonToReturn = '"FAILED"';
-            return exitWithJSONStatusMessage(response, response, "Could not read the journal file for get: '" + fullJournalFileName + "'", NO_FAILURE_HEADER, 500);
+            return exitWithJSONStatusMessage(response, "Could not read the journal file for get: '" + fullJournalFileName + "'", NO_FAILURE_HEADER, 500);
         } else {
             var contentsPartialEncoded = base64_encode(contentsPartial);
             jsonToReturn = '"' + contentsPartialEncoded + '"';
