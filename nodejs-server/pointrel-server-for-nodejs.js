@@ -337,7 +337,7 @@ function makeTrace(timestamp, userID) {
 }
 
 function addIndexEntryToAllIndexesIndex(response, allIndexShortFileName, indexName, randomUUID) {
-	console.log("addIndexEntryToAllIndexesIndex");
+	// console.log("addIndexEntryToAllIndexesIndex");
     var fullAllIndexFileName = pointrelIndexesDirectory + allIndexShortFileName;
 
     createIndexFileIfMissing(response, fullAllIndexFileName, allIndexShortFileName, false);
@@ -348,7 +348,7 @@ function addIndexEntryToAllIndexesIndex(response, allIndexShortFileName, indexNa
 }
 
 function createIndexFileIfMissing(response, fullIndexFileName, indexName, addToAllIndexesIndex) {
-	console.log("createIndexFileIfMissing");
+	// console.log("createIndexFileIfMissing");
     if (!fs.existsSync(fullIndexFileName)) {
         var randomUUID = generateRandomUUID('pointrelIndex:');
         var jsonForIndex = '{"indexFormat":"index","indexName":' + JSON.stringify(indexName) + ',"versionUUID":"' + randomUUID + '"}';
@@ -359,7 +359,7 @@ function createIndexFileIfMissing(response, fullIndexFileName, indexName, addToA
 }
 
 function addResourceIndexEntryToIndex(response, fullIndexFileName, resourceURI, trace, encodedContent) {
-	console.log("addResourceIndexEntryToIndex");
+	// console.log("addResourceIndexEntryToIndex");
     var resourceContentIfEmbedding;
     if (is_string(encodedContent) && encodedContent.length < pointrelIndexesEmbedContentSizeLimitInBytes) {
         resourceContentIfEmbedding = ',"xContent":"' + encodedContent + '"';
@@ -371,7 +371,7 @@ function addResourceIndexEntryToIndex(response, fullIndexFileName, resourceURI, 
 }
 
 function createResourceIndexEntry(response, indexName, resourceURI, trace, encodedContent) {
-	console.log("createResourceIndexEntry");
+	// console.log("createResourceIndexEntry");
     var shortFileNameForIndexName = sanitizeFileName(indexName);
     
     var hexDigits = md5(shortFileNameForIndexName);
@@ -384,7 +384,7 @@ function createResourceIndexEntry(response, indexName, resourceURI, trace, encod
 }
 
 function addNewJournalToIndexes(response, journalName, header, timestamp, userID) {
-	console.log("addNewJournalToIndexes");
+	// console.log("addNewJournalToIndexes");
     if (pointrelIndexesMaintain !== true) {
         return;
     }
@@ -403,7 +403,7 @@ function addNewJournalToIndexes(response, journalName, header, timestamp, userID
 }
 
 function removeJournalFromIndexes(response, journalName, header, timestamp, userID) {
-	console.log("removeJournalFromIndexes");
+	// console.log("removeJournalFromIndexes");
     if (pointrelIndexesMaintain !== true) {
         return;
     }
@@ -422,7 +422,7 @@ function removeJournalFromIndexes(response, journalName, header, timestamp, user
 }
 
 function addNewVariableToIndexes(response, variableName, timestamp, userID) {
-	console.log("addNewVariableToIndexes");
+	// console.log("addNewVariableToIndexes");
     if (pointrelIndexesMaintain !== true) {
         return;
     }
@@ -441,7 +441,7 @@ function addNewVariableToIndexes(response, variableName, timestamp, userID) {
 }
     
 function removeVariableFromIndexes(response, variableName, timestamp, userID) {
-	console.log("removeVariableFromIndexes");
+	// console.log("removeVariableFromIndexes");
     if (pointrelIndexesMaintain !== true) {
         return;
     }
@@ -460,7 +460,7 @@ function removeVariableFromIndexes(response, variableName, timestamp, userID) {
 }
 
 function addResourceToIndexes(response, resourceURI, timestamp, userID, content, encodedContent) {
-	console.log("addResourceToIndexes");
+	// console.log("addResourceToIndexes");
     if (pointrelIndexesMaintain !== true) {
         return;
     }
@@ -519,7 +519,7 @@ function getJournalFileSizeAndHeader(fullJournalFileName) {
     var fd = null;
     try {
         fd = fs.openSync(fullJournalFileName, "r");
-        console.log("getJournalFileSizeAndHeader fd", fd);
+        // console.log("getJournalFileSizeAndHeader fd", fd);
         var stats = fs.fstatSync(fd);
         var size = stats.size;
         var buffer = new Buffer(1024);
@@ -533,7 +533,7 @@ function getJournalFileSizeAndHeader(fullJournalFileName) {
         var data = buffer.toString("utf8", 0, bytesRead);
         var segments = data.split("\n");
         var firstLine = segments[0];
-        console.log("firstLine", firstLine);
+        // console.log("firstLine", firstLine);
         var firstLineHeader = rtrim(firstLine);
         return {size: size, firstLineHeader: firstLineHeader};
     } catch (err) {
@@ -545,6 +545,7 @@ function getJournalFileSizeAndHeader(fullJournalFileName) {
 
 // TODO: Assupmtion about data being utf8; what boundary to break it on if not aligned with request?
 function getJournalFileSegment(fullJournalFileName, start, length) {
+	// console.log("getJournalFileSegment start/length", start, length);
     var fd = null;
     try {
         if (start < 0) return "";
@@ -555,17 +556,17 @@ function getJournalFileSegment(fullJournalFileName, start, length) {
         if (length <= 0) return "";
         // Limit length if too long; TODO: Improve so caller knows it failed?
         if (length > 10000000) {
-            console.log("getJournalFileSegment length is too long");
+            console.log("getJournalFileSegment length is too long", length);
             length = 1024 * 1024;
         }
         fd = fs.openSync(fullJournalFileName, "r");
-        console.log("getJournalFileSegment fd", fd);
+        // console.log("getJournalFileSegment fd", fd);
         var buffer = new Buffer(length);
         var bytesToRead = length;
         // if (size < bytesToRead) bytesToRead = size;
         var bytesRead = 0;
         if (bytesToRead > 0) {
-            bytesRead = fs.readSync(fd, buffer, 0, bytesToRead, 0);
+            bytesRead = fs.readSync(fd, buffer, 0, bytesToRead, start);
         }
         fs.closeSync(fd);
         var data = buffer.toString("utf8", 0, bytesRead);
@@ -580,7 +581,7 @@ function getJournalFileSegment(fullJournalFileName, start, length) {
 //Handling CGI requests
 
 function journalStore(request, response) {
-	console.log("journalStore", request.url);
+	// console.log("journalStore", request.url);
     // Not locking file as this server is single threaded; might be an issue on multiple-core machines...
     // Support creating an append-only journal under a specific name;
     // the journal ideally should be mergable with other journals of the same name on other systems
@@ -801,7 +802,7 @@ function journalStore(request, response) {
         if (journalFileInfo === false) {
             return exitWithJSONStatusMessage(response, "Could not read the journal file for info: '" + fullJournalFileName + "'", NO_FAILURE_HEADER, 500);  
         }
-        console.log("journalFileInfo", journalFileInfo);
+        // console.log("journalFileInfo", journalFileInfo);
         // Returning the header as a string, both so it can be used for deletes and also because if the file is corrupt, it might not be valid json
         var firstLineHeaderWithReplacedQuotes = JSON.stringify(journalFileInfo.firstLineHeader); // journalFileInfo.firstLineHeader.replace('"', '\\"');
         jsonToReturn = '{"header": ' + firstLineHeaderWithReplacedQuotes + ', "size": ' + journalFileInfo.size + "}";
@@ -836,7 +837,7 @@ function journalStore(request, response) {
         // http://www.coneural.org/florian/papers/04_byteserving.php
         // TODO: Issue with encoding of the results; assuming utf8 and maybe not correct, and also boundary conversion issues
         var contentsPartial = getJournalFileSegment(fullJournalFileName, start, length);
-        console.log("contentsPartial", contentsPartial);
+        // console.log("contentsPartial: ***", contentsPartial, "***");
         if (contentsPartial === false) {
             // jsonToReturn = '"FAILED"';
             return exitWithJSONStatusMessage(response, response, "Could not read the journal file for get: '" + fullJournalFileName + "'", NO_FAILURE_HEADER, 500);
