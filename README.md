@@ -16,14 +16,14 @@ The base infrastructure level is called the "Pointrel System", and deals with lo
 That level could potentially be implemented in a variety of way.
 Previous versions in a variety of languages are on SourceForge [here](http://sourceforge.net/projects/pointrel/).
 The most recent alternative version in Java for the client and PHP for the server is on GitHub [here](https://github.com/pdfernhout/Pointrel20120623).
-The version you are looking at uses JavaScript/HTML/CSS for the client and PHP for the server and is on GitHub [here](https://github.com/pdfernhout/Pointrel20130202). 
+The version you are looking at uses JavaScript/HTML/CSS for the client and either PHP or NodeJS for the server and is on GitHub [here](https://github.com/pdfernhout/Pointrel20130202). 
 
 The upper level is called "Twirlip" and represents applications, content, processes, and users that (hopefully) support collective civic sensemaking
 in a co-evolutionary way. That level is largely unfinished at this point. It is the hope to collectively build it using the Pointrel tools here as its base.
 
 ## Services provided
 
-The Pointrel System currently supports these services on the server side in PHP (accessed via CGI):
+The Pointrel System currently supports these services on the server side in PHP (accessed via CGI) or via a NodeJS-powered server:
 
 * Storing files which are then retrievable by a combination of their SHA-256 hash, size, and file-type extension.
 * Automatically creating indexes of some of those files that are in JSON with a specific indexing field and a specific extension.
@@ -67,24 +67,27 @@ Note that some files under the "libs" directory are covered by other FOSS licens
 
 ## Installation
 
-To use the Pointrel software, copy it to a web server supporting PHP.
+To use the Pointrel software, either copy it to a web server supporting PHP or NodeJS.
+
 The directory structure should like this (unless you make changes to pointrel_config.php which specifies these directory names).
 Note that "yoursite" is located somewhere on your webserver directory.
 
-        /yoursite                          (The contents of the "pointrel" directory of this project would be copied here on your webserver directory to create the directories below.)
-        /yoursite/pointrel-app             (There is an index.html file here which links to some utility applications in subdirectories.)
-        /yoursite/pointrel-app/bootstrap   (This contains test and utility apps useful for bootstrapping the system.)
-        /yoursite/pointrel-app/js          (These are JavaScript files specific to the Pointrel System or Twirlip.)
-        /yoursite/pointrel-app/libs        (These are some third-party FOSS JavaScript libraries such as the ace editor, jQuery, jStorage, knockout, marked, mustache, and so on.)
-        /yoursite/pointrel-app/server      (The PHP CGI scripts are here which are called using AJAX.)
-        /yoursite/pointrel-app/test        (Some more simple test applications.)
-        /yoursite/pointrel-data            (This directory and subdirectories will have data you add while using the system.)
-        /yoursite/pointrel-data/indexes    (Various server-generated append-only index files are written here.)
-        /yoursite/pointrel-data/journals   (Various user-generated append-only "journal" files are written here.)
-        /yoursite/pointrel-data/logs       (Various logs about acess to the system are written here.)
-        /yoursite/pointrel-data/resources  (Archived resources are written to subdirectories of this directory.)
-        /yoursite/pointrel-data/variables  (Various "variable" files are written here which associate a text tag with a current Pointrel resource as the value.)
-        /yoursite/pointrel-www             (This is the default location where web resources get "published".)
+        /yoursite/pointrel                          (The contents of the "pointrel" directory of this project would be copied here on your webserver directory to create the directories below.)
+        /yoursite/pointrel/pointrel-app             (There is an index.html file here which links to some utility applications in subdirectories.)
+        /yoursite/pointrel/pointrel-app/bootstrap   (This contains test and utility apps useful for bootstrapping the system.)
+        /yoursite/pointrel/pointrel-app/js          (These are JavaScript files specific to the Pointrel System or Twirlip.)
+        /yoursite/pointrel/pointrel-app/libs        (These are some third-party FOSS JavaScript libraries such as the ace editor, jQuery, jStorage, knockout, marked, mustache, and so on.)
+        /yoursite/pointrel/pointrel-app/server      (The PHP CGI scripts are here which are called using AJAX.)
+        /yoursite/pointrel/pointrel-app/test        (Some more simple test applications.)
+        /yoursite/pointrel/pointrel-data            (This directory and subdirectories will have data you add while using the system.)
+        /yoursite/pointrel/pointrel-data/indexes    (Various server-generated append-only index files are written here.)
+        /yoursite/pointrel/pointrel-data/journals   (Various user-generated append-only "journal" files are written here.)
+        /yoursite/pointrel/pointrel-data/logs       (Various logs about acess to the system are written here.)
+        /yoursite/pointrel/pointrel-data/resources  (Archived resources are written to subdirectories of this directory.)
+        /yoursite/pointrel/pointrel-data/variables  (Various "variable" files are written here which associate a text tag with a current Pointrel resource as the value.)
+        /yoursite/pointrel/pointrel-www             (This is the default location where web resources get "published".)
+        /yoursite/nodejs-server                     (You need this folder and node_modules subfolder only if you want to run the NodeJS server instead of use PHP CGI scripts.)
+        /yoursite/index.html                        (The NodeJS server will serve this page and also all content under the pointrel folder as static html pages.)
 
 Make sure the "pointrel-data" and the "pointrel-www" directory is writeable by your web server process. 
 Making directories writeable generally requires using a "chown" command to change ownership such as:
@@ -96,7 +99,7 @@ There are also security issues to consider when changing ownership of files on s
 Another option on some web servers is to use ["suEXEC"](http://en.wikipedia.org/wiki/SuEXEC) or similar to have the web server process run as your user id when serving your files.
 Consult your webserver documentation for more details on file ownership and security issues.
 
-If your site is public or otherwise allows use by non-trusted users, you should have a .htaccess file like the example below (for Apache)
+If your site is public or otherwise allows use by non-trusted users, and you are using the PHP version, you should have a .htaccess file like the example below (for Apache)
 in the /yoursite/pointrel-www directory and pointrel-data directory to prevent executing uploaded cgi scripts (like .php files).
 You might need another approach with a different web server like lighttpd.
 
@@ -123,6 +126,11 @@ One reason not to disallow access is so that places like the Internet Archive co
 aggregate this information into a global social semantic desktop.
 
 You must also enable JavaScript in your web browser to use the applications.
+
+If you have PHP enabled, then the server should be available via those scripts which will run under your web server.
+If you want to use the NodeJS version, then run the script called "pointrel-server-for-nodejs.js" in the nodejs-server directory
+using the "node" command or a similar one (like "forever" or "supervisor").
+The supplied NodeJS script will emulate the behavior of the PHP scripts and will also server the static content.
 
 --Paul Fernhout  
 http://www.pdfernhout.net/  
