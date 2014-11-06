@@ -2,7 +2,7 @@
 /*jslint node: true */
 "use strict";
 
-// TODO: Review error handling
+// TODO: Review error handling in terms of exceptions that could be throws from file-related Sync operations
 
 // TODO: Mostly left in place the synchronized approach to file handling from PHP; need to revisit for nodejs performance
 
@@ -85,6 +85,7 @@ function exitWithJSONStatusMessage(response, message, sendFailureHeader, errorNu
     return false;
 }
 
+// Returns true if should exit
 function exitIfCGIRequestMethodIsNotPost(request, response) {
     if (request.method !== 'POST') {
         exitWithJSONStatusMessage(response, "Request to change data must be a POST", SEND_FAILURE_HEADER, 400);
@@ -93,6 +94,7 @@ function exitIfCGIRequestMethodIsNotPost(request, response) {
     return false;
 }
 
+// Returns false if should exit
 function validateFileExistsOrExit(response, fullFileName) {
     if (!fs.existsSync(fullFileName)) {
         // TODO: Can't replace with exitWithJSONStatusMessage because has extra value
@@ -104,7 +106,7 @@ function validateFileExistsOrExit(response, fullFileName) {
 }
 
 //TODO: add option to validate for SHA256 content
-//Returns short name (after pointrel://) or quits with an error
+//Returns short name (after pointrel://) or returns false if an error and should exit
 function validateURIOrExit(response, pointrelURI, sendHeader) {
     if (sendHeader === undefined) sendHeader = NO_FAILURE_HEADER;
     
@@ -239,6 +241,19 @@ function explode(separator, source, limit)
   return result;
 }
 
+// trim functions from: http://www.somacon.com/p355.php
+function trim(stringToTrim) {
+    return stringToTrim.replace(/^\s+|\s+$/g,"");
+}
+
+function ltrim(stringToTrim) {
+    return stringToTrim.replace(/^\s+/,"");
+}
+
+function rtrim(stringToTrim) {
+    return stringToTrim.replace(/\s+$/,"");
+}
+
 // From: http://stackoverflow.com/questions/2668854/sanitizing-strings-to-make-them-url-and-filename-safe
 // but changed to change dots to underscores
 function sanitizeFileName(fileName) {
@@ -249,13 +264,23 @@ function is_string(something) {
     return (typeof something == 'string' || something instanceof String);
 }
 
+
+//TODO: Fix
+function base64_encode(content) {
+    return new Buffer(content, "utf8").toString("base64");
+}
+
+function base64_decode(encodedContent) {
+    return new Buffer(encodedContent, "base64").toString("utf8");
+}
+
 // File functions
 
 function createFile(response, fullFileName, contents) {
     try {
         fs.writeFileSync(fullFileName, contents);
     } catch(err) {
-    	console.log("error creating file", fullFileName, err);
+        console.log("error creating file", fullFileName, err);
         return exitWithJSONStatusMessage(response, "Could not create or write to file: '" + fullFileName + '"', NO_FAILURE_HEADER, 500);
     }
     return true;
@@ -265,14 +290,14 @@ function appendDataToFile(response, fullFileName, dataToAppend) {
     try {
         fs.appendFileSync(fullFileName, dataToAppend);
     } catch(err) {
-    	console.log("error appending to file", fullFileName, err);
+        console.log("error appending to file", fullFileName, err);
         return exitWithJSONStatusMessage(response, "Could not append to file: '" + fullFileName + '"', NO_FAILURE_HEADER, 500);
     }
     return true;    
 }
 
 function error_log(response, message) {
-	// console.log("log", message);
+    // console.log("log", message);
     // Calculate today's log file name
     var today = new Date().toISOString().substring(0, 10);
     var fullLogFileName = pointrelLogsDirectory + today + ".log";
@@ -285,6 +310,10 @@ function error_log(response, message) {
 
 function getFileExtension(fileName) {
     return path.extname(fileName);
+}
+
+function generateRandomUUID(prefix) {
+    return generateRandomUUID(prefix + uuid.v4());
 }
 
 ////// Indexing support
@@ -313,7 +342,7 @@ function addIndexEntryToAllIndexesIndex(response, allIndexShortFileName, indexNa
 
 function createIndexFileIfMissing(response, fullIndexFileName, indexName, addToAllIndexesIndex) {
     if (!fs.existsSync(fullIndexFileName)) {
-        var randomUUID = 'pointrelIndex:' + uuid.v4();
+        var randomUUID = generateRandomUUID('pointrelIndex:');
         var jsonForIndex = '{"indexFormat":"index","indexName":' + JSON.stringify(indexName) + ',"versionUUID":"' + randomUUID + '"}';
         var firstLineHeader = jsonForIndex + "\n";
         if (addToAllIndexesIndex) addIndexEntryToAllIndexesIndex(response, POINTREL_ALL_INDEXES_INDEX_FILE_NAME, indexName, randomUUID);
@@ -470,15 +499,362 @@ function addResourceToIndexes(response, resourceURI, timestamp, userID, content,
     }
 }
 
+
+function getJournalFileSizeAndHeader(fullJournalFileName) {
+    var fd = null;
+    try {
+        fd = fs.openSync(fullJournalFileName, "r");
+        var stats = fs.fstatSync(fd);
+        var size = stats.size;
+        var buffer = new Buffer(1024);
+        var bytesToRead = 1024;
+        if (size < bytesToRead) bytesToRead = size;
+        var bytesRead = 0;
+        if (bytesToRead > 0) {
+            bytesRead = fs.readSync(fd, buffer, 0, bytesToRead, 0);
+        }
+        fs.closeSync(fd);
+        var data = buffer.toString("utf8", 0, bytesRead);
+        var segments = data.split("\n");
+        var firstLineHeader = rtrim(segments);
+        return {size: size, firstLineHeader: firstLineHeader};
+    } catch(err) {
+        console.log("getJournalFileSizeAndHeader error", err);
+        if (fd) fs.close(fd);
+        return false;
+    }
+}
+
+// TODO: Assupmtion about data being utf8; what boundary to break it on if not aligned with request?
+function getJournalFileSegment(fullJournalFileName, start, length) {
+    var fd = null;
+    try {
+        if (start < 0) return "";
+        if (length === "END") {
+            var stats = fs.statSync(fullJournalFileName);
+            length = stats.size - start;
+        }
+        if (length <= 0) return "";
+        // Limit length if too long; TODO: Improve so caller knows it failed?
+        if (length > 10000000) {
+            console.log("getJournalFileSegment length is too long");
+            length = 1024 * 1024;
+        }
+        fd = fs.openSync(fullJournalFileName, "r");
+        var buffer = new Buffer(length);
+        var bytesToRead = length;
+        // if (size < bytesToRead) bytesToRead = size;
+        var bytesRead = 0;
+        if (bytesToRead > 0) {
+            bytesRead = fs.readSync(fd, buffer, 0, bytesToRead, 0);
+        }
+        fs.closeSync(fd);
+        var data = buffer.toString("utf8", 0, bytesRead);
+        return data;
+    } catch(err) {
+        console.log("getJournalFileSegment error", err);
+        if (fd) fs.close(fd);
+        return false;
+    }
+}
+
 //Handling CGI requests
 
 function journalStore(request, response) {
-	
-    // if (pointrelRepositoryIsReadOnly) {
-    // 	return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
-    //}
+    // Not locking file as this server is single threaded; might be an issue on multiple-core machines...
+    // Support creating an append-only journal under a specific name;
+    // the journal ideally should be mergable with other journals of the same name on other systems
+
+    // TODO: Should escape all user input returned as errors with htmlspecialchars or something else
+    // TODO: Ensure new line translation so it is always the same regardless of platform encoding
+
+    // PHP uses advisory locking on many platforms, so this locking may only be adequate if the file  is only accessed by this script
+    // There could be concurrency issues in between the time a check for existency is done for a file and when it is modified?
+
+    // the userID making the request
+    var userID = getCGIField(request, 'userID');
+
+    // the name of the journal
+    var journalName = getCGIField(request, 'journalName');
+
+    // Operations and operands: 
+    //   exists -- see if journal exists
+    //   create -- make the journal
+    //   delete userSuppliedHeader userSuppliedSize -- remove the journal, verifying header and size
+    //   info -- returns data from the first line of the journal (which has a uuid) and the journal's size
+    //   get start length -- retrieves a number of bytes starting from start and ending at start + length - 1
+    //   put hash size type path data -- adds data to the journal, verifying the hash
+    var operation = getCGIField(request, 'operation');
+
+    // can be journal, index, or all
+    var journalType = getCGIField(request, 'journalType');
+    if (!journalType) journalType = "journal";
     
-    response.send('{"response": "journalStore Unfinished!!!!"}');
+    var remoteAddress = getIPAddress(request);
+    var logTimeStamp = currentTimeStamp();
+
+    // Ideas for later use; need to add to log
+    // var session = getCGIField(request, 'session');
+    // var authentication = getCGIField(request, 'authentication');
+
+    // Log what was requested
+    var couldWriteLog = error_log('{"timeStamp": "' + logTimeStamp + '", "remoteAddress": "' + remoteAddress + '", "request": "journal-store", journalName": "' + journalName + '", "operation": "' + operation + '", "userID": "' + userID + '"}' + "\n");
+    if (!couldWriteLog) return false;
+    
+    if (pointrelRepositoryIsReadOnly && operations[operation] === 2) {
+        return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
+    }
+
+    if (pointrelJournalsAllow !== true && journalType === "journal") {
+        return exitWithJSONStatusMessage(response, "Journals not allowed", SEND_FAILURE_HEADER, 400);
+    }
+
+    // Validate the input, returning error messages if there is something lacking
+
+    if (!userID) {
+        return exitWithJSONStatusMessage(response, "No userID was specified", NO_FAILURE_HEADER, 400);
+    }
+
+    if (!journalName) {
+        return exitWithJSONStatusMessage(response, "No journalName was specified", NO_FAILURE_HEADER, 400);
+    }
+
+    if (journalName.length > 100) {
+        return exitWithJSONStatusMessage(response, "Journal name is too long (maximum 100 characters)", NO_FAILURE_HEADER, 400);
+    }
+
+    if (operation === null) {
+        return exitWithJSONStatusMessage(response, "No operation was specified", NO_FAILURE_HEADER, 400);
+    }
+
+    var operations = {"exists": 1, "create": 2, "delete": 2, "info": 1, "get": 1, "put": 2};
+    if (!(operation in operations)) {
+        return exitWithJSONStatusMessage(response, "Unsupported operation: 'operation'", NO_FAILURE_HEADER, 400);
+    }
+    
+    if (pointrelRepositoryIsReadOnly && operations[operation] === 2) {
+        return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
+    }
+
+    var journalTypes = {"journal": 1, "index": 1, "allResources": 1, "allIndexes": 1, "allJournals": 1, "allVariables": 1};
+    if (!(journalType in journalTypes)) {
+        return exitWithJSONStatusMessage(response, "Unsupported journalType: 'journalType'", NO_FAILURE_HEADER, 400);
+    }
+
+    // Determine the file name to go with the journal
+
+    var shortFileNameForJournalName = sanitizeFileName(journalName);
+
+    var fullJournalFileName;
+    
+    if (journalType === "allResources") {
+        fullJournalFileName = pointrelIndexesDirectory + POINTREL_ALL_RESOURCES_INDEX_FILE_NAME;
+    } else if (journalType === "allIndexes") {
+        fullJournalFileName = pointrelIndexesDirectory + POINTREL_ALL_INDEXES_INDEX_FILE_NAME;
+    } else if (journalType === "allJournals") {
+        fullJournalFileName = pointrelIndexesDirectory + POINTREL_ALL_JOURNALS_INDEX_FILE_NAME;
+    } else if (journalType === "allVariables") {
+        fullJournalFileName = pointrelIndexesDirectory + POINTREL_ALL_VARIABLES_INDEX_FILE_NAME;
+    } else {
+        if (journalType === "index") {
+            baseDirectory = pointrelIndexesDirectory;
+        } else {
+            baseDirectory = pointrelJournalsDirectory;
+        }
+        var hexDigits = md5(shortFileNameForJournalName);
+        
+        var createSubdirectories = (operation === "create" && journalType !== "index");
+        if (createSubdirectories) {
+            if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
+        }
+        
+        var storagePath = calculateStoragePath(baseDirectory, hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
+        if (journalType === "index") {
+            fullJournalFileName = storagePath + "index_" + hexDigits + "_" + shortFileNameForJournalName + '.pointrelIndex';
+        } else {
+            fullJournalFileName = storagePath + "journal_" + hexDigits + "_" + shortFileNameForJournalName + '.pointrelJournal';
+        }   
+    }
+
+    var journalFileInfo;
+    var jsonToReturn = '"ERROR"';
+
+    // operation: exists
+
+    if (operation === "exists") {
+        if (fs.existsSync(fullJournalFileName)) {
+            // TODO: Can't replace this one because it has OK
+            return response.send('{"status": "OK", "exists": true, "message": "Journal file exists: ' + shortFileNameForJournalName + '"}');
+        } else {
+            return response.send('{"status": "OK", "exists": false, "message": "Journal file does not exist: ' + shortFileNameForJournalName + '"}');
+        }
+        // return exitWithJSONStatusMessage(response, "Journal file does not exist: '" + shortFileNameForJournalName + "'", NO_FAILURE_HEADER, 0);
+    }
+
+    // operation: create
+    // Creates the journal, with the first entry being a JSON object that has a unique ID for this journal instance
+
+    if (operation === "create") {
+        if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
+        
+        if (journalType !== "journal") {
+            return exitWithJSONStatusMessage(response, "Only journalType of journal can be created", NO_FAILURE_HEADER, 400);
+        }
+        
+        if (fs.existsSync(fullJournalFileName)) {
+            return exitWithJSONStatusMessage(response, response, "Journal file already exists: '" + fullJournalFileName + "'", NO_FAILURE_HEADER, 400);
+        }
+        
+        var journalFormat = getCGIField(request, 'journalFormat');
+        
+        if (!journalFormat) {
+            return exitWithJSONStatusMessage(response, "No journalFormat was specified", NO_FAILURE_HEADER, 400);
+        }
+        
+        // TODO: Should also put journalName in somehow
+        var randomUUID = generateRandomUUID('pointrelJournalInstance:');
+        // TODO: Maybe should use journalName passed in, but with replacement for any double quotes in it? Same for journalFormat?
+        var jsonForJournal = '{"journalFormat":"' + journalFormat + '","journalName":' + JSON.stringify(journalName) + ',"versionUUID":"' + randomUUID + '"}';
+        var firstLineHeader = "jsonForJournal\n";
+
+        addNewJournalToIndexes(journalName, jsonForJournal, logTimeStamp, userID);
+        if (!createFile(response, fullJournalFileName, firstLineHeader)) return false;
+        // Return a nested json object instead of a string
+        jsonToReturn = rtrim(firstLineHeader);
+    }
+    
+    // operation: delete userSuppliedHeader userSuppliedSize
+
+    if (operation === "delete") {
+        if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
+        
+        if (pointrelJournalsDeleteAllow !== true) {
+            return exitWithJSONStatusMessage(response, "Journals delete not allowed", SEND_FAILURE_HEADER, 400);
+        }
+        
+        if (journalType !== "journal") {
+            return exitWithJSONStatusMessage(response, "Only journalType of journal can be deleted", NO_FAILURE_HEADER, 400);
+        }
+        
+        if (!validateFileExistsOrExit(response, fullJournalFileName)) return false;
+        
+        // Check that header info and size are correct; header must be in canonical form as supplied
+        var userSuppliedHeader = getCGIField(request, 'userSuppliedHeader');
+        
+        if (!userSuppliedHeader) {
+            return exitWithJSONStatusMessage(response, "No userSuppliedHeader was specified", NO_FAILURE_HEADER, 400);
+        }
+        
+        var userSuppliedSize = getCGIField(request, 'userSuppliedSize');
+        
+        if (userSuppliedSize === "") {
+            return exitWithJSONStatusMessage(response, "No userSuppliedSize was specified", NO_FAILURE_HEADER, 400);
+        }
+        
+        journalFileInfo = getJournalFileSizeAndHeader(fullJournalFileName);
+        if (journalFileInfo === false) {
+            return exitWithJSONStatusMessage(response, "Could not read the journal file for info: '" + fullJournalFileName + "'", NO_FAILURE_HEADER, 500);  
+        }
+        
+        if (journalFileInfo.size != userSuppliedSize) {
+            return exitWithJSONStatusMessage(response, "Current journal size: size was not as supplied: " + userSuppliedSize, NO_FAILURE_HEADER, 409);
+        }
+        if (journalFileInfo.firstLineHeader != userSuppliedHeader) {
+            return exitWithJSONStatusMessage(response, response, "Current journal header: firstLineHeader was not as supplied: '" + userSuppliedHeader + "'", NO_FAILURE_HEADER, 409);
+        }
+        
+        try {
+            fs.unlinkSync(fullJournalFileName);
+        } catch (err) {
+            console.log("file unlink error", err);
+            return exitWithJSONStatusMessage(response, "Journal file could not be removed for some reason", SEND_FAILURE_HEADER, 400);
+        }
+        
+        removeJournalFromIndexes(journalName, userSuppliedHeader, logTimeStamp, userID);
+    }
+
+    // operation: info
+
+    if (operation === "info") {
+        if (!validateFileExistsOrExit(response, fullJournalFileName)) return false;
+        journalFileInfo = getJournalFileSizeAndHeader(fullJournalFileName);
+        if (journalFileInfo === false) {
+            return exitWithJSONStatusMessage(response, "Could not read the journal file for info: '" + fullJournalFileName + "'", NO_FAILURE_HEADER, 500);  
+        }
+        // Returning the header as a string, both so it can be used for deletes and also because if the file is corrupt, it might not be valid json
+        var firstLineHeaderWithReplacedQuotes = journalFileInfo.firstLineHeader.replace('"', '\\"');
+        jsonToReturn = '{"header":"' + firstLineHeaderWithReplacedQuotes + '", "size": ' + journalFileInfo.size + "}";
+    }
+
+    // operation: get
+    // This may return JSON if there is an error; otherwise it returns the byte data in that section of file
+
+    if (operation === "get") {
+        if (!validateFileExistsOrExit(response, fullJournalFileName)) return false;
+        
+        var start = getCGIField(request, 'start');
+        
+        if (start === '') {
+            return exitWithJSONStatusMessage(response, "No start was specified", NO_FAILURE_HEADER, 400);
+        }
+        
+        start = parseInt(start, 10);
+        
+        var length = getCGIField(request, 'length');
+        
+        if (!length) {
+            return exitWithJSONStatusMessage(response, "No length was specified", NO_FAILURE_HEADER, 400);
+        }
+        
+        if (length !== "END") length = parseInt(length, 10);
+        
+        // Need to return arbitrary length content in body instead of JSON status result
+        // TODO: Just doing it as a single read to a string, which should be improved such as done 
+        // in previous pointrel version as readfile at end or instead with buffering similar to::
+        // http://stackoverflow.com/questions/1395656/is-there-a-good-implementation-of-partial-file-downloading-in-php
+        // http://www.coneural.org/florian/papers/04_byteserving.php
+        // TODO: Issue with encoding of the results; assuming utf8 and maybe not correct, and also boundary conversion issues
+        var contentsPartial = getJournalFileSegment(fullJournalFileName, start, length);
+        if (contentsPartial === false) {
+            // jsonToReturn = '"FAILED"';
+            return exitWithJSONStatusMessage(response, response, "Could not read the journal file for get: '" + fullJournalFileName + "'", NO_FAILURE_HEADER, 500);
+        } else {
+            var contentsPartialEncoded = base64_encode(contentsPartial);
+            jsonToReturn = '"' + contentsPartialEncoded + '"';
+            // If wanted to write it out without encoding:
+            // header("Content-type: application/octet-stream");
+            // echo contentsPartial;
+            // exit();
+        }
+    }
+
+    // operation: put
+
+    if (operation === "put") {
+        if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
+        
+        if (journalType !== "journal") {
+            return exitWithJSONStatusMessage(response, "Only journalType of journal can be appended", NO_FAILURE_HEADER, 400);
+        }
+        
+        if (!validateFileExistsOrExit(response, fullJournalFileName)) return false;
+        
+        var encodedContent = getCGIField(request, 'encodedContent');
+        if (!encodedContent) {
+            return exitWithJSONStatusMessage(response, "No encodedContent was specified", NO_FAILURE_HEADER, 400);
+        }   
+        
+        var content = base64_decode(encodedContent);
+        
+        // TODO: Could check that it is valid JSON content
+        appendDataToFile(fullJournalFileName, content);
+        
+        jsonToReturn = '"ADDED"';
+    }
+
+    // response.setHeader("Content-type", "application/json; charset=UTF-8");
+    response.setHeader("Content-type", "application/json");
+    response.send('{"status": "OK", "message": "Successful operation: ' + operation + '", "journalName": "' + journalName + '", "journalType": "' + journalType + '", "result": ' + jsonToReturn + '}');
 }
 
 function resourceAdd(request, response) {
@@ -491,8 +867,8 @@ function resourceAdd(request, response) {
     // var authentication = getCGIField(request, 'authentication');
 
     var remoteAddress = getIPAddress(request);
-    var timestamp = currentTimeStamp();
-    var couldWriteLog = error_log(response, '{"timeStamp": "' + timestamp + '", "remoteAddress": "' + remoteAddress + '", "request": "resource-add", "resourceURI": "' + resourceURI + '", "userID": "' + userID + '", "session": "' + session + '"}' + "\n");
+    var logTimeStamp = currentTimeStamp();
+    var couldWriteLog = error_log(response, '{"timeStamp": "' + logTimeStamp + '", "remoteAddress": "' + remoteAddress + '", "request": "resource-add", "resourceURI": "' + resourceURI + '", "userID": "' + userID + '", "session": "' + session + '"}' + "\n");
     if (!couldWriteLog) return false;
 
     if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
@@ -510,16 +886,17 @@ function resourceAdd(request, response) {
     }
     
     if (pointrelRepositoryIsReadOnly) {
-    	return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
+        return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
     }
 
     var urlInfo = validateURIOrExit(response, resourceURI, NO_FAILURE_HEADER);
+    if (urlInfo === false) return false;
     var shortName = urlInfo.shortName;
     var hexDigits = urlInfo.hexDigits;
     var uriSpecifiedLength = urlInfo.length;
 
     // TODO -- confirm the content is converted correctly and then hashed correctly
-    var content = new Buffer(encodedContent, "base64");
+    var content = base64_decode(encodedContent);
     var contentLength = content.length;
     var contentSHA256Actual = crypto.createHash("sha256").update(content).digest("hex");
 
@@ -544,7 +921,7 @@ function resourceAdd(request, response) {
     }
 
     // TODO; Is it good enough to create indexes before writing file, with the implication it is OK if an index entry can't be found or is corrupt?
-    addResourceToIndexes(response, "pointrel://" + shortName, timestamp, userID, content, encodedContent);
+    addResourceToIndexes(response, "pointrel://" + shortName, logTimeStamp, userID, content, encodedContent);
 
     if (!createFile(response, fullName, content)) return false;
 
@@ -643,10 +1020,11 @@ function resourcePublish(request, response) {
     }
     
     if (pointrelRepositoryIsReadOnly) {
-    	return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
+        return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
     }
 
     var urlInfo = validateURIOrExit(response, resourceURI, SEND_FAILURE_HEADER);
+    if (urlInfo === false) return false;
     var shortName = urlInfo.shortName;
     var hexDigits = urlInfo.hexDigits;
 
@@ -768,7 +1146,7 @@ function variableQuery(request, response) {
     }
     
     if (pointrelRepositoryIsReadOnly && operations[operation] === 2) {
-    	return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
+        return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
     }
 
     if (!userID) {
