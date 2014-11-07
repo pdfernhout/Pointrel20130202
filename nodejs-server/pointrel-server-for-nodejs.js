@@ -7,19 +7,24 @@
 // TODO: Mostly left in place the synchronized approach to file handling from PHP; need to revisit for nodejs performance
 
 // Standard nodejs modules
+
 var fs = require('fs');
 var url = require('url');
 var path = require("path");
 var crypto = require('crypto');
 var path = require('path');
+var http = require('http');
+var https = require('https');
 
-// These modules require npm installation
+// The modules below require npm installation
+
 var express = require('express');
 var bodyParser = require('body-parser');
 var md5 = require('MD5');
 var mime = require("mime");
 var uuid = require('node-uuid');
 var fsExtra = require("fs-extra");
+// Authentication-related
 var passport = require("passport");
 var passportLocal = require("passport-local");
 var flash = require('connect-flash');
@@ -1554,10 +1559,25 @@ app.use(function(err, req, res, next){
     res.status(500).send('Something broke!');
 });
 
-var server = app.listen(8080, function () {
-
+//Create an HTTP service.
+var server = http.createServer(app).listen(8080, function () {
   var host = server.address().address;
   var port = server.address().port;
-
   console.log("Pointrel20130202 app listening at http://%s:%s", host, port);
 });
+
+// http://stackoverflow.com/questions/5998694/how-to-create-an-https-server-in-node-js
+
+// TODO: These keys are only for testing; do not use in production!!!!
+var sslOptions = {
+    key: fs.readFileSync('test-ssl-info/pointrel-test-key.pem'),
+    cert: fs.readFileSync('test-ssl-info/pointrel-test-cert.pem')
+};
+
+//Create an HTTPS service identical to the HTTP service.
+var server2 = https.createServer(sslOptions, app).listen(8081, function () {
+  var host = server2.address().address;
+  var port = server2.address().port;
+  console.log("Pointrel20130202 app listening at https://%s:%s", host, port);
+});
+
