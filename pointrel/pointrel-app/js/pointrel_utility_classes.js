@@ -172,7 +172,7 @@ function PointrelVariable(archiver, variableName) {
 		this.getLatestVariableVersionURI(function(error, variableGetResult) {
 			console.log("callback in getNewVersions after getLatestVariableVersionURI", variableGetResult);
 			if (error) {
-				log("error getting latest value of variable");
+				console.log("error getting latest value of variable");
 				if (typeof (this.callbackWhenVersionsLoaded) == "function") {
 					this.callbackWhenVersionsLoaded(error, null, null, null);
 				} else {
