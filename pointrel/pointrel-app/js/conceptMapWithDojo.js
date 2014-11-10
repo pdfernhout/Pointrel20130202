@@ -538,7 +538,7 @@ define("conceptMap", [
         //new Moveable(arrow);
         // console.log("addClick");
 
-        if (item == null) {
+        if (item === null) {
             item = {};
             item.text = text;
             item.url = url;
@@ -621,7 +621,7 @@ define("conceptMap", [
                 line = "...";
                 return;
             }
-            if (line == "") {
+            if (line === "") {
                 line = word;
             } else if (tb(line + " " + word).w < maxWidth) {
                 line += " " + word;

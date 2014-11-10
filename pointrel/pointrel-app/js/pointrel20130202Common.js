@@ -303,7 +303,7 @@ function PointrelIndex(archiver, indexName, indexType, fetchResources) {
 					} catch (e) {
 						console.log("Problem parsing JSON", indexEntry, e);
 					}
-					if (parsedIndexEntry != null) {
+					if (parsedIndexEntry !== null) {
 						if (i === 0 && self.content ==="" && self.header === "") {
 							// Handle the header on the first line as a special case
 							self.header = lines[0];
