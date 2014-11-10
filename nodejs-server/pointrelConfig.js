@@ -32,5 +32,6 @@ pointrelConfig.pointrelPublishingAllow = true;
 pointrelConfig.pointrelIndexesDirectory = "pointrel/pointrel-data/indexes/";
 pointrelConfig.pointrelIndexesMaintain = true;
 
+pointrelConfig.requireAuthentication = false;
 
 

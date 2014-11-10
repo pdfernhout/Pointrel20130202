@@ -90,9 +90,9 @@ passport.use(new LocalStrategy(
   }
 ));
 
-function ensureAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) { return next(); }
-  res.redirect('/login');
+function ensureAuthenticated(request, response, next) {
+  if (!pointrelConfig.requireAuthentication || request.isAuthenticated()) { return next(); }
+  response.redirect('/login');
 }
 	
 function cleanupRelativePath(base, relativePath) {
@@ -136,6 +136,8 @@ function fixupConfigOptions() {
     
     // This can be a function to create custom indexings (not supported well for now, so don't use)
     pointrelConfig.pointrelIndexesCustomFunction = null;
+    
+    pointrelConfig.requireAuthentication = false;
     
     // Copy over values from config to overwrite defaults
     for (var key in pointrelConfigFromUser) {
@@ -1524,36 +1526,42 @@ app.get('/login', function(request, response){
 app.post('/login', 
   passport.authenticate('local', { failureRedirect: '/login', failureFlash: true }),
   function(req, res) {
-    res.redirect('/');
+    res.redirect('/test');
   });
 
 app.get('/logout', function(req, res){
   req.logout();
-  res.redirect('/');
+  res.redirect('/test');
 });
 
 
-function writeMainPage(request, response) {
+function writeTestPage(request, response) {
 	// response.sendFile(pointrelConfig.baseDirectory + "index.html");
     // response.sendFile(baseDirectoryNormalized + "index.html");
 	writePageStart(request, response);
 	response.write("Example of authentication with passport; authenticated " + request.isAuthenticated());
-	if (request.isAuthenticated()) response.write('<br><a href="/pointrel/pointrel-app">Pointrel App only available if authenticated</a>');
+	var label = "Pointrel App";
+	if (pointrelConfig.requireAuthentication) label += " (only available if authenticated)";
+	if (request.isAuthenticated()) response.write('<br><a href="/pointrel/pointrel-app">' + label + '</a>');
 	writePageEnd(request, response);
 }
 
 // Application routes
 
 app.get("/", function (request, response) {
-    writeMainPage(request, response);
+	response.sendFile(pointrelConfig.baseDirectory + "index.html");
 });
 
 app.get("/index.html", function (request, response) {
-	writeMainPage(request, response);
+	response.sendFile(pointrelConfig.baseDirectory + "index.html");
 });
 
 app.get("/pointrel/pointrel-app/server/journal-store.php", ensureAuthenticated, function (request, response) {
     journalStore(request, response);
+});
+
+app.get("/test", function (request, response) {
+    writeTestPage(request, response);
 });
 
 app.post("/pointrel/pointrel-app/server/journal-store.php", ensureAuthenticated, function (request, response) {
