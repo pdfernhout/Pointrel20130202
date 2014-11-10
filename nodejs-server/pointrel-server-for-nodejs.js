@@ -16,6 +16,9 @@ var path = require('path');
 var http = require('http');
 var https = require('https');
 
+// Configuration
+var pointrelConfigFromUser = require("./pointrelConfig");
+
 // The modules below require npm installation
 
 var express = require('express');
@@ -40,13 +43,13 @@ var users = [
 ];
 
 function findById(id, callback) {
-	  var idx = id - 1;
-	  if (users[idx]) {
-	    callback(null, users[idx]);
-	  } else {
-	    callback(new Error('User ' + id + ' does not exist'));
-	  }
-	}
+    var idx = id - 1;
+    if (users[idx]) {
+        callback(null, users[idx]);
+    } else {
+        callback(new Error('User ' + id + ' does not exist'));
+    }
+}
 
 function findByUsername(username, callback) {
   for (var i in users) { 
@@ -59,8 +62,8 @@ function findByUsername(username, callback) {
 }
 
 passport.serializeUser(function(user, done) {
-	  done(null, user.id);
-	});
+    done(null, user.id);
+});
 
 passport.deserializeUser(function(id, done) {
   findById(id, function (err, user) {
@@ -92,38 +95,68 @@ function ensureAuthenticated(req, res, next) {
   res.redirect('/login');
 }
 	
-// CONFIG
-//Change these options as appropriate for your system
-//Note the need for a trailing slash for these directory names
+function cleanupRelativePath(base, relativePath) {
+    if (startsWith(relativePath, "/")) return relativePath;
+    var result = path.normalize(base + "/" + relativePath);
+    if (!endsWith(result, "/")) result = result + "/";
+    return result;
+}
 
-var pointrelRepositoryIsReadOnly = false;
+var pointrelConfig = {};
 
-var baseDirectory = __dirname + "/" + "..";
-var baseDirectoryNormalized = path.normalize(baseDirectory + "/");
-console.log("baseDirectoryNormalized", baseDirectoryNormalized);
+function fixupConfigOptions() {
+    
+    // Set up defaults...
+    pointrelConfig.baseDirectory = "../";
 
-var pointrelResourcesDirectory = path.normalize(baseDirectory + "/pointrel/pointrel-data/resources/");
+    // This prevents any changes to the repository, but it can still be read.
+    // More fine-grained writing control options are below but this overrides them.
+    pointrelConfig.pointrelRepositoryIsReadOnly = false;
+    
+    pointrelConfig.pointrelResourcesDirectory = "pointrel/pointrel-data/resources/";
+    
+    pointrelConfig.pointrelJournalsDirectory = "pointrel/pointrel-data/journals/";
+    pointrelConfig.pointrelJournalsAllow = true;
+    pointrelConfig.pointrelJournalsDeleteAllow = true;
+    
+    pointrelConfig.pointrelVariablesDirectory = "pointrel/pointrel-data/variables/";
+    pointrelConfig.pointrelVariablesAllow = true;
+    pointrelConfig.pointrelVariablesDeleteAllow = true;
+    
+    pointrelConfig.pointrelLogsDirectory = "pointrel/pointrel-data/logs/";
+    
+    pointrelConfig.pointrelPublishingDirectory = "pointrel/pointrel-www/";
+    pointrelConfig.pointrelPublishingAllow = true;
+    
+    pointrelConfig.pointrelIndexesDirectory = "pointrel/pointrel-data/indexes/";
+    pointrelConfig.pointrelIndexesMaintain = true;
+    
+    //Set to 0 to turn off, 2048 for probably a reasonable size (the content is base 64 encoded so takes somewhat more space)
+    pointrelConfig.pointrelIndexesEmbedContentSizeLimitInBytes = 2048;
+    
+    // This can be a function to create custom indexings (not supported well for now, so don't use)
+    pointrelConfig.pointrelIndexesCustomFunction = null;
+    
+    // Copy over values from config to overwrite defaults
+    for (var key in pointrelConfigFromUser) {
+        if (pointrelConfigFromUser.hasOwnProperty(key)) {
+            pointrelConfig[key] = pointrelConfigFromUser[key];
+        }
+    }
 
-var pointrelJournalsDirectory = path.normalize(baseDirectory + "/pointrel/pointrel-data/journals/");
-var pointrelJournalsAllow = true;
-var pointrelJournalsDeleteAllow = true;
+    //Update config paths as needed to be relative to base
+    pointrelConfig.baseDirectory = cleanupRelativePath(__dirname, pointrelConfig.baseDirectory);
+    pointrelConfig.pointrelResourcesDirectory = cleanupRelativePath(pointrelConfig.baseDirectory, pointrelConfig.pointrelResourcesDirectory);
+    pointrelConfig.pointrelJournalsDirectory = cleanupRelativePath(pointrelConfig.baseDirectory, pointrelConfig.pointrelJournalsDirectory);
+    pointrelConfig.pointrelVariablesDirectory = cleanupRelativePath(pointrelConfig.baseDirectory, pointrelConfig.pointrelVariablesDirectory);
+    pointrelConfig.pointrelLogsDirectory = cleanupRelativePath(pointrelConfig.baseDirectory, pointrelConfig.pointrelLogsDirectory);
+    pointrelConfig.pointrelPublishingDirectory = cleanupRelativePath(pointrelConfig.baseDirectory, pointrelConfig.pointrelPublishingDirectory);
+    pointrelConfig.pointrelIndexesDirectory = cleanupRelativePath(pointrelConfig.baseDirectory, pointrelConfig.pointrelIndexesDirectory);
+    
+    console.log("pointrelConfig", pointrelConfig);
+}
 
-var pointrelVariablesDirectory = path.normalize(baseDirectory + "/pointrel/pointrel-data/variables/");
-var pointrelVariablesAllow = true;
-var pointrelVariablesDeleteAllow = true;
-
-var pointrelLogsDirectory = path.normalize(baseDirectory + "/pointrel/pointrel-data/logs/");
-
-var pointrelPublishingDirectory = path.normalize(baseDirectory + "/pointrel/pointrel-www/");
-var pointrelPublishingAllow = true;
-
-var pointrelIndexesDirectory = path.normalize(baseDirectory + "/pointrel/pointrel-data/indexes/");
-var pointrelIndexesMaintain = true;
-//Set to 0 to turn off, 2048 for probably a reasonable size (the content is base 64 encoded so takes somewhat more space)
-var pointrelIndexesEmbedContentSizeLimitInBytes = 2048;
-var pointrelIndexesCustomFunction = null;
-
-// Constants
+//Constants
 
 var MaximumVariableVersionBufferSize = 8192;
 var NO_FAILURE_HEADER = false;
@@ -144,7 +177,6 @@ var POINTREL_ALL_RESOURCES_INDEX_FILE_NAME = "__PointrelAllResources.pointrelInd
 var POINTREL_ALL_INDEXES_INDEX_FILE_NAME = "__PointrelAllIndexes.pointrelIndex";
 var POINTREL_ALL_JOURNALS_INDEX_FILE_NAME = "__PointrelAllJournals.pointrelIndex";
 var POINTREL_ALL_VARIABLES_INDEX_FILE_NAME = "__PointrelAllVariables.pointrelIndex";
-
 
 function exitWithJSONStatusMessage(response, message, sendFailureHeader, errorNumberForHeader) {
     if (sendFailureHeader === undefined) sendFailureHeader = NO_FAILURE_HEADER;
@@ -382,7 +414,7 @@ function error_log(response, message) {
     console.log("log", message);
     // Calculate today's log file name
     var today = new Date().toISOString().substring(0, 10);
-    var fullLogFileName = pointrelLogsDirectory + today + ".log";
+    var fullLogFileName = pointrelConfig.pointrelLogsDirectory + today + ".log";
     if (!fs.existsSync(fullLogFileName)) {
         return createFile(response, fullLogFileName, message);
     } else {
@@ -414,7 +446,7 @@ function makeTrace(timestamp, userID) {
 
 function addIndexEntryToAllIndexesIndex(response, allIndexShortFileName, indexName, randomUUID) {
 	// console.log("addIndexEntryToAllIndexesIndex");
-    var fullAllIndexFileName = pointrelIndexesDirectory + allIndexShortFileName;
+    var fullAllIndexFileName = pointrelConfig.pointrelIndexesDirectory + allIndexShortFileName;
 
     if (!createIndexFileIfMissing(response, fullAllIndexFileName, allIndexShortFileName, false)) return false;
     
@@ -438,7 +470,7 @@ function createIndexFileIfMissing(response, fullIndexFileName, indexName, addToA
 function addResourceIndexEntryToIndex(response, fullIndexFileName, resourceURI, trace, encodedContent) {
 	// console.log("addResourceIndexEntryToIndex");
     var resourceContentIfEmbedding;
-    if (is_string(encodedContent) && encodedContent.length < pointrelIndexesEmbedContentSizeLimitInBytes) {
+    if (is_string(encodedContent) && encodedContent.length < pointrelConfig.pointrelIndexesEmbedContentSizeLimitInBytes) {
         resourceContentIfEmbedding = ',"xContent":"' + encodedContent + '"';
     } else {
         resourceContentIfEmbedding = "";
@@ -453,7 +485,7 @@ function createResourceIndexEntry(response, indexName, resourceURI, trace, encod
     
     var hexDigits = md5(shortFileNameForIndexName);
     var createSubdirectories = true;
-    var storagePath = calculateStoragePath(pointrelIndexesDirectory, hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
+    var storagePath = calculateStoragePath(pointrelConfig.pointrelIndexesDirectory, hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
     var fullIndexFileName = storagePath + "index_" + hexDigits + "_" + shortFileNameForIndexName + '.pointrelIndex';
     
     if (!createIndexFileIfMissing(response, fullIndexFileName, indexName, true)) return false;
@@ -462,12 +494,12 @@ function createResourceIndexEntry(response, indexName, resourceURI, trace, encod
 
 function addNewJournalToIndexes(response, journalName, header, timestamp, userID) {
 	// console.log("addNewJournalToIndexes");
-    if (pointrelIndexesMaintain !== true) {
+    if (pointrelConfig.pointrelIndexesMaintain !== true) {
         return true;
     }
     
     var shortFileNameForAllIndex = POINTREL_ALL_JOURNALS_INDEX_FILE_NAME;
-    var fullAllIndexFileName = pointrelIndexesDirectory + shortFileNameForAllIndex;
+    var fullAllIndexFileName = pointrelConfig.pointrelIndexesDirectory + shortFileNameForAllIndex;
     
     // This trace would get more complex for items received from other servers (similar to email received: headers)
     var trace = makeTrace(timestamp, userID);
@@ -481,12 +513,12 @@ function addNewJournalToIndexes(response, journalName, header, timestamp, userID
 
 function removeJournalFromIndexes(response, journalName, header, timestamp, userID) {
 	// console.log("removeJournalFromIndexes");
-    if (pointrelIndexesMaintain !== true) {
+    if (pointrelConfig.pointrelIndexesMaintain !== true) {
         return true;
     }
     
     var shortFileNameForAllIndex = POINTREL_ALL_JOURNALS_INDEX_FILE_NAME;
-    var fullAllIndexFileName = pointrelIndexesDirectory + shortFileNameForAllIndex;
+    var fullAllIndexFileName = pointrelConfig.pointrelIndexesDirectory + shortFileNameForAllIndex;
     
     // This trace would get more complex for items received from other servers (similar to email received: headers)
     var trace = makeTrace(timestamp, userID);
@@ -500,12 +532,12 @@ function removeJournalFromIndexes(response, journalName, header, timestamp, user
 
 function addNewVariableToIndexes(response, variableName, timestamp, userID) {
 	// console.log("addNewVariableToIndexes");
-    if (pointrelIndexesMaintain !== true) {
+    if (pointrelConfig.pointrelIndexesMaintain !== true) {
         return true;
     }
     
     var shortFileNameForAllIndex = POINTREL_ALL_VARIABLES_INDEX_FILE_NAME;
-    var fullAllIndexFileName = pointrelIndexesDirectory + shortFileNameForAllIndex;
+    var fullAllIndexFileName = pointrelConfig.pointrelIndexesDirectory + shortFileNameForAllIndex;
     
     // This trace would get more complex for items received from other servers (similar to email received: headers)
     var trace = makeTrace(timestamp, userID);
@@ -519,12 +551,12 @@ function addNewVariableToIndexes(response, variableName, timestamp, userID) {
     
 function removeVariableFromIndexes(response, variableName, timestamp, userID) {
 	// console.log("removeVariableFromIndexes");
-    if (pointrelIndexesMaintain !== true) {
+    if (pointrelConfig.pointrelIndexesMaintain !== true) {
         return true;
     }
     
     var shortFileNameForAllIndex = POINTREL_ALL_VARIABLES_INDEX_FILE_NAME;
-    var fullAllIndexFileName = pointrelIndexesDirectory + shortFileNameForAllIndex;
+    var fullAllIndexFileName = pointrelConfig.pointrelIndexesDirectory + shortFileNameForAllIndex;
     
     // This trace would get more complex for items received from other servers (similar to email received: headers)
     var trace = makeTrace(timestamp, userID);
@@ -538,12 +570,12 @@ function removeVariableFromIndexes(response, variableName, timestamp, userID) {
 
 function addResourceToIndexes(response, resourceURI, timestamp, userID, content, encodedContent) {
 	// console.log("addResourceToIndexes");
-    if (pointrelIndexesMaintain !== true) {
+    if (pointrelConfig.pointrelIndexesMaintain !== true) {
         return true;
     }
     
     var shortFileNameForAllIndex = POINTREL_ALL_RESOURCES_INDEX_FILE_NAME;
-    var fullAllIndexFileName = pointrelIndexesDirectory + shortFileNameForAllIndex;
+    var fullAllIndexFileName = pointrelConfig.pointrelIndexesDirectory + shortFileNameForAllIndex;
     
     // This trace would get more complex for items received from other servers (similar to email received: headers)
     var trace = makeTrace(timestamp, userID);
@@ -586,8 +618,8 @@ function addResourceToIndexes(response, resourceURI, timestamp, userID, content,
     }
     // echo "Done indexing";
 
-    if (pointrelIndexesCustomFunction !== null) {
-        pointrelIndexesCustomFunction(resourceURI, timestamp, userID, content);
+    if (pointrelConfig.pointrelIndexesCustomFunction !== null) {
+        pointrelConfig.pointrelIndexesCustomFunction(resourceURI, timestamp, userID, content);
     }
     
     return true;
@@ -701,11 +733,11 @@ function journalStore(request, response) {
     var couldWriteLog = error_log(response, '{"timeStamp": "' + logTimeStamp + '", "remoteAddress": "' + remoteAddress + '", "request": "journal-store", journalName": "' + journalName + '", "operation": "' + operation + '", "userID": "' + userID + '"}' + "\n");
     if (!couldWriteLog) return false;
     
-    if (pointrelRepositoryIsReadOnly && operations[operation] === 2) {
+    if (pointrelConfig.pointrelRepositoryIsReadOnly && operations[operation] === 2) {
         return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
     }
 
-    if (pointrelJournalsAllow !== true && journalType === "journal") {
+    if (pointrelConfig.pointrelJournalsAllow !== true && journalType === "journal") {
         return exitWithJSONStatusMessage(response, "Journals not allowed", SEND_FAILURE_HEADER, 400);
     }
 
@@ -732,7 +764,7 @@ function journalStore(request, response) {
         return exitWithJSONStatusMessage(response, "Unsupported operation: 'operation'", NO_FAILURE_HEADER, 400);
     }
     
-    if (pointrelRepositoryIsReadOnly && operations[operation] === 2) {
+    if (pointrelConfig.pointrelRepositoryIsReadOnly && operations[operation] === 2) {
         return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
     }
 
@@ -748,18 +780,19 @@ function journalStore(request, response) {
     var fullJournalFileName;
     
     if (journalType === "allResources") {
-        fullJournalFileName = pointrelIndexesDirectory + POINTREL_ALL_RESOURCES_INDEX_FILE_NAME;
+        fullJournalFileName = pointrelConfig.pointrelIndexesDirectory + POINTREL_ALL_RESOURCES_INDEX_FILE_NAME;
     } else if (journalType === "allIndexes") {
-        fullJournalFileName = pointrelIndexesDirectory + POINTREL_ALL_INDEXES_INDEX_FILE_NAME;
+        fullJournalFileName = pointrelConfig.pointrelIndexesDirectory + POINTREL_ALL_INDEXES_INDEX_FILE_NAME;
     } else if (journalType === "allJournals") {
-        fullJournalFileName = pointrelIndexesDirectory + POINTREL_ALL_JOURNALS_INDEX_FILE_NAME;
+        fullJournalFileName = pointrelConfig.pointrelIndexesDirectory + POINTREL_ALL_JOURNALS_INDEX_FILE_NAME;
     } else if (journalType === "allVariables") {
-        fullJournalFileName = pointrelIndexesDirectory + POINTREL_ALL_VARIABLES_INDEX_FILE_NAME;
+        fullJournalFileName = pointrelConfig.pointrelConfig.pointrelIndexesDirectory + POINTREL_ALL_VARIABLES_INDEX_FILE_NAME;
     } else {
+        var baseDirectory;
         if (journalType === "index") {
-            baseDirectory = pointrelIndexesDirectory;
+            baseDirectory = pointrelConfig.pointrelIndexesDirectory;
         } else {
-            baseDirectory = pointrelJournalsDirectory;
+            baseDirectory = pointrelConfig.pointrelJournalsDirectory;
         }
         var hexDigits = md5(shortFileNameForJournalName);
         
@@ -828,7 +861,7 @@ function journalStore(request, response) {
     if (operation === "delete") {
         if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
         
-        if (pointrelJournalsDeleteAllow !== true) {
+        if (pointrelConfig.pointrelJournalsDeleteAllow !== true) {
             return exitWithJSONStatusMessage(response, "Journals delete not allowed", SEND_FAILURE_HEADER, 400);
         }
         
@@ -933,7 +966,7 @@ function journalStore(request, response) {
     // operation: put
 
     if (operation === "put") {
-    	// console.log("journal put");
+        // console.log("journal put");
         if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
         
         if (journalType !== "journal") {
@@ -992,7 +1025,7 @@ function resourceAdd(request, response) {
       return exitWithJSONStatusMessage(response, "No userID was specified", SEND_FAILURE_HEADER, 400);
     }
     
-    if (pointrelRepositoryIsReadOnly) {
+    if (pointrelConfig.pointrelRepositoryIsReadOnly) {
         return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
     }
 
@@ -1020,7 +1053,7 @@ function resourceAdd(request, response) {
     // TODO: Validate shortName is OK for files
 
     var createSubdirectories = true;
-    var storagePath = calculateStoragePath(pointrelResourcesDirectory, hexDigits, RESOURCE_STORAGE_LEVEL_COUNT, RESOURCE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
+    var storagePath = calculateStoragePath(pointrelConfig.pointrelResourcesDirectory, hexDigits, RESOURCE_STORAGE_LEVEL_COUNT, RESOURCE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
     var fullName = storagePath + shortName;
 
     if (fs.existsSync(fullName)) {
@@ -1069,7 +1102,7 @@ function resourceGet(request, response) {
     var hexDigits = urlInfo.hexDigits;
 
     var createSubdirectories = false;
-    var storagePath = calculateStoragePath(pointrelResourcesDirectory, hexDigits, RESOURCE_STORAGE_LEVEL_COUNT, RESOURCE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
+    var storagePath = calculateStoragePath(pointrelConfig.pointrelResourcesDirectory, hexDigits, RESOURCE_STORAGE_LEVEL_COUNT, RESOURCE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
     var fullName = storagePath + shortName;
 
     if (!fs.existsSync(fullName)) {
@@ -1106,7 +1139,7 @@ function resourcePublish(request, response) {
     
     if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
 
-    if (pointrelPublishingAllow !== true) {
+    if (pointrelConfig.pointrelPublishingAllow !== true) {
         return exitWithJSONStatusMessage(response, "Publishing not allowed", SEND_FAILURE_HEADER, 400);
     }
 
@@ -1126,7 +1159,7 @@ function resourcePublish(request, response) {
         return exitWithJSONStatusMessage(response, "No userID was specified", SEND_FAILURE_HEADER, 400);
     }
     
-    if (pointrelRepositoryIsReadOnly) {
+    if (pointrelConfig.pointrelRepositoryIsReadOnly) {
         return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
     }
 
@@ -1136,7 +1169,7 @@ function resourcePublish(request, response) {
     var hexDigits = urlInfo.hexDigits;
 
     var createSubdirectories = false;
-    var storagePath = calculateStoragePath(pointrelResourcesDirectory, hexDigits, RESOURCE_STORAGE_LEVEL_COUNT, RESOURCE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
+    var storagePath = calculateStoragePath(pointrelConfig.pointrelResourcesDirectory, hexDigits, RESOURCE_STORAGE_LEVEL_COUNT, RESOURCE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
     var fullName = storagePath + shortName;
 
     if (!fs.existsSync(fullName)) {
@@ -1145,7 +1178,7 @@ function resourcePublish(request, response) {
 
     var extension = getFileExtension(shortName);
 
-    var destinationFileName = pointrelPublishingDirectory + destinationURL;
+    var destinationFileName = pointrelConfig.pointrelPublishingDirectory + destinationURL;
 
     if (!endsWith(destinationFileName, extension)) {
         return exitWithJSONStatusMessage(response, 'File "' + destinationFileName + '" does not end with the same extension "' + extension + '" as the resource: "' + shortName + '"', NO_FAILURE_HEADER, 404);
@@ -1153,7 +1186,7 @@ function resourcePublish(request, response) {
 
     // Inspired by: http://stackoverflow.com/questions/1911382/sanitize-file-path-in-php
     // using call to expandPath to deal with relative paths
-    var baseDir = path.resolve(pointrelPublishingDirectory);
+    var baseDir = path.resolve(pointrelConfig.pointrelPublishingDirectory);
     var desiredPath = path.resolve(destinationFileName);
 
     if (desiredPath.indexOf(baseDir) !== 0) {
@@ -1239,7 +1272,7 @@ function variableQuery(request, response) {
     var couldWriteLog = error_log(response, '{"timeStamp": "' + logTimeStamp + '", "remoteAddress": "' + remoteAddress + '", "request": "variable-change", "variableName": "' + variableName + '", "operation": "' + operation + '", "newValue": "' + newValue + '", "currentValue": "' + currentValue + '", "userID": "' + userID + '", "session": "' + session + '"}' + "\n");
     if (!couldWriteLog) return false;
     
-    if (pointrelVariablesAllow !== true) {
+    if (pointrelConfig.pointrelVariablesAllow !== true) {
         return exitWithJSONStatusMessage(response, "Variables not allowed", SEND_FAILURE_HEADER, 400);
     }
 
@@ -1252,7 +1285,7 @@ function variableQuery(request, response) {
         return exitWithJSONStatusMessage(response, "Unsupported operation: '" + operation + "'", NO_FAILURE_HEADER, 400);
     }
     
-    if (pointrelRepositoryIsReadOnly && operations[operation] === 2) {
+    if (pointrelConfig.pointrelRepositoryIsReadOnly && operations[operation] === 2) {
         return exitWithJSONStatusMessage(response, "Writing is not currently allowed", NO_FAILURE_HEADER, 400);
     }
 
@@ -1277,7 +1310,7 @@ function variableQuery(request, response) {
         if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
     }
 
-    var storagePath = calculateStoragePath(pointrelVariablesDirectory, hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
+    var storagePath = calculateStoragePath(pointrelConfig.pointrelVariablesDirectory, hexDigits, VARIABLE_STORAGE_LEVEL_COUNT, VARIABLE_STORAGE_SEGMENT_LENGTH, createSubdirectories);
 
     var fullVariableFileName = storagePath + "variable_" + hexDigits + "_" + shortFileNameForVariableName + '.txt';
     var variableValueAfterOperation = "ERROR";
@@ -1306,7 +1339,7 @@ function variableQuery(request, response) {
         // So do not need to write "DELETE" to file before removing
           if (exitIfCGIRequestMethodIsNotPost(request, response)) return false;
         
-        if (pointrelVariablesDeleteAllow !== true) {
+        if (pointrelConfig.pointrelVariablesDeleteAllow !== true) {
             return exitWithJSONStatusMessage(response, "Variables delete not allowed", SEND_FAILURE_HEADER, 400);
         }
         
@@ -1398,6 +1431,8 @@ console.log("Pointrel20130202 server for nodejs started: " + Date());
 
 console.log("__dirname", __dirname);
 
+fixupConfigOptions();
+
 var app = express();
 
 //to support JSON-encoded bodies
@@ -1437,7 +1472,7 @@ function writePageStart(request, response) {
 		response.write("<p>");
 		response.write("<h2>Welcome! Please log in.</h2>");
     } else {
-    	response.write("<p>");
+        response.write("<p>");
 		response.write('<a href="/">Home</a> |');
 		response.write('<a href="/login">Log In</a> | ');
 		response.write('<a href="/logout">Log Out</a>');
@@ -1459,20 +1494,20 @@ app.get('/account', ensureAuthenticated, function(request, response) {
 	writePageEnd(request, response);
 });
 
-var loginTemplate = '<form action="/login" method="post">\
-<div>\
-<label>Username:</label>\
-<input type="text" name="username"/><br/>\
-</div>\
-<div>\
-<label>Password:</label>\
-<input type="password" name="password"/>\
-</div>\
-<div>\
-<input type="submit" value="Submit"/>\
-</div>\
-</form>\
-<p><small>Hint - bob:secret</small></p>';
+var loginTemplate = '<form action="/login" method="post">\n' +
+'<div>\n' +
+'<label>Username:</label>\n' +
+'<input type="text" name="username"/><br/>\n' +
+'</div>\n' +
+'<div>\n' +
+'<label>Password:</label>\n' +
+'<input type="password" name="password"/>\n' +
+'</div>\n' +
+'<div>\n' +
+'<input type="submit" value="Submit"/>\n' +
+'</div>\n' +
+'</form>\n' +
+'<p><small>Hint - bob:secret</small></p>';
 
 app.get('/login', function(request, response){
   // res.render('login', { user: req.user, message: req.flash('error') });
@@ -1498,18 +1533,23 @@ app.get('/logout', function(req, res){
 });
 
 
-// Application routes
-
-app.get("/", function (request, response) {
+function writeMainPage(request, response) {
+	// response.sendFile(pointrelConfig.baseDirectory + "index.html");
     // response.sendFile(baseDirectoryNormalized + "index.html");
 	writePageStart(request, response);
 	response.write("Example of authentication with passport; authenticated " + request.isAuthenticated());
 	if (request.isAuthenticated()) response.write('<br><a href="/pointrel/pointrel-app">Pointrel App only available if authenticated</a>');
 	writePageEnd(request, response);
+}
+
+// Application routes
+
+app.get("/", function (request, response) {
+    writeMainPage(request, response);
 });
 
 app.get("/index.html", function (request, response) {
-    response.sendFile(baseDirectoryNormalized + "index.html");
+	writeMainPage(request, response);
 });
 
 app.get("/pointrel/pointrel-app/server/journal-store.php", ensureAuthenticated, function (request, response) {
