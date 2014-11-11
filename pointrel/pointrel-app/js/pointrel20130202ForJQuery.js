@@ -57,14 +57,14 @@ var Pointrel = (function () {
 
     // Data passed to this needs to be only characters in the range 0-255 (byte)
     // That means you should encode and decode arbitrary JavaScript string text using the UTF8 functions if needed
-    function pointrel_resource_add(serverURL, credentials, originalDataString, extension, callback) {
+	function pointrel_resource_add(serverURL, credentials, originalDataString, extension, callback) {
         console.log("pointrel_resource_add extension: ", extension);
         // special validation for now
         if (!validateBinaryData(originalDataString)) { callback("FAILED Not Binary Data", null); return ""; }
 
         var stringInCryptoJSWords = CryptoJS.enc.Latin1.parse(originalDataString);
         var hash = CryptoJS.SHA256(stringInCryptoJSWords);
-        
+
         var extensionSeperator = ".";
         if (extension === "") extensionSeperator = "";
         var uri = "pointrel://sha256_" + hash + "_" + originalDataString.length + extensionSeperator + extension;
