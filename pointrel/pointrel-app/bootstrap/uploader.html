@@ -17,7 +17,7 @@
 
         var archiveURL = "../server/";
         var credentials = pointrel_authentication.getUserIDOrAnonymous();
-        var archiver = new PointrelArchiver(Pointrel20130202, archiveURL, credentials);
+        var archiver = new Pointrel20130202.PointrelArchiver(archiveURL, credentials);
 
         function storeButtonPressed() {
             console.log("Store button pressed");

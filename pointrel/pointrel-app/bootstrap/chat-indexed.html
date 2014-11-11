@@ -30,7 +30,7 @@
 <script type="text/javascript">
     var archiveURL = "../../pointrel-app/server/";
     var credentials = pointrel_authentication.getUserIDOrAnonymous();
-    var archiver = new PointrelArchiver(Pointrel20130202, archiveURL, credentials);
+    var archiver = new Pointrel20130202.PointrelArchiver(archiveURL, credentials);
     var hyperdocumentID = "chat-indexed:test-001";
     var index = new PointrelIndex(archiver, hyperdocumentID);
     var messages = [];

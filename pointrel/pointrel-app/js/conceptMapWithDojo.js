@@ -18,7 +18,7 @@ define("conceptMap", [
 
     var archiveURL = "../server/";
     var credentials = pointrel_authentication.getUserIDOrAnonymous();
-    var archiver = new PointrelArchiver(Pointrel20130202, archiveURL, credentials);
+    var archiver = new Pointrel20130202.PointrelArchiver(archiveURL, credentials);
 
     var textBox = null;
     var urlBox = null;
@@ -337,7 +337,7 @@ define("conceptMap", [
         loginDialog.hide();
 
         credentials = pointrel_authentication.getUserIDOrAnonymous();
-        archiver = new PointrelArchiver(Pointrel20130202, archiveURL, credentials);
+        archiver = new Pointrel20130202.PointrelArchiver(archiveURL, credentials);
     }
 
 //    function clickedSignup(event) {

@@ -47,7 +47,7 @@ require(["dojo/ready", "Pointrel20130202"], function(ready, Pointrel20130202) {
         console.log("about to call newArchiver");
         var archiveURL = "../server/";
         var credentials = pointrel_authentication.getUserIDOrAnonymous();
-        var archiver = new PointrelArchiver(Pointrel20130202, archiveURL, credentials);
+        var archiver = new Pointrel20130202.PointrelArchiver(archiveURL, credentials);
         //, function (error, archiver) {
         //    console.log("in callback from newArchiver", error, archiver);
         //    if (error) {

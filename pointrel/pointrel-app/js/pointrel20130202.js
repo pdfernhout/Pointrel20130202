@@ -2,7 +2,6 @@
 // TODO: Might need to think about decoding URLs passed back to user and encoding them for variables
 
 // Using module definition pattern from Mustache that can support CommonJS, AMD, or direct loading as a script
-/*global define: false*/
 (function (global, factory) {
 	if (typeof exports === "object" && exports) {
 		console.log("Pointrel20130202 CommonJS init");
@@ -16,7 +15,7 @@
 	}
 }(this, function (pointrel) {
 	"use strict";
-
+	
     // Currying two variables
     function success(callback, postProcessing, request) {
     	var response = request.response;
@@ -253,23 +252,108 @@
         pointrel_journal_ajax("put", serverURL, credentials, journalName, journalType, callback, {"encodedContent": encodedContent});
     }
     
+    // Class that wraps the base functions and stores a base server URL and credentials
+    function PointrelArchiver(serverURL, credentials) {
+        this.serverURL = serverURL;
+        this.credentials = credentials;
+
+        // Resources
+        
+        this.resource_add = function (originalDataString, extension, callback) {
+            return pointrel_resource_add(this.serverURL, this.credentials, originalDataString, extension, callback);
+
+        };
+
+        this.resource_get = function (uri, callback) {
+            return pointrel_resource_get(this.serverURL, this.credentials, uri, callback);
+
+        };
+
+        this.resource_publish = function (resourceURI, destinationURL, callback) {
+            return pointrel_resource_publish(this.serverURL, this.credentials, resourceURI, destinationURL, callback);
+        };
+        
+        // Variables
+
+        this.variable_new = function (variableName, newVersionURI, callback) {
+            return pointrel_variable_new(this.serverURL, this.credentials, variableName, newVersionURI, callback);
+
+        };
+
+        this.variable_get = function (variableName, callback) {
+            return pointrel_variable_get(this.serverURL, this.credentials, variableName, callback);
+
+        };
+
+        this.variable_set = function (variableName, oldVersionURI, newVersionURI, callback) {
+            return pointrel_variable_set(this.serverURL, this.credentials, variableName, oldVersionURI, newVersionURI, callback);
+
+        };
+
+        this.variable_delete = function (variableName, oldVersionURI, callback) {
+            return pointrel_variable_delete(this.serverURL, this.credentials, variableName, oldVersionURI, callback);
+        };
+        
+        // Journals
+        
+        this.journal_exists = function (journalName, callback) {
+            return pointrel_journal_exists(this.serverURL, this.credentials, journalName, "journal", callback);
+        };
+        
+        this.journal_create = function (journalName, journalFormat, callback) {
+            return pointrel_journal_create(this.serverURL, this.credentials, journalName, "journal", journalFormat, callback);
+        };
+        
+        this.journal_delete = function (journalName, header, size, callback) {
+            return pointrel_journal_delete(this.serverURL, this.credentials, journalName, "journal", header, size, callback);
+        };
+        
+        this.journal_info = function (journalName, callback) {
+            return pointrel_journal_info(this.serverURL, this.credentials, journalName, "journal", callback);
+        };
+        
+        this.journal_get = function (journalName, start, length, callback) {
+            return pointrel_journal_get(this.serverURL, this.credentials, journalName, "journal", start, length, callback);
+        };
+        
+        this.journal_put = function (journalName, contentStringToAppend, callback) {
+            return pointrel_journal_put(this.serverURL, this.credentials, journalName, "journal", contentStringToAppend, callback);
+        };
+        
+        // Indexes -- type can be either journal, index, or all
+        
+        this.index_exists = function (indexName, indexType, callback) {
+            return pointrel_journal_exists(this.serverURL, this.credentials, indexName, indexType, callback);
+        };
+        
+        this.index_info = function (indexName, indexType, callback) {
+            return pointrel_journal_info(this.serverURL, this.credentials, indexName, indexType, callback);
+        };
+        
+        this.index_get = function (indexName, indexType, start, length, callback) {
+            return pointrel_journal_get(this.serverURL, this.credentials, indexName, indexType, start, length, callback);
+        };
+    }
+        
     /// EXPORT
 
-    pointrel.resource_add = pointrel_resource_add;
-    pointrel.resource_get = pointrel_resource_get;
-    pointrel.resource_publish = pointrel_resource_publish;
+    // pointrel.resource_add = pointrel_resource_add;
+    // pointrel.resource_get = pointrel_resource_get;
+    // pointrel.resource_publish = pointrel_resource_publish;
     
-    pointrel.variable_new = pointrel_variable_new;
-    pointrel.variable_get = pointrel_variable_get;
-    pointrel.variable_set = pointrel_variable_set;
-    pointrel.variable_delete = pointrel_variable_delete;
+    // pointrel.variable_new = pointrel_variable_new;
+    // pointrel.variable_get = pointrel_variable_get;
+    // pointrel.variable_set = pointrel_variable_set;
+    // pointrel.variable_delete = pointrel_variable_delete;
     
-    pointrel.journal_exists = pointrel_journal_exists;
-    pointrel.journal_create = pointrel_journal_create;
-    pointrel.journal_delete = pointrel_journal_delete;
-    pointrel.journal_info = pointrel_journal_info;
-    pointrel.journal_get = pointrel_journal_get;
-    pointrel.journal_put = pointrel_journal_put;
+    // pointrel.journal_exists = pointrel_journal_exists;
+    // pointrel.journal_create = pointrel_journal_create;
+    // pointrel.journal_delete = pointrel_journal_delete;
+    // pointrel.journal_info = pointrel_journal_info;
+    // pointrel.journal_get = pointrel_journal_get;
+    // pointrel.journal_put = pointrel_journal_put;
+    
+    pointrel.PointrelArchiver = PointrelArchiver;
     
     return pointrel;
 }));
