@@ -1,11 +1,19 @@
 // Need to load jstorage, pointrel_authentication, and utils_common. first
 // TODO: Might need to think about decoding URLs passed back to user and encoding them for variables
 
-var Pointrel = (function () {
+// Using module definition pattern from Mustache that can support CommonJS, AMD, or direct loading as a script
+/*global define: false*/
+(function (global, factory) {
+	if (typeof exports === "object" && exports) {
+		factory(exports); // CommonJS
+	} else if (typeof define === "function" && define.amd) {
+		define(['exports'], factory); // AMD
+	} else {
+		factory(global.Pointrel = {}); // <script>
+	}
+}(this, function (pointrel) {
 	"use strict";
-	
-    var pointrel = {};
-    
+
     // Currying two variables
     function success(callback, postProcessing, request) {
     	var response = request.response;
@@ -261,4 +269,4 @@ var Pointrel = (function () {
     pointrel.journal_put = pointrel_journal_put;
     
     return pointrel;
-}());
+}));
