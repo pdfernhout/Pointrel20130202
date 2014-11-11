@@ -4,21 +4,59 @@
 var Pointrel = (function () {
     var pointrel = {};
     
-    function success(response) {
-		console.log("sendRequest result:", response);
-		if (dataType === "text" || response.status === "OK") {
-			if (typeof (callback) === "function") {
-				if (typeof (postProcessing) === "function") {
-					response = postProcessing(response);
+    // Currying two variables
+    function success(callback, postProcessing) {
+    	return function(request) {
+	    	response = request.response;
+			// console.log("sendRequest result:", request, response);
+			if (request.responseType === "text" || request.statusText === "OK") {
+				if (typeof (callback) === "function") {
+					if (typeof (postProcessing) === "function") {
+						response = postProcessing(response);
+					}
+					callback(null, response);
 				}
-				callback(null, response);
+			} else {
+				if (typeof (callback) === "function") {
+					callback("FAILED", request);
+				}
 			}
-		} else {
-			if (typeof (callback) === "function") {
-				callback("FAILED", response);
-			}
-		}
+    	};
     }
+    
+    // Factories and creation method from: http://stackoverflow.com/questions/2557247/easiest-way-to-retrieve-cross-browser-xmlhttprequest
+    var XMLHttpFactories = [
+        function () {return new XMLHttpRequest();},
+        function () {return new ActiveXObject("Msxml3.XMLHTTP");},
+        function () {return new ActiveXObject("Msxml2.XMLHTTP");},
+        function () {return new ActiveXObject("Msxml2.XMLHTTP.6.0");},
+        function () {return new ActiveXObject("Msxml2.XMLHTTP.3.0");},
+        function () {return new ActiveXObject("Microsoft.XMLHTTP");}
+    ];
+
+    function createXMLHTTPObject() {
+        var xmlhttp = false;
+        for (var i = 0; i < XMLHttpFactories.length; i++) {
+            try {
+                xmlhttp = XMLHttpFactories[i]();
+            } catch (e) {
+                continue;
+            }
+            break;
+        }
+        return xmlhttp;
+    }
+    
+    // http://stackoverflow.com/questions/22582795/jquery-param-alternative-for-javascript
+    function queryParams(data) {
+        var array = [];
+        
+	    for(var key in data) {
+	        array.push(encodeURIComponent(key) + "=" + encodeURIComponent(data[key]));
+	    }
+	    
+	   return array.join("&");
+	}
 
 	function sendRequest(serverURL, remoteScript, credentials, data, callback, postProcessing) {
 		data.userID = pointrel_authentication.userIDFromCredentials(credentials);
@@ -31,29 +69,58 @@ var Pointrel = (function () {
 			requestType = "GET";
 			dataType = "text";
 		}
-
-		console.log("sendRequest", remoteScript, requestType, dataType, data);
-		var request = {
-			type : requestType,
-			url : serverURL + remoteScript,
-			// Need to pass original data string as it will be utf-8 encoded by jQuery
-			data : data,
-			dataType : dataType,
-			// TODO: Are these headers really needed? They are not used in the other requests, although this one has encoded data
-            // headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
-			// cache: false,
-			success : success,
-			error : function(xhr, textStatus, errorThrown) {
-				console.log("sendRequest error", xhr, textStatus, errorThrown);
-				if (typeof (callback) === "function") {
-					callback("ERROR", xhr, errorThrown);
+		
+		// console.log("sendRequest", remoteScript, requestType, dataType, data);
+		
+		var url = serverURL + remoteScript;
+		if (requestType === "GET") {
+			var urlParamsToAdd = queryParams(data);
+			if (urlParamsToAdd) url += "?" + urlParamsToAdd;
+		}
+		
+		var r = createXMLHTTPObject(); // new XMLHttpRequest();
+		
+        var async = true;
+		r.open(requestType, url, async);
+ 
+        r.responseType = dataType;
+        
+        // TODO: Are these needed?
+        // r.setRequestHeader('User-Agent','XMLHTTP/1.0');
+        if (requestType === "POST") r.setRequestHeader('Content-type','application/x-www-form-urlencoded');   
+        
+		// TODO: Are these headers really needed? They are not used in the other requests, although this one has encoded data
+        // headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
+		// cache: false,
+        
+        // Store this callback
+        r.pointrelSuccess = success(callback, postProcessing);
+        
+	    r.onreadystatechange = function() {
+	    	// this refers to request
+			if (this.readyState != 4)  return;
+			// 200 == success, 304 = not modified
+			if  (this.status === 200 || this.status === 304) {
+				this.pointrelSuccess(this);
+			} else {
+				// Otherwise an error
+				console.log("sendRequest error", this, this.status, this.statusText);
+				if (typeof (this.pointrelCallbackOnCompletion) === "function") {
+					this.pointrelCallbackOnCompletion("ERROR", this);
 				} else {
-					alert("Failed POST to " + remoteScript + " xhr.status: " + xhr.status + " textStatus: " + textStatus);
+					alert("Failed POST to " + remoteScript + "\nstatus: " + this.status + " statusText: " + this.statusText);
 				}
 			}
 		};
-
-		$.ajax(request);
+		
+		if (requestType === "GET") {
+			r.send();
+		} else {
+			// Need to pass original data string as it will be utf-8 encoded by jQuery
+			var dataToSend = "";
+			if (data) dataToSend = queryParams(data);
+			r.send(dataToSend);
+		}
 	}
 
     //////// RESOURCES
