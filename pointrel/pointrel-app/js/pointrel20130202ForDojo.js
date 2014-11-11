@@ -1,9 +1,7 @@
+// Need to load jstorage, pointrel_authentication, and utils_common. first
+// TODO: Might need to think about decoding URLs passed back to user and encoding them for variables
+
 define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
-
-    // Need to load jstorage and pointrel_authentication first
-
-    // TODO: Might need to think about decoding URLs passed back to user and encoding them for variables
-
     var pointrel = {};
 
 	function sendRequest(serverURL, remoteScript, credentials, data, callback, postProcessing) {
@@ -23,9 +21,9 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
 			url : serverURL + remoteScript,
 			// Need to pass original data string as it will be utf-8 encoded by dojo
 			content : data,
+			handleAs : dataType,
             // TODO: Are these headers really needed? They are not used in the other requests, although this one has encoded data
             // headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
-			handleAs : dataType,
 			// cache: false,
 			load : function(response) {
 				console.log("sendRequest result:", response);

@@ -1,4 +1,5 @@
 // Need to load jstorage, pointrel_authentication, and utils_common. first
+// TODO: Might need to think about decoding URLs passed back to user and encoding them for variables
 
 var Pointrel = (function () {
     var pointrel = {};
@@ -22,6 +23,8 @@ var Pointrel = (function () {
 			// Need to pass original data string as it will be utf-8 encoded by jQuery
 			data : data,
 			dataType : dataType,
+			// TODO: Are these headers really needed? They are not used in the other requests, although this one has encoded data
+            // headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
 			// cache: false,
 			success : function(response) {
 				console.log("sendRequest result:", response);
