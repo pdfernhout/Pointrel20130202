@@ -2,26 +2,44 @@
 // TODO: Might need to think about decoding URLs passed back to user and encoding them for variables
 
 var Pointrel = (function () {
+	"use strict";
+	
     var pointrel = {};
     
     // Currying two variables
-    function success(callback, postProcessing) {
-    	return function(request) {
-	    	response = request.response;
-			// console.log("sendRequest result:", request, response);
-			if (request.responseType === "text" || request.statusText === "OK") {
-				if (typeof (callback) === "function") {
-					if (typeof (postProcessing) === "function") {
-						response = postProcessing(response);
-					}
-					callback(null, response);
+    function success(callback, postProcessing, request) {
+    	var response = request.response;
+		// console.log("sendRequest result:", request, response);
+		if (request.responseType === "text" || request.statusText === "OK") {
+			if (typeof (callback) === "function") {
+				if (typeof (postProcessing) === "function") {
+					response = postProcessing(response);
 				}
+				callback(null, response);
+			}
+		} else {
+			if (typeof (callback) === "function") {
+				callback("FAILED", request);
+			}
+		}
+    }
+    
+    function createOnReadyStateChangeCallback(callback, postProcessing, request) {
+    	return function() {
+			if (request.readyState != 4)  return;
+			// 200 == success, 304 = not modified
+			if  (request.status === 200 || request.status === 304) {
+				success(callback, postProcessing, request);
 			} else {
+				// Otherwise an error
+				console.log("sendRequest error", request, request.status, request.statusText);
 				if (typeof (callback) === "function") {
-					callback("FAILED", request);
+					callback("ERROR", request);
+				} else {
+					alert("Failed POST to " + remoteScript + "\nstatus: " + request.status + " statusText: " + request.statusText);
 				}
 			}
-    	};
+		};
     }
     
     // Factories and creation method from: http://stackoverflow.com/questions/2557247/easiest-way-to-retrieve-cross-browser-xmlhttprequest
@@ -78,48 +96,30 @@ var Pointrel = (function () {
 			if (urlParamsToAdd) url += "?" + urlParamsToAdd;
 		}
 		
-		var r = createXMLHTTPObject(); // new XMLHttpRequest();
+		var request = createXMLHTTPObject(); // new XMLHttpRequest();
 		
         var async = true;
-		r.open(requestType, url, async);
+		request.open(requestType, url, async);
  
-        r.responseType = dataType;
+        request.responseType = dataType;
         
         // TODO: Are these needed?
-        // r.setRequestHeader('User-Agent','XMLHTTP/1.0');
-        if (requestType === "POST") r.setRequestHeader('Content-type','application/x-www-form-urlencoded');   
+        // request.setRequestHeader('User-Agent','XMLHTTP/1.0');
+        if (requestType === "POST") request.setRequestHeader('Content-type','application/x-www-form-urlencoded');   
         
 		// TODO: Are these headers really needed? They are not used in the other requests, although this one has encoded data
         // headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
 		// cache: false,
         
-        // Store this callback
-        r.pointrelSuccess = success(callback, postProcessing);
-        
-	    r.onreadystatechange = function() {
-	    	// this refers to request
-			if (this.readyState != 4)  return;
-			// 200 == success, 304 = not modified
-			if  (this.status === 200 || this.status === 304) {
-				this.pointrelSuccess(this);
-			} else {
-				// Otherwise an error
-				console.log("sendRequest error", this, this.status, this.statusText);
-				if (typeof (this.pointrelCallbackOnCompletion) === "function") {
-					this.pointrelCallbackOnCompletion("ERROR", this);
-				} else {
-					alert("Failed POST to " + remoteScript + "\nstatus: " + this.status + " statusText: " + this.statusText);
-				}
-			}
-		};
+	    request.onreadystatechange = createOnReadyStateChangeCallback(callback, postProcessing, request);
 		
 		if (requestType === "GET") {
-			r.send();
+			request.send();
 		} else {
 			// Need to pass original data string as it will be utf-8 encoded by jQuery
 			var dataToSend = "";
 			if (data) dataToSend = queryParams(data);
-			r.send(dataToSend);
+			request.send(dataToSend);
 		}
 	}
 
