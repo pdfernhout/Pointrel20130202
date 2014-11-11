@@ -3,22 +3,6 @@
 
 define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
     var pointrel = {};
-    
-    function success(response) {
-		console.log("sendRequest result:", response);
-		if (dataType === "text" || response.status === "OK") {
-			if (typeof (callback) === "function") {
-				if (typeof (postProcessing) === "function") {
-					response = postProcessing(response);
-				}
-				callback(null, response);
-			}
-		} else {
-			if (typeof (callback) === "function") {
-				callback("FAILED", response);
-			}
-		}
-    }
 
 	function sendRequest(serverURL, remoteScript, credentials, data, callback, postProcessing) {
 		data.userID = pointrel_authentication.userIDFromCredentials(credentials);
@@ -41,7 +25,21 @@ define("Pointrel", ["dojo/_base/xhr"], function (xhr) {
             // TODO: Are these headers really needed? They are not used in the other requests, although this one has encoded data
             // headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
 			// cache: false,
-			load : success,
+			load : function (response) {
+				console.log("sendRequest result:", response);
+				if (dataType === "text" || response.status === "OK") {
+					if (typeof (callback) === "function") {
+						if (typeof (postProcessing) === "function") {
+							response = postProcessing(response);
+						}
+						callback(null, response);
+					}
+				} else {
+					if (typeof (callback) === "function") {
+						callback("FAILED", response);
+					}
+				}
+			},
 			error : function(error, other) {
 				console.log("sendRequest error", error, other);
 				if (typeof (callback) === "function") {
