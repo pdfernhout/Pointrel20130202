@@ -9,7 +9,7 @@
     <script type="text/javascript" src="../js/pointrel20130202Utils.js"></script>
     <script type="text/javascript" src="../libs/jstorage.js"></script>
     <script type="text/javascript" src="../js/pointrel20130202Authentication.js"></script>
-    <script type="text/javascript" src="../js/pointrel20130202ForDojo.js"></script>
+    <script type="text/javascript" src="../js/pointrel20130202.js"></script>
     <script type="text/javascript" src="../js/pointrel20130202Common.js"></script>
 </head>
 <body>
@@ -40,15 +40,15 @@ var variableName = "test-of-variable-changes";
 var sampleURI1 = "pointrel://sha256_2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c_14.txt";
 var sampleURI2 = "pointrel://sha256_2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c_14.dat";
 
-require(["dojo/ready", "Pointrel"], function(ready, Pointrel) {
-
+require(["dojo/ready", "Pointrel20130202"], function(ready, Pointrel20130202) {
+	
     ready(openArchive);
 
     function openArchive() {
         console.log("about to call newArchiver");
         var archiveURL = "../server/";
         var credentials = pointrel_authentication.getUserIDOrAnonymous();
-        var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
+        var archiver = new PointrelArchiver(Pointrel20130202, archiveURL, credentials);
         //, function (error, archiver) {
         //    console.log("in callback from newArchiver", error, archiver);
         //    if (error) {

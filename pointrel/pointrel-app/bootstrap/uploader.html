@@ -9,7 +9,7 @@
     <script type="text/javascript" src="../js/pointrel20130202Utils.js"></script>
     <script type="text/javascript" src="../libs/jstorage.js"></script>
     <script type="text/javascript" src="../js/pointrel20130202Authentication.js"></script>
-    <script type="text/javascript" src="../js/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="../js/pointrel20130202.js"></script>
     <script type="text/javascript" src="../js/pointrel20130202Common.js"></script>
 
     <script type="text/javascript">
@@ -17,7 +17,7 @@
 
         var archiveURL = "../server/";
         var credentials = pointrel_authentication.getUserIDOrAnonymous();
-        var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
+        var archiver = new PointrelArchiver(Pointrel20130202, archiveURL, credentials);
 
         function storeButtonPressed() {
             console.log("Store button pressed");

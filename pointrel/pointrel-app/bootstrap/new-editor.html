@@ -39,7 +39,7 @@
     <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202Utils.js"></script>
     <script type="text/javascript" src="../../pointrel-app/libs/jstorage.js"></script>
     <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202Authentication.js"></script>
-    <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202ForJQuery.js"></script>
+    <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202.js"></script>
     <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202Common.js"></script>
     
     <script type="text/javascript">
@@ -57,7 +57,7 @@
         var loginAppBaseURL = appPath + "login.html";
 
         var credentials = pointrel_authentication.getUserIDOrAnonymous();
-        var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
+        var archiver = new PointrelArchiver(Pointrel20130202, archiveURL, credentials);
 
         var currentVersionURI = "";
         var variableName = "code-editor-test.js";

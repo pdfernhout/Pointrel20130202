@@ -11,14 +11,14 @@ define("conceptMap", [
     "dijit/form/Textarea",
     "dijit/Dialog",
     "dojo/touch",
-    "Pointrel"], function (ready, domAttr, ioQuery, registry, gfx, move, Moveable, TextBox, Button, SimpleTextarea, Dialog, touch, Pointrel) {
+    "Pointrel20130202"], function (ready, domAttr, ioQuery, registry, gfx, move, Moveable, TextBox, Button, SimpleTextarea, Dialog, touch, Pointrel20130202) {
 
    // Resources:
    // # http://dojotdg.zaffra.com/2009/03/dojo-now-with-drawing-tools-linux-journal-reprint/
 
     var archiveURL = "../server/";
     var credentials = pointrel_authentication.getUserIDOrAnonymous();
-    var archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
+    var archiver = new PointrelArchiver(Pointrel20130202, archiveURL, credentials);
 
     var textBox = null;
     var urlBox = null;
@@ -337,7 +337,7 @@ define("conceptMap", [
         loginDialog.hide();
 
         credentials = pointrel_authentication.getUserIDOrAnonymous();
-        archiver = new PointrelArchiver(Pointrel, archiveURL, credentials);
+        archiver = new PointrelArchiver(Pointrel20130202, archiveURL, credentials);
     }
 
 //    function clickedSignup(event) {

@@ -5,11 +5,14 @@
 /*global define: false*/
 (function (global, factory) {
 	if (typeof exports === "object" && exports) {
+		console.log("Pointrel20130202 CommonJS init");
 		factory(exports); // CommonJS
 	} else if (typeof define === "function" && define.amd) {
-		define(['exports'], factory); // AMD
+		console.log("Pointrel20130202 AMD init");
+		define("Pointrel20130202", ['exports'], factory); // AMD
 	} else {
-		factory(global.Pointrel = {}); // <script>
+		console.log("Pointrel20130202 script init", global, factory);
+		factory(global.Pointrel20130202 = {}); // <script>
 	}
 }(this, function (pointrel) {
 	"use strict";
