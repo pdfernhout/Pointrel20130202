@@ -24,11 +24,11 @@
 <a href="new-editor.html?documentName=bootstrap/chat.html">Edit this page</a>
 
 <script type="text/javascript">
-    $(pointrel_authentication.loginPageLoaded);
+    $(Pointrel20130202Utility.LoginHelper.loginPageLoaded);
     $(setupTimer);
 
     var archiveURL = "../../pointrel-app/server/";
-    var credentials = pointrel_authentication.getUserIDOrAnonymous();
+    var credentials = Pointrel20130202Utility.LoginHelper.getUserIDOrAnonymous();
     var archiver = new Pointrel20130202.PointrelArchiver(archiveURL, credentials);
 
     function setupTimer() {
@@ -72,7 +72,7 @@
             // TODO: Better handling for creating a variable
             if (error) { alert("Error updating variable -- ignoring in case it is new"); }
             var timestamp = new Date().toISOString();
-            var userID = pointrel_authentication.getUserIDOrAnonymous();
+            var userID = Pointrel20130202Utility.LoginHelper.getUserIDOrAnonymous();
             var version = {timestamp: timestamp, userID: userID, previousVersion: latestVariableVersionURI, message: message};
             console.log("version:", version);
             var versionAsString = JSON.stringify(version);
@@ -100,7 +100,7 @@
         for (var i in messagesReversed) {
             //noinspection JSUnfilteredForInLoop
             var oldMessage = messagesReversed[i];
-            output = output + Pointrel20130202.Utility.displayStringForTimestamp(oldMessage.timestamp) + " " + oldMessage.userID + " " + oldMessage.message + "<br/>";
+            output = output + Pointrel20130202Utility.displayStringForTimestamp(oldMessage.timestamp) + " " + oldMessage.userID + " " + oldMessage.message + "<br/>";
         }
         $("#div_messages").html(output);
     }

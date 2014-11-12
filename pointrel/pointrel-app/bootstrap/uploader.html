@@ -10,10 +10,10 @@
     <script type="text/javascript" src="../js/pointrel20130202.js"></script>
 
     <script type="text/javascript">
-        $(pointrel_authentication.loginPageLoaded);
+        $(Pointrel20130202Utility.LoginHelper.loginPageLoaded);
 
         var archiveURL = "../server/";
-        var credentials = pointrel_authentication.getUserIDOrAnonymous();
+        var credentials = Pointrel20130202Utility.LoginHelper.getUserIDOrAnonymous();
         var archiver = new Pointrel20130202.PointrelArchiver(archiveURL, credentials);
 
         function storeButtonPressed() {
@@ -31,7 +31,7 @@
                 console.log("loaded contents",  contents.length, contents.substring(0, 50));
                 var pointrelURI = archiver.resource_add(contents, extension, function(error, status) {
                     $("#form_uri").text("URI: " + pointrelURI);
-                    var url = "../server/resource-get.php?userID=" + pointrel_authentication.getUserIDOrAnonymous()
+                    var url = "../server/resource-get.php?userID=" + Pointrel20130202Utility.LoginHelper.getUserIDOrAnonymous()
                             + "&resourceURI=" + pointrelURI
                             + "&contentType=" + file.type
                             + "&charset=utf-8";

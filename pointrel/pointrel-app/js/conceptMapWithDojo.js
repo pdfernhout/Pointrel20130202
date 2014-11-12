@@ -14,13 +14,14 @@ define("conceptMap", [
     "dijit/form/Textarea",
     "dijit/Dialog",
     "dojo/touch",
-    "Pointrel20130202"], function (ready, domAttr, ioQuery, registry, gfx, move, Moveable, TextBox, Button, SimpleTextarea, Dialog, touch, Pointrel20130202) {
+    "Pointrel20130202",
+    "Pointrel20130202Utility"], function (ready, domAttr, ioQuery, registry, gfx, move, Moveable, TextBox, Button, SimpleTextarea, Dialog, touch, Pointrel20130202, Pointrel20130202Utility) {
 
    // Resources:
    // # http://dojotdg.zaffra.com/2009/03/dojo-now-with-drawing-tools-linux-journal-reprint/
 
     var archiveURL = "../server/";
-    var credentials = pointrel_authentication.getUserIDOrAnonymous();
+    var credentials = Pointrel20130202Utility.LoginHelper.getUserIDOrAnonymous();
     var archiver = new Pointrel20130202.PointrelArchiver(archiveURL, credentials);
 
     var textBox = null;
@@ -219,7 +220,7 @@ define("conceptMap", [
         // });
 
         logoutButton = newButton("logoutButton", "Logout", function () {
-            pointrel_authentication.setUserID("");
+            Pointrel20130202Utility.LoginHelper.setUserID("");
             updateDisplayedAccountInformation();
         });
 
@@ -227,7 +228,7 @@ define("conceptMap", [
     }
 
     function updateDisplayedAccountInformation() {
-        var userID = pointrel_authentication.getUserID();
+        var userID = Pointrel20130202Utility.LoginHelper.getUserID();
         console.log("user name", userID);
         if (userID) {
             loginButton.domNode.style.display = "none";
@@ -356,11 +357,11 @@ define("conceptMap", [
         console.log("login data", data);
         // setFieldValue("loginPassword", "");
         //noinspection JSUnresolvedVariable
-        pointrel_authentication.setUserID(data.loginName);
+        Pointrel20130202Utility.LoginHelper.setUserID(data.loginName);
         updateDisplayedAccountInformation();
         loginDialog.hide();
 
-        credentials = pointrel_authentication.getUserIDOrAnonymous();
+        credentials = Pointrel20130202Utility.LoginHelper.getUserIDOrAnonymous();
         archiver = new Pointrel20130202.PointrelArchiver(archiveURL, credentials);
     }
 
@@ -475,7 +476,7 @@ define("conceptMap", [
     }
 
     function saveChanges() {
-        if (!pointrel_authentication.isLoggedIn()) { alert ("Please login first"); return;}
+        if (!Pointrel20130202Utility.LoginHelper.isLoggedIn()) { alert ("Please login first"); return;}
         // Try to get old value to update it...
         // Although maybe you should not, as it is a conflict?
         // Could warn?
@@ -496,7 +497,7 @@ define("conceptMap", [
         console.log(textURI);
         var timestamp = new Date().toISOString();
         var previousVersionURI = currentVersionURI;
-        var version = {timestamp: timestamp, userID: pointrel_authentication.getUserID(), previousVersion: previousVersionURI, value: textURI};
+        var version = {timestamp: timestamp, userID: Pointrel20130202Utility.LoginHelper.getUserID(), previousVersion: previousVersionURI, value: textURI};
         console.log("version:", version);
         var versionAsString = JSON.stringify(version);
         console.log("versionAsString:", versionAsString);

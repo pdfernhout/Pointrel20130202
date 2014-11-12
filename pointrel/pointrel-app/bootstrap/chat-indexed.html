@@ -26,7 +26,7 @@
 
 <script type="text/javascript">
     var archiveURL = "../../pointrel-app/server/";
-    var credentials = pointrel_authentication.getUserIDOrAnonymous();
+    var credentials = Pointrel20130202Utility.LoginHelper.getUserIDOrAnonymous();
     var archiver = new Pointrel20130202.PointrelArchiver(archiveURL, credentials);
     var hyperdocumentID = "chat-indexed:test-001";
     var index = new Pointrel20130202.PointrelIndex(archiver, hyperdocumentID);
@@ -71,7 +71,7 @@
         for (var i in messagesReversed) {
             //noinspection JSUnfilteredForInLoop
             var oldMessage = messagesReversed[i];
-            output = output + "<b>" + oldMessage.message + "</b><i> -- " + oldMessage.userID + " " + Pointrel20130202.Utility.displayStringForTimestamp(oldMessage.timestamp) + "</i><br/>";
+            output = output + "<b>" + oldMessage.message + "</b><i> -- " + oldMessage.userID + " " + Pointrel20130202Utility.displayStringForTimestamp(oldMessage.timestamp) + "</i><br/>";
         }
         $("#div_messages").html(output);
     }
@@ -88,7 +88,7 @@
         console.log("store message", message);
         
         var timestamp = new Date().toISOString();
-        var userID = pointrel_authentication.getUserIDOrAnonymous();
+        var userID = Pointrel20130202Utility.LoginHelper.getUserIDOrAnonymous();
         var version = {"_pointrelIndexing": [hyperdocumentID], "timestamp": timestamp, "userID": userID, "message": message};
         console.log("version:", version);
         var versionAsString = JSON.stringify(version);
@@ -102,7 +102,7 @@
     }
 
     function initialize() {
-        pointrel_authentication.loginPageLoaded();
+        Pointrel20130202Utility.LoginHelper.loginPageLoaded();
         setupTimer();
         
         // Hookup enter key to send message if pressed in message_to_send field
@@ -112,7 +112,7 @@
             }
         });
         
-        var chosenHyperdocumentID = Pointrel20130202.Utility.getParameter("hyperdocumentID");
+        var chosenHyperdocumentID = Pointrel20130202Utility.getParameter("hyperdocumentID");
         if (chosenHyperdocumentID) {
         	console.log("Chosen hyperdocumentID: ", chosenHyperdocumentID);
         	hyperdocumentID = chosenHyperdocumentID;

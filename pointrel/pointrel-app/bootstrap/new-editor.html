@@ -53,7 +53,7 @@
     	var versionsAppBaseURL = appPath + "versions.html";
         var loginAppBaseURL = appPath + "login.html";
 
-        var credentials = pointrel_authentication.getUserIDOrAnonymous();
+        var credentials = Pointrel20130202Utility.LoginHelper.getUserIDOrAnonymous();
         var archiver = new Pointrel20130202.PointrelArchiver(archiveURL, credentials);
 
         var currentVersionURI = "";
@@ -62,11 +62,11 @@
         var editorMode = "html";
 
         $(document).ready(startEditor);
-        $(document).ready(pointrel_authentication.loginPageLoaded);
+        $(document).ready(Pointrel20130202Utility.LoginHelper.loginPageLoaded);
         $(document).ready(loadLatestFromParameter);
 
         function loadLatestFromParameter() {
-            var chosenVariable = Pointrel20130202.Utility.getParameter("documentName");
+            var chosenVariable = Pointrel20130202Utility.getParameter("documentName");
             if (chosenVariable) {
                 console.log("Read document from: " + chosenVariable);
                 variableName = chosenVariable;
@@ -188,13 +188,13 @@
             var extension = extensionForVariableNameLong();
             var textURI = archiver.resource_add(editorText, extension, function(error, status) {
                 // TODO: Improve the handling so PHP returns a better status
-                if (error && !Pointrel20130202.Utility.startsWith(status.message, "File already exists:")) {
+                if (error && !Pointrel20130202Utility.startsWith(status.message, "File already exists:")) {
                     alert("could not write resource: " + JSON.stringify(status) + " error: " + error);
                     return
                 }
                 console.log("wrote", textURI);
                 var timestamp = new Date().toISOString();
-                var userID = pointrel_authentication.getUserIDOrAnonymous();
+                var userID = Pointrel20130202Utility.LoginHelper.getUserIDOrAnonymous();
                 var previousVersionURI = currentVersionURI;
                 var version = {timestamp: timestamp, userID: userID, previousVersion: previousVersionURI, value: textURI};
                 console.log("version:", version);

@@ -13,7 +13,7 @@
 
     <script type="text/javascript">
         var archiveURL = "../server/";
-        var credentials = pointrel_authentication.getUserIDOrAnonymous();
+        var credentials = Pointrel20130202Utility.LoginHelper.getUserIDOrAnonymous();
         var archiver = new Pointrel20130202.PointrelArchiver(archiveURL, credentials);
 
         // Only supported in FireFox and maybe issues in Chrome and no others? So hard to become dependent on it, even though eventually a useful idea
@@ -29,7 +29,7 @@
 
         // TODO: Have some way of passing in the userID, timestamp, and document separately for a resource
 
-        function Pointrel20130202.Utility.getParameter(paramName) {
+        function Pointrel20130202Utility.getParameter(paramName) {
             var searchString = window.location.search.substring(1);
             var i;
             var val;
@@ -45,7 +45,7 @@
         }
 
         function loadLatestFromParameter() {
-            var chosenVariable = Pointrel20130202.Utility.getParameter("documentName");
+            var chosenVariable = Pointrel20130202Utility.getParameter("documentName");
             if (chosenVariable) {
                 console.log("Read document from: " + chosenVariable);
                 variableName = chosenVariable;
@@ -137,7 +137,7 @@
         	
             $("#documentName").text(variableName);
             // Special handling if it is a resource instead of a variable
-            if (Pointrel20130202.Utility.startsWith(variableName, "pointrel://")) {
+            if (Pointrel20130202Utility.startsWith(variableName, "pointrel://")) {
                 $("#timestamp").text("???");
                 $("#userID").text("???");
                 $("#refreshAndEdit").hide();

@@ -11,7 +11,7 @@
 
     <script type="text/javascript">
         var archiveURL = "../server/";
-        var credentials = pointrel_authentication.getUserIDOrAnonymous();
+        var credentials = Pointrel20130202Utility.LoginHelper.getUserIDOrAnonymous();
         var archiver = new Pointrel20130202.PointrelArchiver(archiveURL, credentials);
 
         var currentVersionURI = "";
@@ -23,10 +23,10 @@
         var journalType = "journal";
 
         $(document).ready(loadLatestFromParameter);
-        $(pointrel_authentication.loginPageLoaded);
+        $(Pointrel20130202Utility.LoginHelper.loginPageLoaded);
 
         function loadLatestFromParameter() {
-            var chosenJournal = Pointrel20130202.Utility.getParameter("documentName");
+            var chosenJournal = Pointrel20130202Utility.getParameter("documentName");
             if (chosenJournal) {
                 console.log("Read document from: " + chosenJournal);
                 journalName = chosenJournal;
@@ -34,7 +34,7 @@
                 lastSize = "END";
                 latestButtonPressed("ignoreMissing");
             }
-            var chosenJournalType = Pointrel20130202.Utility.getParameter("journalType");
+            var chosenJournalType = Pointrel20130202Utility.getParameter("journalType");
             if (chosenJournalType) {
             	console.log("Chosen journal type: " + chosenJournalType);
             	journalType = chosenJournalType;

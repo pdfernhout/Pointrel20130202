@@ -533,37 +533,6 @@
             return pointrel_journal_get(this.serverURL, this.credentials, indexName, indexType, start, length, callback);
         };
     }
-    
-    // Useful utility functions when working with Pointrel data
-    
-    var Utility = {};
-    
-	// Get the value of a parameter in the query string
-	function getParameter(paramName) {
-	    var searchString = window.location.search.substring(1);
-	    var params = searchString.split("&");
-	
-	    for (var i = 0; i < params.length; i++) {
-	        var val = params[i].split("=");
-	        if (val[0] === paramName) {
-	            return decodeURI(val[1]);
-	        }
-	    }
-	    return null;
-	}
-	
-	function displayStringForTimestamp(timestamp) {
-	    return timestamp.replace("T", " ").replace("Z", " UTC");
-	}
-	
-	function startsWith(data, start) {
-		if (!data) return false;
-	    return data.substring(0, start.length) === start;
-	}
-	
-	Utility.getParameter = getParameter;
-	Utility.displayStringForTimestamp = displayStringForTimestamp;
-	Utility.startsWith = startsWith;
 	
 	// Support classes that define conventient ways to use the Pointrel system as one approach
 	// TODO: Move these function definitions into prototype definitions instead of setting when instance is created with this.X = function ...
@@ -988,7 +957,6 @@
     // pointrel.journal_put = pointrel_journal_put;
     
     pointrel.PointrelArchiver = PointrelArchiver;
-    pointrel.Utility = Utility;
     pointrel.PointrelVersionFollower = PointrelVersionFollower;
     pointrel.PointrelVariable = PointrelVariable;
     pointrel.PointrelJournal = PointrelJournal;

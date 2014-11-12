@@ -11,11 +11,11 @@
 
     <script type="text/javascript">
         var archiveURL = "../../pointrel-app/server/";
-        var credentials = pointrel_authentication.getUserIDOrAnonymous();
+        var credentials = Pointrel20130202Utility.LoginHelper.getUserIDOrAnonymous();
         var archiver = new Pointrel20130202.PointrelArchiver(archiveURL, credentials);
         var indexer = new Pointrel20130202.PointrelIndex(archiver, "allIndexes", "allIndexes", false);
 
-        $(pointrel_authentication.loginPageLoaded);
+        $(Pointrel20130202Utility.LoginHelper.loginPageLoaded);
         $(latestButtonPressed);
 
         function latestButtonPressed() {

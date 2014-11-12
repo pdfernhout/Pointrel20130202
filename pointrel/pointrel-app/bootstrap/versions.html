@@ -32,7 +32,7 @@
 
     <script type="text/javascript">
         var archiveURL = "../server/";
-        var credentials = pointrel_authentication.getUserIDOrAnonymous();
+        var credentials = Pointrel20130202Utility.LoginHelper.getUserIDOrAnonymous();
         var archiver = new Pointrel20130202.PointrelArchiver(archiveURL, credentials);
 
         var currentVersionURI = "";
@@ -41,7 +41,7 @@
 
         $(document).ready(loadLatestFromParameter);
 
-        function Pointrel20130202.Utility.getParameter(paramName) {
+        function Pointrel20130202Utility.getParameter(paramName) {
             var searchString = window.location.search.substring(1);
             var i;
             var val;
@@ -60,7 +60,7 @@
             // Save the initial template -- does not work
             itemTemplate = $("#template").html();
             console.log("itemTemplate read", itemTemplate);
-            var chosenVariable = Pointrel20130202.Utility.getParameter("documentName");
+            var chosenVariable = Pointrel20130202Utility.getParameter("documentName");
             if (chosenVariable) {
                 console.log("Read document from: " + chosenVariable);
                 variableName = chosenVariable;
