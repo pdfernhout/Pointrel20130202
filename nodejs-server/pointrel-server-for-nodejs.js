@@ -788,7 +788,7 @@ function journalStore(request, response) {
     } else if (journalType === "allJournals") {
         fullJournalFileName = pointrelConfig.pointrelIndexesDirectory + POINTREL_ALL_JOURNALS_INDEX_FILE_NAME;
     } else if (journalType === "allVariables") {
-        fullJournalFileName = pointrelConfig.pointrelConfig.pointrelIndexesDirectory + POINTREL_ALL_VARIABLES_INDEX_FILE_NAME;
+        fullJournalFileName = pointrelConfig.pointrelIndexesDirectory + POINTREL_ALL_VARIABLES_INDEX_FILE_NAME;
     } else {
         var baseDirectory;
         if (journalType === "index") {
