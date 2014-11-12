@@ -1,4 +1,3 @@
-// Need to load pointrel_authentication first
 // TODO: Might need to think about decoding URLs passed back to user and encoding them for variables
 "use strict";
 	
@@ -17,6 +16,8 @@
 		factory(global.Pointrel20130202); // <script>
 	}
 }(this, function (pointrel) {
+	
+	// "credentials" is either a string that is the userID or it is a dictionary with a field called "userID"
 	
     // support functions
 	function validateBinaryData(dataString) {
@@ -217,7 +218,13 @@
 	}
 
 	function sendRequest(serverURL, remoteScript, credentials, data, callback, postProcessing) {
-		data.userID = pointrel_authentication.userIDFromCredentials(credentials);
+		var userID = "anonymous";
+		if (typeof credentials == 'string' || credentials instanceof String) {
+			userID = credentials;
+		} else if (credentials.userID !== undefined) {
+			userID = credentials.userID;
+		}
+		data.userID = userID;
 		
 		var requestType = "POST";
 		var responseType = "json";
