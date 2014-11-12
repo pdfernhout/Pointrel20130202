@@ -40,21 +40,6 @@
 
         $(document).ready(loadLatestFromParameter);
 
-        function Pointrel20130202Utility.getParameter(paramName) {
-            var searchString = window.location.search.substring(1);
-            var i;
-            var val;
-            var params = searchString.split("&");
-
-            for (i = 0; i < params.length; i++) {
-                val = params[i].split("=");
-                if (val[0] == paramName) {
-                    return decodeURI(val[1]);
-                }
-            }
-            return null;
-        }
-
         function loadLatestFromParameter() {
             // Save the initial template -- does not work
             itemTemplate = $("#template").html();
