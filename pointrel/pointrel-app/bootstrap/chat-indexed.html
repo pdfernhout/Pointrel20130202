@@ -8,7 +8,6 @@
     <script type="text/javascript" src="../../pointrel-app/libs/jstorage.js"></script>
     <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202Authentication.js"></script>
     <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202.js"></script>
-    <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202Common.js"></script>
 </head>
 <body>
 <b>Chat program (using an Index)</b>
@@ -31,7 +30,7 @@
     var credentials = pointrel_authentication.getUserIDOrAnonymous();
     var archiver = new Pointrel20130202.PointrelArchiver(archiveURL, credentials);
     var hyperdocumentID = "chat-indexed:test-001";
-    var index = new PointrelIndex(archiver, hyperdocumentID);
+    var index = new Pointrel20130202.PointrelIndex(archiver, hyperdocumentID);
     var messages = [];
 
     function setupTimer() {
@@ -119,7 +118,7 @@
         	console.log("Chosen hyperdocumentID: ", chosenHyperdocumentID);
         	hyperdocumentID = chosenHyperdocumentID;
         	// TODO:  A little wasteful to create a new index object, although nothing has been loaded from it yet
-        	index = new PointrelIndex(archiver, hyperdocumentID);
+        	index = new Pointrel20130202.PointrelIndex(archiver, hyperdocumentID);
         }
     	$("#hyperdocumentID").val(hyperdocumentID);
     }

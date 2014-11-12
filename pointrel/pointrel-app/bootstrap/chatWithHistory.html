@@ -8,7 +8,6 @@
     <script type="text/javascript" src="../../pointrel-app/libs/jstorage.js"></script>
     <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202Authentication.js"></script>
     <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202.js"></script>
-    <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202Common.js"></script>
 </head>
 <body>
 <b>Chat program (using a Variable, with local history)</b> <a href="../../pointrel-app/bootstrap/login.html">login/logout page</a>  <span id="form_loginStatus">Not logged in</span><br/>
@@ -37,7 +36,7 @@
         window.setInterval(autorefresh, 5000);
     }
 
-    var variable = new PointrelVariable(archiver, "chat-test-001");
+    var variable = new Pointrel20130202.PointrelVariable(archiver, "chat-test-001");
     var messages = [];
     var lastHistory = 0;
 

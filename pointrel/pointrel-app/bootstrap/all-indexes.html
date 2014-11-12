@@ -9,13 +9,12 @@
     <script type="text/javascript" src="../../pointrel-app/libs/jstorage.js"></script>
     <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202Authentication.js"></script>
     <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202.js"></script>
-    <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202Common.js"></script>
 
     <script type="text/javascript">
         var archiveURL = "../../pointrel-app/server/";
         var credentials = pointrel_authentication.getUserIDOrAnonymous();
         var archiver = new Pointrel20130202.PointrelArchiver(archiveURL, credentials);
-        var indexer = new PointrelIndex(archiver, "allIndexes", "allIndexes", false);
+        var indexer = new Pointrel20130202.PointrelIndex(archiver, "allIndexes", "allIndexes", false);
 
         $(pointrel_authentication.loginPageLoaded);
         $(latestButtonPressed);
@@ -35,7 +34,7 @@
                 // make a copy of the array so we can sort it (which modifies the array)
                 var entries = indexer.entries.slice(0);
                 //console.log("unsorted", entries);
-                entries.sort(PointrelIndex.compareIndexEntriesByName);
+                entries.sort(Pointrel20130202.PointrelIndex.compareIndexEntriesByName);
                 // console.log("sorted", entries);
                 for (i in entries) {
                     var entry = entries[i];
