@@ -375,16 +375,6 @@ function is_string(something) {
     return (typeof something == 'string' || something instanceof String);
 }
 
-
-//TODO: Fix
-function base64_encode(content) {
-    return new Buffer(content, "utf8").toString("base64");
-}
-
-function base64_decode(encodedContent) {
-    return new Buffer(encodedContent, "base64").toString("utf8");
-}
-
 // File functions
 
 function createFile(response, fullFileName, contents) {
@@ -656,8 +646,8 @@ function getJournalFileSizeAndHeader(fullJournalFileName) {
     }
 }
 
-// TODO: Assupmtion about data being utf8; what boundary to break it on if not aligned with request?
-function getJournalFileSegment(fullJournalFileName, start, length) {
+function getJournalFileSegment(fullJournalFileName, start, length, encoding) {
+	if (!encoding) encoding = "base64";
 	// console.log("getJournalFileSegment start/length", start, length);
     var fd = null;
     try {
@@ -682,7 +672,7 @@ function getJournalFileSegment(fullJournalFileName, start, length) {
             bytesRead = fs.readSync(fd, buffer, 0, bytesToRead, start);
         }
         fs.closeSync(fd);
-        var data = buffer.toString("utf8", 0, bytesRead);
+        var data = buffer.toString(encoding, 0, bytesRead);
         return data;
     } catch (err) {
         console.log("getJournalFileSegment error", err, new Error().stack);
@@ -949,14 +939,12 @@ function journalStore(request, response) {
         // in previous pointrel version as readfile at end or instead with buffering similar to::
         // http://stackoverflow.com/questions/1395656/is-there-a-good-implementation-of-partial-file-downloading-in-php
         // http://www.coneural.org/florian/papers/04_byteserving.php
-        // TODO: Issue with encoding of the results; assuming utf8 and maybe not correct, and also boundary conversion issues
-        var contentsPartial = getJournalFileSegment(fullJournalFileName, start, length);
+        var contentsPartialEncoded = getJournalFileSegment(fullJournalFileName, start, length, "base64");
         // console.log("contentsPartial: ***", contentsPartial, "***");
-        if (contentsPartial === false) {
+        if (contentsPartialEncoded === false) {
             // jsonToReturn = '"FAILED"';
             return exitWithJSONStatusMessage(response, "Could not read the journal file for get: '" + fullJournalFileName + "'", NO_FAILURE_HEADER, 500);
         } else {
-            var contentsPartialEncoded = base64_encode(contentsPartial);
             jsonToReturn = '"' + contentsPartialEncoded + '"';
             // If wanted to write it out without encoding:
             // header("Content-type: application/octet-stream");
@@ -982,7 +970,7 @@ function journalStore(request, response) {
             return exitWithJSONStatusMessage(response, "No encodedContent was specified", NO_FAILURE_HEADER, 400);
         }   
         
-        var content = base64_decode(encodedContent);
+        var content = new Buffer(encodedContent, "base64");
         // console.log("content", content);
         
         // TODO: Could check that it is valid JSON content
@@ -1036,20 +1024,27 @@ function resourceAdd(request, response) {
     var shortName = urlInfo.shortName;
     var hexDigits = urlInfo.hexDigits;
     var uriSpecifiedLength = urlInfo.length;
+    
+    // console.log("resourceAdd encodedContent:", encodedContent.length, encodedContent);
 
     // TODO -- confirm the content is converted correctly and then hashed correctly
-    var content = base64_decode(encodedContent);
+    var content = new Buffer(encodedContent, "base64");
     var contentLength = content.length;
+    
+    // console.log("resourceAdd decodedContent:", content.length, content);
+    
     var contentSHA256Actual = crypto.createHash("sha256").update(content).digest("hex");
+    // console.log("contentSHA256Supplied", hexDigits);
+    // console.log("contentSHA256Actual", contentSHA256Actual);
 
     if (uriSpecifiedLength !== contentLength) {
         // for debugging -- send back content
         // return exitWithJSONStatusMessage(response, "Lengths do not agree from URI: uriSpecifiedLength and from content: contentLength with content: 'content''", NO_FAILURE_HEADER, 0);
-        return exitWithJSONStatusMessage(response, "Lengths do not agree from URI: uriSpecifiedLength and from content: contentLength", NO_FAILURE_HEADER, 0);
+        return exitWithJSONStatusMessage(response, "Lengths do not agree from URI: " + uriSpecifiedLength + " and from content: " + contentLength, NO_FAILURE_HEADER, 0);
     }
 
     if (hexDigits !== contentSHA256Actual) {
-        return exitWithJSONStatusMessage(response, "SHA256 values do not agree from URI: hexDigits and computed from content: contentSHA256Actual", NO_FAILURE_HEADER, 0);
+        return exitWithJSONStatusMessage(response, "SHA256 values do not agree from URI: " + hexDigits + " and computed from content: " + contentSHA256Actual, NO_FAILURE_HEADER, 0);
     }
 
     // TODO: Validate shortName is OK for files
