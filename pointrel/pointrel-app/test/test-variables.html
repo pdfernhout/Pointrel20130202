@@ -6,7 +6,6 @@
     <script type="text/javascript" src="../libs/dojo_1.8.3_base_compressed.js"></script>
 
     <script type="text/javascript" src="../libs/sha256.js"></script>
-    <script type="text/javascript" src="../js/pointrel20130202Authentication.js"></script>
     <script type="text/javascript" src="../js/pointrel20130202.js"></script>
 </head>
 <body>
@@ -44,7 +43,7 @@ require(["dojo/ready", "Pointrel20130202"], function(ready, Pointrel20130202) {
     function openArchive() {
         console.log("about to call newArchiver");
         var archiveURL = "../server/";
-        var credentials = pointrel_authentication.getUserIDOrAnonymous();
+        var credentials = "anonymous";
         var archiver = new Pointrel20130202.PointrelArchiver(archiveURL, credentials);
         //, function (error, archiver) {
         //    console.log("in callback from newArchiver", error, archiver);
