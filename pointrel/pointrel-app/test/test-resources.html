@@ -6,7 +6,6 @@
     <script type="text/javascript" src="../libs/dojo_1.8.3_base_compressed.js"></script>
 
     <script type="text/javascript" src="../libs/sha256.js"></script>
-    <script type="text/javascript" src="../js/pointrel20130202Utils.js"></script>
     <script type="text/javascript" src="../libs/jstorage.js"></script>
     <script type="text/javascript" src="../js/pointrel20130202Authentication.js"></script>
     <script type="text/javascript" src="../js/pointrel20130202.js"></script>
@@ -60,7 +59,7 @@ require(["dojo/ready", "Pointrel20130202"], function(ready, Pointrel20130202) {
 
     function addTest(archiver) {
         console.log("originalDataString", originalDataString.length, originalDataString);
-        var dataStringAsUTF8 = encodeAsUTF8(originalDataString);
+        var dataStringAsUTF8 = Pointrel20130202.Utility.encodeAsUTF8(originalDataString);
         console.log("dataStringAsUTF8", dataStringAsUTF8.length, dataStringAsUTF8);
 
         var hash = CryptoJS.SHA256(dataStringAsUTF8);

@@ -5,7 +5,6 @@
     <title>Pointrel Chat</title>
     <script type="text/javascript" src="../../pointrel-app/libs/jquery-1.9.1.min.js"></script>
     <script type="text/javascript" src="../../pointrel-app/libs/sha256.js"></script>
-    <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202Utils.js"></script>
     <script type="text/javascript" src="../../pointrel-app/libs/jstorage.js"></script>
     <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202Authentication.js"></script>
     <script type="text/javascript" src="../../pointrel-app/js/pointrel20130202.js"></script>
@@ -67,7 +66,7 @@
         for (var i in messagesReversed) {
             //noinspection JSUnfilteredForInLoop
             var oldMessage = messagesReversed[i];
-            output = output + displayStringForTimestamp(oldMessage.timestamp) + " " + oldMessage.userID + " " + oldMessage.message + "<br/>";
+            output = output + Pointrel20130202.Utility.displayStringForTimestamp(oldMessage.timestamp) + " " + oldMessage.userID + " " + oldMessage.message + "<br/>";
         }
         $("#div_messages").html(output);
     }
@@ -93,7 +92,7 @@
             console.log("version:", version);
             var versionAsString = JSON.stringify(version);
             console.log("versionAsString:", versionAsString);
-            var newVersionURI = archiver.resource_add(encodeAsUTF8(versionAsString), "Version.json", function(error, status) {
+            var newVersionURI = archiver.resource_add(Pointrel20130202.Utility.encodeAsUTF8(versionAsString), "Version.json", function(error, status) {
                 if (error) { alert("could not write new version: " + JSON.stringify(status)); return }
                 console.log("wrote newVersionURI:", newVersionURI);
                 console.log("about to update variable");

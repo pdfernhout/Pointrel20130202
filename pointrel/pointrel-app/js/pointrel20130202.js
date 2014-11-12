@@ -1,6 +1,8 @@
 // Need to load jstorage, pointrel_authentication, and utils_common. first
 // TODO: Might need to think about decoding URLs passed back to user and encoding them for variables
-
+"use strict";
+	
+/* global exports, define */
 // Using module definition pattern from Mustache that can support CommonJS, AMD, or direct loading as a script
 (function (global, factory) {
 	if (typeof exports === "object" && exports) {
@@ -11,10 +13,129 @@
 		define("Pointrel20130202", ['exports'], factory); // AMD
 	} else {
 		console.log("Pointrel20130202 script init", global, factory);
-		factory(global.Pointrel20130202 = {}); // <script>
+		global.Pointrel20130202 = {};
+		factory(global.Pointrel20130202); // <script>
 	}
 }(this, function (pointrel) {
-	"use strict";
+	
+    // support functions
+	function validateBinaryData(dataString) {
+	    // slow for now...
+	    for (var i = 0; i < dataString.length; i++) {
+	        var c = dataString.charAt(i);
+	        // console.log("char", i, c.charCodeAt(0), c);
+	        // var charCode = c & 0xff;
+	        var charCode = c;
+	        if (charCode < 0 || charCode > 255) {
+	            alert("string had data outside the range of 0-255 at position: " + i);
+	            return false;
+	        }
+	    }
+	    return true;
+	}
+	
+	// From: http://phpjs.org/functions/base64_encode/
+	function base64_encode(data) {
+	    // http://kevin.vanzonneveld.net
+	    // +   original by: Tyler Akins (http://rumkin.com)
+	    // +   improved by: Bayron Guevara
+	    // +   improved by: Thunder.m
+	    // +   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+	    // +   bugfixed by: Pellentesque Malesuada
+	    // +   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+	    // +   improved by: Rafał Kukawski (http://kukawski.pl)
+	    // *     example 1: base64_encode('Kevin van Zonneveld');
+	    // *     returns 1: 'S2V2aW4gdmFuIFpvbm5ldmVsZA=='
+	    // mozilla has this native
+	    // - but breaks in 2.0.0.12!
+	    //if (typeof this.window['btoa'] == 'function') {
+	    //    return btoa(data);
+	    //}
+	    var b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+	    //noinspection JSUnusedAssignment
+	    var o1, o2, o3, h1, h2, h3, h4, bits, i = 0,
+	        ac = 0,
+	        enc = "",
+	        tmp_arr = [];
+
+	    if (!data) {
+	        return data;
+	    }
+
+	    do { // pack three octets into four hexets
+	        o1 = data.charCodeAt(i++);
+	        o2 = data.charCodeAt(i++);
+	        o3 = data.charCodeAt(i++);
+
+	        bits = o1 << 16 | o2 << 8 | o3;
+
+	        h1 = bits >> 18 & 0x3f;
+	        h2 = bits >> 12 & 0x3f;
+	        h3 = bits >> 6 & 0x3f;
+	        h4 = bits & 0x3f;
+
+	        // use hexets to index into b64, and append result to encoded string
+	        tmp_arr[ac++] = b64.charAt(h1) + b64.charAt(h2) + b64.charAt(h3) + b64.charAt(h4);
+	    } while (i < data.length);
+
+	    enc = tmp_arr.join('');
+
+	    var r = data.length % 3;
+
+	    return (r ? enc.slice(0, r - 3) : enc) + '==='.slice(r || 3);
+	}
+
+	// From: http://phpjs.org/functions/base64_decode/
+	function base64_decode(data) {
+	  // discuss at: http://phpjs.org/functions/base64_decode/
+	  // original by: Tyler Akins (http://rumkin.com)
+	  // improved by: Thunder.m
+	  // improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+	  // improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+	  //   input by: Aman Gupta
+	  //   input by: Brett Zamir (http://brett-zamir.me)
+	  // bugfixed by: Onno Marsman
+	  // bugfixed by: Pellentesque Malesuada
+	  // bugfixed by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+	  //   example 1: base64_decode('S2V2aW4gdmFuIFpvbm5ldmVsZA==');
+	  //   returns 1: 'Kevin van Zonneveld'
+
+		var b64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+		var o1, o2, o3, h1, h2, h3, h4, bits, i = 0, ac = 0, dec = '', tmp_arr = [];
+
+		if (!data) {
+			return data;
+		}
+
+		data += '';
+
+		do { // unpack four hexets into three octets using index points in b64
+			h1 = b64.indexOf(data.charAt(i++));
+			h2 = b64.indexOf(data.charAt(i++));
+			h3 = b64.indexOf(data.charAt(i++));
+			h4 = b64.indexOf(data.charAt(i++));
+
+			bits = h1 << 18 | h2 << 12 | h3 << 6 | h4;
+
+			o1 = bits >> 16 & 0xff;
+			o2 = bits >> 8 & 0xff;
+			o3 = bits & 0xff;
+
+			if (h3 === 64) {
+				tmp_arr[ac++] = String.fromCharCode(o1);
+			} else if (h4 === 64) {
+				tmp_arr[ac++] = String.fromCharCode(o1, o2);
+			} else {
+				tmp_arr[ac++] = String.fromCharCode(o1, o2, o3);
+			}
+		} while (i < data.length);
+
+		dec = tmp_arr.join('');
+
+		return dec;
+	}
+	
+	// end support functions
 	
     // Currying two variables
     function success(callback, postProcessing, request) {
@@ -34,7 +155,7 @@
 		}
     }
     
-    function createOnReadyStateChangeCallback(callback, postProcessing, request) {
+    function createOnReadyStateChangeCallback(remoteScript, callback, postProcessing, request) {
     	return function() {
 			if (request.readyState != 4)  return;
 			// 200 == success, 304 = not modified
@@ -52,6 +173,7 @@
 		};
     }
     
+    /* global XMLHttpRequest,  ActiveXObject */
     // Factories and creation method from: http://stackoverflow.com/questions/2557247/easiest-way-to-retrieve-cross-browser-xmlhttprequest
     var XMLHttpFactories = [
         function () {return new XMLHttpRequest();},
@@ -121,7 +243,7 @@
         // headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
 		// cache: false,
         
-	    request.onreadystatechange = createOnReadyStateChangeCallback(callback, postProcessing, request);
+	    request.onreadystatechange = createOnReadyStateChangeCallback(remoteScript, callback, postProcessing, request);
 		
 		if (requestType === "GET") {
 			request.send();
@@ -134,7 +256,7 @@
 	}
 
     //////// RESOURCES
-    
+	
     // TODO: Might need to think about decoding URLs passed back to user and encoding them for variables
 
     // Data passed to this needs to be only characters in the range 0-255 (byte)
@@ -334,6 +456,51 @@
             return pointrel_journal_get(this.serverURL, this.credentials, indexName, indexType, start, length, callback);
         };
     }
+    
+    // Useful utility functions when working with Pointrel data
+    
+    var Utility = {};
+    
+    /* global escape, unescape, window */
+    
+	// Get the value of a parameter in the query string
+	function getParameter(paramName) {
+	    var searchString = window.location.search.substring(1);
+	    var params = searchString.split("&");
+	
+	    for (var i = 0; i < params.length; i++) {
+	        var val = params[i].split("=");
+	        if (val[0] === paramName) {
+	            return decodeURI(val[1]);
+	        }
+	    }
+	    return null;
+	}
+	
+	function displayStringForTimestamp(timestamp) {
+	    return timestamp.replace("T", " ").replace("Z", " UTC");
+	}
+	
+	function startsWith(data, start) {
+		if (!data) return false;
+	    return data.substring(0, start.length) === start;
+	}
+	
+	/// encoding and decoding so can send binary data via pointrel and process it when it comes back
+	
+	function encodeAsUTF8(text) {
+	    return unescape(encodeURIComponent(text));
+	}
+	
+	function decodeFromUTF8(text) {
+	    return decodeURIComponent(escape(text));
+	}
+	
+	Utility.getParameter = getParameter;
+	Utility.displayStringForTimestamp = displayStringForTimestamp;
+	Utility.startsWith = startsWith;
+	Utility.encodeAsUTF8 = encodeAsUTF8;
+	Utility.decodeFromUTF8 = decodeFromUTF8;
         
     /// EXPORT
 
@@ -354,6 +521,7 @@
     // pointrel.journal_put = pointrel_journal_put;
     
     pointrel.PointrelArchiver = PointrelArchiver;
+    pointrel.Utility = Utility;
     
     return pointrel;
 }));

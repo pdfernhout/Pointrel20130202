@@ -6,7 +6,6 @@
     <script type="text/javascript" src="../libs/jquery-1.9.1.min.js"></script>
 
     <script type="text/javascript" src="../libs/sha256.js"></script>
-    <script type="text/javascript" src="../js/pointrel20130202Utils.js"></script>
     <script type="text/javascript" src="../libs/jstorage.js"></script>
     <script type="text/javascript" src="../js/pointrel20130202Authentication.js"></script>
     <script type="text/javascript" src="../js/pointrel20130202.js"></script>
@@ -24,7 +23,7 @@
         $(pointrel_authentication.loginPageLoaded);
 
         function loadLatestFromParameter() {
-            var chosenVariable = getParameter("documentName");
+            var chosenVariable = Pointrel20130202.Utility.getParameter("documentName");
             if (chosenVariable) {
                 console.log("Read document from: " + chosenVariable);
                 variableName = chosenVariable;
@@ -144,11 +143,11 @@
             updateURI();
             var editorText = $("#editor").val();
             console.log("editorText", editorText.length, editorText);
-            var editorTextAsUTF8 = encodeAsUTF8(editorText);
+            var editorTextAsUTF8 = Pointrel20130202.Utility.encodeAsUTF8(editorText);
             console.log("editorTextAsUTF8", editorTextAsUTF8.length, editorTextAsUTF8);
             var textURI = archiver.resource_add(editorTextAsUTF8, "txt", function(error, status) {
                 // TODO: Improve the handling so PHP returns a better status
-                if (error && !startsWith(status.message, "File already exists:")) {
+                if (error && !Pointrel20130202.Utility.startsWith(status.message, "File already exists:")) {
                     alert("could not write resource: " + JSON.stringify(status) + " error: " + error);
                     progress("failed as could not write resource");
                     progress("");
@@ -163,7 +162,7 @@
                 console.log("version:", version);
                 var versionAsString = JSON.stringify(version);
                 console.log("versionAsString:", versionAsString);
-                var newVersionURI = archiver.resource_add(encodeAsUTF8(versionAsString), "Version.json", function(error, status) {
+                var newVersionURI = archiver.resource_add(Pointrel20130202.Utility.encodeAsUTF8(versionAsString), "Version.json", function(error, status) {
                     if (error) { alert("could not write new version: " + JSON.stringify(status)); return }
                     console.log("wrote newVersionURI:", newVersionURI);
                     progress("Saved version");

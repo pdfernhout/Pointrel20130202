@@ -8,7 +8,6 @@
     <script type="text/javascript" src="../libs/mustache.js"></script>
 
     <script type="text/javascript" src="../libs/sha256.js"></script>
-    <script type="text/javascript" src="../js/pointrel20130202Utils.js"></script>
     <script type="text/javascript" src="../libs/jstorage.js"></script>
     <script type="text/javascript" src="../js/pointrel20130202Authentication.js"></script>
     <script type="text/javascript" src="../js/pointrel20130202.js"></script>
@@ -44,7 +43,7 @@
 
         $(document).ready(loadLatestFromParameter);
 
-        function getParameter(paramName) {
+        function Pointrel20130202.Utility.getParameter(paramName) {
             var searchString = window.location.search.substring(1);
             var i;
             var val;
@@ -63,7 +62,7 @@
             // Save the initial template -- does not work
             itemTemplate = $("#template").html();
             console.log("itemTemplate read", itemTemplate);
-            var chosenVariable = getParameter("documentName");
+            var chosenVariable = Pointrel20130202.Utility.getParameter("documentName");
             if (chosenVariable) {
                 console.log("Read document from: " + chosenVariable);
                 variableName = chosenVariable;

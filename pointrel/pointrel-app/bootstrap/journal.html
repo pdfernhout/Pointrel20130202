@@ -6,7 +6,6 @@
     <script type="text/javascript" src="../libs/jquery-1.9.1.min.js"></script>
 
     <script type="text/javascript" src="../libs/sha256.js"></script>
-    <script type="text/javascript" src="../js/pointrel20130202Utils.js"></script>
     <script type="text/javascript" src="../libs/jstorage.js"></script>
     <script type="text/javascript" src="../js/pointrel20130202Authentication.js"></script>
     <script type="text/javascript" src="../js/pointrel20130202.js"></script>
@@ -29,7 +28,7 @@
         $(pointrel_authentication.loginPageLoaded);
 
         function loadLatestFromParameter() {
-            var chosenJournal = getParameter("documentName");
+            var chosenJournal = Pointrel20130202.Utility.getParameter("documentName");
             if (chosenJournal) {
                 console.log("Read document from: " + chosenJournal);
                 journalName = chosenJournal;
@@ -37,7 +36,7 @@
                 lastSize = "END";
                 latestButtonPressed("ignoreMissing");
             }
-            var chosenJournalType = getParameter("journalType");
+            var chosenJournalType = Pointrel20130202.Utility.getParameter("journalType");
             if (chosenJournalType) {
             	console.log("Chosen journal type: " + chosenJournalType);
             	journalType = chosenJournalType;
@@ -78,7 +77,7 @@
             var newContent = $("#newContent").val();
             
             console.log("newContent", newContent.length, newContent);
-            var newContentAsUTF8 = encodeAsUTF8(newContent);
+            var newContentAsUTF8 = Pointrel20130202.Utility.encodeAsUTF8(newContent);
             console.log("newContenttAsUTF8", newContentAsUTF8.length, newContentAsUTF8);
             
             archiver.journal_put(journalName, newContentAsUTF8, function (error, response) {

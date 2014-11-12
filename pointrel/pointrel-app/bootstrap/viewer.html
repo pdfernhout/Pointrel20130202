@@ -8,7 +8,6 @@
     <script type="text/javascript" src="../libs/marked.js"></script>
 
     <script type="text/javascript" src="../libs/sha256.js"></script>
-    <script type="text/javascript" src="../js/pointrel20130202Utils.js"></script>
     <script type="text/javascript" src="../libs/jstorage.js"></script>
     <script type="text/javascript" src="../js/pointrel20130202Authentication.js"></script>
     <script type="text/javascript" src="../js/pointrel20130202.js"></script>
@@ -32,7 +31,7 @@
 
         // TODO: Have some way of passing in the userID, timestamp, and document separately for a resource
 
-        function getParameter(paramName) {
+        function Pointrel20130202.Utility.getParameter(paramName) {
             var searchString = window.location.search.substring(1);
             var i;
             var val;
@@ -48,7 +47,7 @@
         }
 
         function loadLatestFromParameter() {
-            var chosenVariable = getParameter("documentName");
+            var chosenVariable = Pointrel20130202.Utility.getParameter("documentName");
             if (chosenVariable) {
                 console.log("Read document from: " + chosenVariable);
                 variableName = chosenVariable;
@@ -140,7 +139,7 @@
         	
             $("#documentName").text(variableName);
             // Special handling if it is a resource instead of a variable
-            if (startsWith(variableName, "pointrel://")) {
+            if (Pointrel20130202.Utility.startsWith(variableName, "pointrel://")) {
                 $("#timestamp").text("???");
                 $("#userID").text("???");
                 $("#refreshAndEdit").hide();
@@ -207,7 +206,7 @@
             console.log("about to publish with markdown formatting:", variableName);
             var contentToPublish = '<html>\n<head>\n<meta http-equiv="Content-Type" content="text/html; charset=utf-8">\n</head>\n<body>\n' + lastProcessedText + "\n</body>\n</html>";
 
-            var newResourceURI = archiver.resource_add(encodeAsUTF8(contentToPublish), "html", function(error, status) {
+            var newResourceURI = archiver.resource_add(Pointrel20130202.Utility.encodeAsUTF8(contentToPublish), "html", function(error, status) {
                 // TODO: Ignoring error for now as may already exist
                 // if (error) { alert("could not write new resource: " + JSON.stringify(status)); return }
                 console.log("wrote newResourceURI:", newResourceURI);
@@ -238,7 +237,7 @@
             }
             if (extension === "") {extension = "html";}
 
-            var newResourceURI = archiver.resource_add(encodeAsUTF8(contentToPublish), extension, function(error, status) {
+            var newResourceURI = archiver.resource_add(Pointrel20130202.Utility.encodeAsUTF8(contentToPublish), extension, function(error, status) {
                 // TODO: Ignoring error for now as may already exist
                 // if (error) { alert("could not write new resource: " + JSON.stringify(status)); return }
                 console.log("wrote newResourceURI:", newResourceURI);

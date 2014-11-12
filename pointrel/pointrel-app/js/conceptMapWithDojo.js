@@ -1,3 +1,6 @@
+"use strict";
+/*jslint browser:true */
+
 define("conceptMap", [
     "dojo/ready",
     "dojo/dom-attr",
@@ -47,6 +50,27 @@ define("conceptMap", [
     var entryDialog;
     var loginDialog;
     // var signupDialog;
+    
+    // uuidFast from http://www.broofa.com/2008/09/javascript-uuid-function/
+    // Copyright (c) 2010 Robert Kieffer
+    // Dual licensed under the MIT and GPL licenses.
+    // A more performant, but slightly bulkier, RFC4122v4 solution. 
+    // We boost performance by minimizing calls to random()
+    var CHARS2 = '0123456789abcdefghijklmnopqrstuvwxyz'.split(''); 
+    function uuidFast() {
+    	var chars = CHARS2, uuid = new Array(32), rnd=0, r;
+    	for (var i = 0; i < 32; i++) {
+    		if (i === 14) {
+    			uuid[i] = '4';
+    		} else {
+    			if (rnd <= 0x02) {rnd = 0x2000000 + (Math.random() * 0x1000000) | 0; }
+    			r = rnd & 0xf;
+    			rnd = rnd >> 4;
+    			uuid[i] = chars[(i === 19) ? (r & 0x3) | 0x8 : r];
+    		}
+    	}
+    	return uuid.join('');
+    }
 
     function forEach(array, theFunction) {
         for(var index = 0, length = array.length; index < length; ++index) {
@@ -160,7 +184,7 @@ define("conceptMap", [
         });
 
         var newDiagramButton = newButton("newDiagramButton", "Link to new diagram", function () {
-            var uuid = "pce:org.twirlip.ConceptMap:uuid:" + Math.uuidFast();
+            var uuid = "pce:org.twirlip.ConceptMap:uuid:" + uuidFast();
             var url = "conceptMap.html?diagram=" + uuid;
             setFieldValue("name", "");
             setFieldValue("url", url);
@@ -468,7 +492,7 @@ define("conceptMap", [
         // TODO: Does not deal with editing conflicts except by failing
 
         var newItemsDocumentText = JSON.stringify(newItemsDocument);
-        var textURI = archiver.resource_add(encodeAsUTF8(newItemsDocumentText), "ConceptMapItems.json");
+        var textURI = archiver.resource_add(Pointrel20130202.Utility.encodeAsUTF8(newItemsDocumentText), "ConceptMapItems.json");
         console.log(textURI);
         var timestamp = new Date().toISOString();
         var previousVersionURI = currentVersionURI;
@@ -476,7 +500,7 @@ define("conceptMap", [
         console.log("version:", version);
         var versionAsString = JSON.stringify(version);
         console.log("versionAsString:", versionAsString);
-        var newVersionURI = archiver.resource_add(encodeAsUTF8(versionAsString), "Version.json");
+        var newVersionURI = archiver.resource_add(Pointrel20130202.Utility.encodeAsUTF8(versionAsString), "Version.json");
         console.log("newVersionURI:", newVersionURI);
         //noinspection JSUnusedLocalSymbols
         archiver.variable_set(diagramName, currentVersionURI, newVersionURI, function (error, result) {
@@ -544,7 +568,7 @@ define("conceptMap", [
             item.url = url;
             item.x = 200;
             item.y = 200;
-            item.uuid = Math.uuidFast();
+            item.uuid = uuidFast();
         }
         console.log("item", item);
 
