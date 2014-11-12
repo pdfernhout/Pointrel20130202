@@ -1,4 +1,4 @@
-// Need to load jstorage, pointrel_authentication, and utils_common. first
+// Need to load pointrel_authentication first
 // TODO: Might need to think about decoding URLs passed back to user and encoding them for variables
 "use strict";
 	
@@ -138,10 +138,18 @@
 	// end support functions
 	
     // Currying two variables
-    function success(callback, postProcessing, request) {
+    function success(callback, postProcessing, request, responseType) {
     	var response = request.response;
+    	if (responseType === "json") {
+    		// TODO: Exception handling
+    		try {
+    			response = JSON.parse(response);
+    		} catch (err) {
+    			callback("ERROR parsing JSON", response);
+    		}
+    	}
 		// console.log("sendRequest result:", request, response);
-		if (request.responseType === "text" || request.statusText === "OK") {
+		if (responseType === "text" || request.statusText === "OK") {
 			if (typeof (callback) === "function") {
 				if (typeof (postProcessing) === "function") {
 					response = postProcessing(response);
@@ -155,12 +163,12 @@
 		}
     }
     
-    function createOnReadyStateChangeCallback(remoteScript, callback, postProcessing, request) {
+    function createOnReadyStateChangeCallback(responseType, remoteScript, callback, postProcessing, request) {
     	return function() {
 			if (request.readyState != 4)  return;
 			// 200 == success, 304 = not modified
 			if  (request.status === 200 || request.status === 304) {
-				success(callback, postProcessing, request);
+				success(callback, postProcessing, request, responseType);
 			} else {
 				// Otherwise an error
 				console.log("sendRequest error", request, request.status, request.statusText);
@@ -212,12 +220,12 @@
 		data.userID = pointrel_authentication.userIDFromCredentials(credentials);
 		
 		var requestType = "POST";
-		var dataType = "json";
+		var responseType = "json";
 		
 		// Everything else uses POST and returns JSON, except this one which returns immutable resources that could be cached
 		if (remoteScript === "resource-get.php") {
 			requestType = "GET";
-			dataType = "text";
+			responseType = "text";
 		}
 		
 		// console.log("sendRequest", remoteScript, requestType, dataType, data);
@@ -233,7 +241,8 @@
         var async = true;
 		request.open(requestType, url, async);
  
-        request.responseType = dataType;
+		// Not supported by older browsers like Safari 5
+        // request.responseType = dataType;
         
         // TODO: Are these needed?
         // request.setRequestHeader('User-Agent','XMLHTTP/1.0');
@@ -243,7 +252,7 @@
         // headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
 		// cache: false,
         
-	    request.onreadystatechange = createOnReadyStateChangeCallback(remoteScript, callback, postProcessing, request);
+	    request.onreadystatechange = createOnReadyStateChangeCallback(responseType, remoteScript, callback, postProcessing, request);
 		
 		if (requestType === "GET") {
 			request.send();
