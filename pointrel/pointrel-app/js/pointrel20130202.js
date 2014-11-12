@@ -41,20 +41,20 @@
 	//    return decodeURIComponent(escape(text));
 	//}
 	
-	function validateBinaryData(dataString) {
-	    // slow for now...
-	    for (var i = 0; i < dataString.length; i++) {
-	        var c = dataString.charAt(i);
-	        // console.log("char", i, c.charCodeAt(0), c);
-	        // var charCode = c & 0xff;
-	        var charCode = c;
-	        if (charCode < 0 || charCode > 255) {
-	            alert("string had data outside the range of 0-255 at position: " + i);
-	            return false;
-	        }
-	    }
-	    return true;
-	}
+	//function validateBinaryData(dataString) {
+	//    // slow for now...
+	//    for (var i = 0; i < dataString.length; i++) {
+	//        var c = dataString.charAt(i);
+	//        // console.log("char", i, c.charCodeAt(0), c);
+	//        // var charCode = c & 0xff;
+	//        var charCode = c;
+	//        if (charCode < 0 || charCode > 255) {
+	//            alert("string had data outside the range of 0-255 at position: " + i);
+	//            return false;
+	//        }
+	//    }
+	//    return true;
+	//}
 	
 	// From: http://phpjs.org/functions/base64_encode/
 	function base64_encode(data) {
