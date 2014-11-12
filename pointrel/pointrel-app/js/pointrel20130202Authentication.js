@@ -9,7 +9,7 @@
 // form_logoutButton -- a button
 // form_userID -- a text input field
 var pointrel_authentication = (function () {
-    var login_userIDKey = "login_userID";
+    var login_userIDKey = "pointrel20130202_login_userID";
     
     var fallbackTemporaryStorage = {};
     
