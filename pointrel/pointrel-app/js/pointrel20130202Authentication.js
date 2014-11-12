@@ -2,11 +2,12 @@
 
 /* global document, localStorage, window */
 
-// This is a helper class that support updating user information or connecting in login buttons if field are named a certain way
+// This is a helper class that support updating user information about who is currently logged in.
+// It also updates the screen based on login/logout buttor behavior if field are named a certain way.
 // The fields would have to have these ids:
 // form_loginStatus -- a span
-// form_loginButton -- a button
-// form_logoutButton -- a button
+// form_loginButton -- a button which should call "document.clickedLogin();"
+// form_logoutButton -- a button which should call "document.clickedLogout();"
 // form_userID -- a text input field
 var pointrel_authentication = (function () {
     var login_userIDKey = "pointrel20130202_login_userID";
