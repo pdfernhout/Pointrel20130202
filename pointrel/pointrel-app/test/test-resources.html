@@ -65,7 +65,10 @@ require(["dojo/ready", "Pointrel20130202"], function(ready, Pointrel20130202) {
         var dataStringAsUTF8 = encodeAsUTF8(originalDataString);
         console.log("dataStringAsUTF8", dataStringAsUTF8.length, dataStringAsUTF8);
 
+        // Testing against different SHA256 implementation than the one used by the Pointrel library
         var stringInCryptoJSWords = CryptoJS.enc.Latin1.parse(dataStringAsUTF8);
+        // console.log("stringInCryptoJSWords", stringInCryptoJSWords);
+        // console.log("equals?", stringInCryptoJSWords === dataStringAsUTF8);
         var hash = CryptoJS.SHA256(stringInCryptoJSWords);
         var expectedURI = "pointrel://sha256_" + hash + "_" + dataStringAsUTF8.length + ".txt";
         console.log("Expected name: " + expectedURI);
