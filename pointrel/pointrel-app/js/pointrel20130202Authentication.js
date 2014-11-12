@@ -2,6 +2,12 @@
 
 /* global document, localStorage, window */
 
+// This is a helper class that support updating user information or connecting in login buttons if field are named a certain way
+// The fields would have to have these ids:
+// form_loginStatus -- a span
+// form_loginButton -- a button
+// form_logoutButton -- a button
+// form_userID -- a text input field
 var pointrel_authentication = (function () {
     var login_userIDKey = "login_userID";
     
@@ -62,21 +68,29 @@ var pointrel_authentication = (function () {
 
     function updateStatus(userID) {
         console.log("updateStatus userID", userID);
+        var form_loginStatus = document.getElementById("form_loginStatus");
+        var form_loginButton = document.getElementById("form_loginButton");
+        var form_logoutButton = document.getElementById("form_logoutButton");
+        var form_userID = document.getElementById("form_userID");
         if (userID) {
-            $("#form_loginStatus").text("Logged in as: \"" + userID + "\"");
-            $("#form_loginButton").attr("disabled", true);
-            $("#form_logoutButton").removeAttr("disabled");
-            $("#form_userID").val(userID);
+        	console.log("userID is ", userID);
+            if (form_loginStatus) form_loginStatus.innerHTML = "Logged in as: \"" + userID + "\"";
+            if (form_loginButton) form_loginButton.setAttribute("disabled", true);
+            if (form_logoutButton) form_logoutButton.removeAttribute("disabled");
+            if (form_userID) form_userID.value = userID;
         } else {
-            $("#form_loginStatus").text("Not logged in");
-            $("#form_loginButton").removeAttr("disabled");
-            $("#form_logoutButton").attr("disabled", true);
-            $("#form_userID").val("");
+        	console.log("No userID");
+        	if (form_loginStatus) form_loginStatus.innerHTML = "Not logged in";
+        	if (form_loginButton) form_loginButton.removeAttribute("disabled");
+        	if (form_logoutButton) form_logoutButton.setAttribute("disabled", true);
+        	if (form_userID) form_userID.value = "";
         }
     }
 
     function clickedLogin() {
-        var userID = $("#form_userID").val();
+    	var form_userID = document.getElementById("form_userID");
+    	var userID = "";
+    	if (form_userID) userID = form_userID.value;
         console.log("userID", userID);
         if (!userID) {
             alert("No user ID entered");
