@@ -17,6 +17,15 @@
 	}
 }(this, function (pointrel) {
 	
+	// Default server method names for CGI scripts or server calss which can be overriden by user
+	var serverMethods = {
+	  resourceGet: "resource-get.php",
+	  resourceAdd: "resource-add.php",
+	  resourcePublish: "resource-publish.php",
+	  variableQuery: "variable-query.php",
+	  journalStore: "journal-store.php"
+	};
+	
 	// "credentials" is either a string that is the userID or it is a dictionary with a field called "userID"
 	
     // support functions
@@ -393,7 +402,7 @@
 		var responseType = "json";
 		
 		// Everything else uses POST and returns JSON, except this one which returns immutable resources that could be cached
-		if (remoteScript === "resource-get.php") {
+		if (remoteScript === serverMethods.resourceGet) {
 			requestType = "GET";
 			responseType = "text";
 		}
@@ -480,7 +489,7 @@
         var data = {"resourceURI": uri, "resourceContent": byteStringEncodedAsBase64};
         // console.log("data sending", data);
         console.log("adding resource", uri);
-        sendRequest(serverURL, "resource-add.php", credentials, data, callback);
+        sendRequest(serverURL, serverMethods.resourceAdd, credentials, data, callback);
 
         // console.log("pointrel_resource_add returning: ", uri);
         return uri;
@@ -498,14 +507,14 @@
         		}
         	}
         }
-        sendRequest(serverURL, "resource-get.php", credentials, data, callback);
+        sendRequest(serverURL, serverMethods.resourceGet, credentials, data, callback);
     }
 
     function pointrel_resource_publish(serverURL, credentials, resourceURI, destinationURL, callback) {
         console.log("pointrel_resource_publish: ", resourceURI, " to: ", destinationURL);
         
         var data = {"resourceURI": resourceURI, "destinationURL": destinationURL};
-        sendRequest(serverURL, "resource-publish.php", credentials, data, callback);
+        sendRequest(serverURL, serverMethods.resourcePublish, credentials, data, callback);
     }
 
     //////// VARIABLES
@@ -513,25 +522,25 @@
     function pointrel_variable_new(serverURL, credentials, variableName, newValue, callback) {
         console.log("pointrel_variable_new: ", variableName);
         var data = {"variableName": variableName, "operation": "new", "newValue": newValue};
-        sendRequest(serverURL, "variable-query.php", credentials, data, callback);
+        sendRequest(serverURL, serverMethods.variableQuery, credentials, data, callback);
     }
 
     function pointrel_variable_get(serverURL, credentials, variableName, callback) {
         console.log("pointrel_variable_get: ", variableName);
         var data = {"variableName": variableName, "operation": "get"};
-        sendRequest(serverURL, "variable-query.php", credentials, data, callback);
+        sendRequest(serverURL, serverMethods.variableQuery, credentials, data, callback);
     }
 
     function pointrel_variable_set(serverURL, credentials, variableName, oldVersionURI, newVersionURI, callback) {
         console.log("pointrel_resource_set: ", variableName, " old: ", oldVersionURI, " new: ", newVersionURI);
         var data = {"variableName": variableName, "operation": "set", "currentValue": oldVersionURI, "newValue": newVersionURI};
-        sendRequest(serverURL, "variable-query.php", credentials, data, callback);
+        sendRequest(serverURL, serverMethods.variableQuery, credentials, data, callback);
     }
 
     function pointrel_variable_delete(serverURL, credentials, variableName, currentValue, callback) {
         console.log("pointrel_variable_delete: ", variableName);
         var data = {"variableName": variableName, "operation": "delete", currentValue: currentValue};
-        sendRequest(serverURL, "variable-query.php", credentials, data, callback);
+        sendRequest(serverURL, serverMethods.variableQuery, credentials, data, callback);
     }
 
     ///// JOURNALS
@@ -558,7 +567,7 @@
         var postProcessing = null;
         if (operation === "get") postProcessing = decodeResponseFromServer; 
         
-        sendRequest(serverURL, "journal-store.php", credentials, data, callback, postProcessing);
+        sendRequest(serverURL, serverMethods.journalStore, credentials, data, callback, postProcessing);
     }
     
     function pointrel_journal_exists(serverURL, credentials, journalName, journalType, callback) {
@@ -1102,6 +1111,7 @@
     pointrel.PointrelVariable = PointrelVariable;
     pointrel.PointrelJournal = PointrelJournal;
     pointrel.PointrelIndex = PointrelIndex;
+    pointrel.serverMethods = serverMethods;
     
     return pointrel;
 }));
