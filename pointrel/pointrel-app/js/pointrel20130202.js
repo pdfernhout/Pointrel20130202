@@ -319,28 +319,29 @@
         var stringInCryptoJSWords = CryptoJS.enc.Latin1.parse(dataAsStringOfBytes);
         var hash = CryptoJS.SHA256(stringInCryptoJSWords);
         
-        console.log("pointrel_resource_add", originalData.length, dataAsStringOfBytes.length, "" + hash, originalData, dataAsStringOfBytes);
+        // console.log("pointrel_resource_add", originalData.length, dataAsStringOfBytes.length, "" + hash, originalData, dataAsStringOfBytes);
 
         var extensionSeperator = ".";
         if (extension === "") extensionSeperator = "";
         var uri = "pointrel://sha256_" + hash + "_" + dataAsStringOfBytes.length + extensionSeperator + extension;
         
         var byteStringEncodedAsBase64 = base64_encode(dataAsStringOfBytes);
-        console.log("encodedData", byteStringEncodedAsBase64);
+        // console.log("encodedData", byteStringEncodedAsBase64);
         
         // check
-        var checkData = base64_decode(byteStringEncodedAsBase64);
-        if (checkData !== dataAsStringOfBytes) {
-        	console.log("data check: does not match", checkData);
-        } else {
-        	console.log("data check matches");
-        }
+        // var checkData = base64_decode(byteStringEncodedAsBase64);
+        // if (checkData !== dataAsStringOfBytes) {
+        // 	console.log("data check: does not match", checkData);
+        // } else {
+        //	console.log("data check matches");
+        //}
 
         var data = {"resourceURI": uri, "resourceContent": byteStringEncodedAsBase64};
-        console.log("data sending", data);
+        // console.log("data sending", data);
+        console.log("adding resource", uri);
         sendRequest(serverURL, "resource-add.php", credentials, data, callback);
 
-        console.log("pointrel_resource_add returning: ", uri);
+        // console.log("pointrel_resource_add returning: ", uri);
         return uri;
     }
 
@@ -416,7 +417,7 @@
             if (extra.hasOwnProperty(attributeName)) { data[attributeName] = extra[attributeName]; }
         }
         
-        console.log("data: ", data);
+        // console.log("data: ", data);
         
         var postProcessing = null;
         if (operation === "get") postProcessing = decodeResponseFromServer; 
@@ -597,7 +598,7 @@
 
 	    this.done = function (status) {
 	        this.endingStatus = status;
-	        console.log("endingStatus", this.endingStatus);
+	        // console.log("endingStatus", this.endingStatus);
 	        if (isFunction(this.callbackForAllVersions)) this.callbackForAllVersions(null, this.versions, this.endingStatus, this);
 	    };
 
@@ -619,7 +620,7 @@
 
 	    // TODO: Could be an issue if this function is called a second time by someone else before it is done? May need guard variable to fail if called while running (or some other approach to pass around state through the recursion).
 	    this.getPreviousVersionsRecursively = function (versionURI, currentSearchDepth) {
-	        console.log("getPreviousVersionsRecursively", versionURI, currentSearchDepth);
+	        // console.log("getPreviousVersionsRecursively", versionURI, currentSearchDepth);
 	        if (!versionURI) {
 	            this.done("end");
 	        } else if (versionURI === this.stopAtVersionURI) {
@@ -630,16 +631,16 @@
 	            // JavaScript has "this" refer to the object a function is called on, or the global object
 	            var self = this;
 	            this.archiver.resource_get(versionURI, function (error, versionContents) {
-	                console.log("callback from archiver.resource_get", versionURI);
+	                // console.log("callback from archiver.resource_get", versionURI);
 	                if (error) {
 	                    var message = "Error happened on versionContents get: " + JSON.stringify(error);
 	                    console.log("error in getPreviousVersionsRecursively", message, error, versionContents);
 	                    self.doneBecauseOfError(message);
 	                    return;
 	                }
-	                console.log("versionContents:", versionContents);
+	                // console.log("versionContents:", versionContents);
 	                var version = JSON.parse(versionContents);
-	                console.log("version read", version);
+	                // console.log("version read", version);
 	                // Make a note of the place the version was read from in the version itself
 	                version._readFromVersionURI = versionURI;
 	                self.versions.push(version);
@@ -698,10 +699,10 @@
 //	        };
 
 	    this.getLatestVariableVersionURI = function(callback) {
-			console.log("getLatestVariableVersionURI -- callback", callback);
+			// console.log("getLatestVariableVersionURI -- callback", callback);
 			var self = this;
 			this.archiver.variable_get(this.variableName, function(error, variableGetResult) {
-				console.log("callback for archiver.variable_get in getLatestVariableVersionURI");
+				// console.log("callback for archiver.variable_get in getLatestVariableVersionURI");
 				if (error) {
 					console.log("error in getLastestVariableVersionURI", error);
 					if (isFunction(callback)) {
@@ -712,15 +713,15 @@
 					return;
 				}
 				self.latestVariableVersionURI = variableGetResult.currentValue;
-				console.log("getLatestVariableVersionURI result", self.latestVariableVersionURI);
-				console.log("Callback", callback);
+				// console.log("getLatestVariableVersionURI result", self.latestVariableVersionURI);
+				// console.log("Callback", callback);
 				if (isFunction(callback)) callback(null, self.latestVariableVersionURI);
 			});
 	    };
 
 	    this.newVersionsDone = function (error, versions, endingStatus, follower) {
-			console.log("newVersionsDone in variable", error, endingStatus, versions);
-			console.log("newVersionsDone this", this);
+			// console.log("newVersionsDone in variable", error, endingStatus, versions);
+			// console.log("newVersionsDone this", this);
 			if (error) {
 				console.log("error in NewVersionsDone", error, versions, endingStatus, follower);
 				if (isFunction(this.callbackWhenVersionsLoaded)) {
@@ -733,18 +734,18 @@
 			if (versions) {
 				this.mostRecentlyLoadedVersionURI = this.latestVariableVersionURI;
 			}
-			console.log("about to try callback", this.callbackWhenVersionsLoaded);
+			// console.log("about to try callback", this.callbackWhenVersionsLoaded);
 			if (isFunction(this.callbackWhenVersionsLoaded)) this.callbackWhenVersionsLoaded(error, versions, endingStatus, follower);
-			console.log("after tried callback");
+			// console.log("after tried callback");
 		};
 
 	    this.getNewVersions = function (callbackWhenVersionsLoaded) {
-			console.log("getNewVersions -- ", callbackWhenVersionsLoaded);
+			// console.log("getNewVersions -- ", callbackWhenVersionsLoaded);
 			this.callbackWhenVersionsLoaded = callbackWhenVersionsLoaded;
-			console.log("after set: ", this.callbackWhenVersionsLoaded);
+			// console.log("after set: ", this.callbackWhenVersionsLoaded);
 			var self = this;
 			this.getLatestVariableVersionURI(function(error, variableGetResult) {
-				console.log("callback in getNewVersions after getLatestVariableVersionURI", variableGetResult);
+				// console.log("callback in getNewVersions after getLatestVariableVersionURI", variableGetResult);
 				if (error) {
 					console.log("error getting latest value of variable");
 					if (isFunction(this.callbackWhenVersionsLoaded)) {
@@ -755,7 +756,7 @@
 					return;
 				}
 				self.follower = new PointrelVersionFollower(self.archiver, self.latestVariableVersionURI, self.mostRecentlyLoadedVersionURI, 100, self.newVersionsDone.bind(self), null);
-				console.log("about to do follower.search");
+				// console.log("about to do follower.search");
 				self.follower.search();
 			});
 	    };
@@ -772,7 +773,7 @@
 					}
 					return;
 				}
-				console.log("after updating to: ", newVersionURI);
+				// console.log("after updating to: ", newVersionURI);
 				self.latestVariableVersionURI = newVersionURI;
 				if (isFunction(callback)) callback(error, status, newVersionURI);
 			});
@@ -786,11 +787,11 @@
 		this.content = "";
 
 		this.getNewContents = function(callback) {
-			console.log("geNewContents -- callback", callback);
+			// console.log("geNewContents -- callback", callback);
 			var self = this;
 
 			this.archiver.journal_get(this.journalName, this.content.length, "END", function(error, journalGetResult) {
-				console.log("callback for archiver.journal_get in getNewContents");
+				// console.log("callback for archiver.journal_get in getNewContents");
 				if (error) {
 					console.log("Error happened on journal get", error, journalGetResult);
 					// self.latestVariableVersionURI = null;
@@ -811,7 +812,7 @@
 					}
 					self.content = self.content + newContent;
 				}
-				console.log("Callback", callback);
+				// console.log("Callback", callback);
 				if (isFunction(callback)) callback(null, self.content, newContent);
 			});
 		};
@@ -845,13 +846,13 @@
 		this.newEntries = [];
 
 		this.getNewEntries = function(callback) {
-			console.log("geNewContents -- callback", callback);
+			// console.log("geNewContents -- callback", callback);
 			var self = this;
 			var start = this.content.length;
 
 			// TODO: Limit the length requested if the index is too big; would require getting the info first and some kind of looping
 			this.archiver.index_get(this.indexName, this.indexType, start, "END", function (error, indexGetResult) {
-				console.log("callback for archiver.index_get in getNewEntries");
+				// console.log("callback for archiver.index_get in getNewEntries");
 				if (error) {
 					console.log("Error happened on index get", error, indexGetResult);
 					// self.latestVariableVersionURI = null;
@@ -863,7 +864,7 @@
 					return;
 				}
 				var newContent = indexGetResult.result;
-				console.log("start", start, "content.length", self.content.length, "newContent.length", newContent.length, "getNewEntries result", newContent);
+				// console.log("start", start, "content.length", self.content.length, "newContent.length", newContent.length, "getNewEntries result", newContent);
 				self.newEntries = [];
 				self.newResources = [];
 				if (newContent) {
@@ -910,7 +911,7 @@
 //					});
 					self.fetchEntries(self, 0, self.newEntries, callback);
 				} else {
-					console.log("Callback", callback);
+					// console.log("Callback", callback);
 					if (isFunction(callback)) callback(null, self.entries, self.newEntries);
 				}
 			});
@@ -919,7 +920,7 @@
 		// indirectly recursive function -- could this lead to stack overflow if there are too many new entries in the index? Especially for main index?
 		this.fetchEntries = function(self, entryIndex, newEntries, callback) {
 			if (entryIndex >= newEntries.length) {
-				console.log("Callback", callback);
+				// console.log("Callback", callback);
 				if (isFunction(callback)) callback(null, self.entries, newEntries);
 				return;
 			}
@@ -929,9 +930,9 @@
 			// Support some legacy data from initial testing and development
 			if (resourceURI === undefined) resourceURI = entry.resourceUUID;
 			
-			console.log("fetchNewEntries about to request", resourceURI);
+			// console.log("fetchNewEntries about to request", resourceURI);
 			if (!resourceURI) {
-				console.log("No resourceUUID", entry);
+				// console.log("No resourceUUID", entry);
 				self.fetchEntries(self, entryIndex + 1, newEntries, callback);
 			} else if (entry.xContent !== undefined) {
 				// Handle situation where resource data was directly embedded in index (to save network lookups)
