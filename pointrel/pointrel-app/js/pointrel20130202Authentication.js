@@ -1,40 +1,63 @@
+"use strict";
+
+/* global document, localStorage, window */
+
 var pointrel_authentication = (function () {
     var login_userIDKey = "login_userID";
+    
+    var fallbackTemporaryStorage = {};
+    
+    function isHTML5StorageAvailable() {
+    	try {
+    		return 'localStorage' in window && window.localStorage !== null;
+    	} catch (e) {
+    		return false;
+    	}
+    }
 
     function loginPageLoaded() {
         document.clickedLogin = clickedLogin;
         document.clickedLogout = clickedLogout;
-        var userID = LocalStorage_get(login_userIDKey);
+        var userID = localStorage_get(login_userIDKey);
         console.log("key and userID read from local storage", login_userIDKey, userID);
         updateStatus(userID);
     }
 
-    function LocalStorage_set(key, value) {
+    function localStorage_set(key, value) {
         // console.log("LocalStorage_set", key, value);
-        return $.jStorage.set(key, value);
+    	if (isHTML5StorageAvailable()) {
+    		localStorage[key] = value;
+    	} else {
+    		fallbackTemporaryStorage[key] = value;
+    	}
+    	return value;
     }
 
-    function LocalStorage_get(key) {
-        return $.jStorage.get(key);
+    function localStorage_get(key) {
+    	if (isHTML5StorageAvailable()) {
+    		return localStorage[key];
+    	} else {
+    		return fallbackTemporaryStorage[key];
+    	}
     }
 
     function isLoggedIn() {
         //noinspection RedundantIfStatementJS
-        if (LocalStorage_get(login_userIDKey)) return true;
+        if (localStorage_get(login_userIDKey)) return true;
         return false;
     }
 
     function getUserID() {
-        return LocalStorage_get(login_userIDKey);
+        return localStorage_get(login_userIDKey);
     }
 
     function getUserIDOrAnonymous() {
         if (!isLoggedIn()) return "anonymous";
-        return LocalStorage_get(login_userIDKey);
+        return localStorage_get(login_userIDKey);
     }
 
     function setUserID(userID) {
-        return LocalStorage_set(login_userIDKey, userID);
+        return localStorage_set(login_userIDKey, userID);
     }
 
     function updateStatus(userID) {
@@ -59,14 +82,14 @@ var pointrel_authentication = (function () {
             alert("No user ID entered");
             return;
         }
-        LocalStorage_set(login_userIDKey, userID);
+        localStorage_set(login_userIDKey, userID);
         updateStatus(userID);
     }
 
     function clickedLogout() {
         var userID = "";
         console.log("userID", "");
-        LocalStorage_set(login_userIDKey, userID);
+        localStorage_set(login_userIDKey, userID);
         updateStatus(userID);
     }
 
