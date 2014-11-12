@@ -492,7 +492,7 @@ define("conceptMap", [
         // TODO: Does not deal with editing conflicts except by failing
 
         var newItemsDocumentText = JSON.stringify(newItemsDocument);
-        var textURI = archiver.resource_add(Pointrel20130202.Utility.encodeAsUTF8(newItemsDocumentText), "ConceptMapItems.json");
+        var textURI = archiver.resource_add(newItemsDocumentText, "ConceptMapItems.json");
         console.log(textURI);
         var timestamp = new Date().toISOString();
         var previousVersionURI = currentVersionURI;
@@ -500,7 +500,7 @@ define("conceptMap", [
         console.log("version:", version);
         var versionAsString = JSON.stringify(version);
         console.log("versionAsString:", versionAsString);
-        var newVersionURI = archiver.resource_add(Pointrel20130202.Utility.encodeAsUTF8(versionAsString), "Version.json");
+        var newVersionURI = archiver.resource_add(versionAsString, "Version.json");
         console.log("newVersionURI:", newVersionURI);
         //noinspection JSUnusedLocalSymbols
         archiver.variable_set(diagramName, currentVersionURI, newVersionURI, function (error, result) {

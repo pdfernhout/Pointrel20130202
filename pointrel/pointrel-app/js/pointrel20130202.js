@@ -19,7 +19,28 @@
 	
 	// "credentials" is either a string that is the userID or it is a dictionary with a field called "userID"
 	
+	
     // support functions
+
+    function isString(something) {
+    	return (typeof something === 'string' || something instanceof String);
+    }
+    
+    function isFunction(something) {
+    	return (typeof something === "function");
+    } 
+    
+    /* global escape, unescape, window */
+
+	/// encoding and decoding so can send binary data via pointrel and process it when it comes back
+	function encodeAsUTF8(text) {
+	    return unescape(encodeURIComponent(text));
+	}
+	
+	function decodeFromUTF8(text) {
+	    return decodeURIComponent(escape(text));
+	}
+	
 	function validateBinaryData(dataString) {
 	    // slow for now...
 	    for (var i = 0; i < dataString.length; i++) {
@@ -49,7 +70,7 @@
 	    // *     returns 1: 'S2V2aW4gdmFuIFpvbm5ldmVsZA=='
 	    // mozilla has this native
 	    // - but breaks in 2.0.0.12!
-	    //if (typeof this.window['btoa'] == 'function') {
+	    //if (isFunction(this.window['btoa']) {
 	    //    return btoa(data);
 	    //}
 	    var b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
@@ -136,51 +157,19 @@
 		return dec;
 	}
 	
-	// end support functions
+	// TODO: Move this to another file
+    // http://stackoverflow.com/questions/22582795/jquery-param-alternative-for-javascript
+    function queryParams(data) {
+        var array = [];
+        
+	    for(var key in data) {
+	        array.push(encodeURIComponent(key) + "=" + encodeURIComponent(data[key]));
+	    }
+	    
+	   return array.join("&");
+	}
 	
-    // Currying two variables
-    function success(callback, postProcessing, request, responseType) {
-    	var response = request.response;
-    	if (responseType === "json") {
-    		// TODO: Exception handling
-    		try {
-    			response = JSON.parse(response);
-    		} catch (err) {
-    			callback("ERROR parsing JSON", response);
-    		}
-    	}
-		// console.log("sendRequest result:", request, response);
-		if (responseType === "text" || request.statusText === "OK") {
-			if (typeof (callback) === "function") {
-				if (typeof (postProcessing) === "function") {
-					response = postProcessing(response);
-				}
-				callback(null, response);
-			}
-		} else {
-			if (typeof (callback) === "function") {
-				callback("FAILED", request);
-			}
-		}
-    }
-    
-    function createOnReadyStateChangeCallback(responseType, remoteScript, callback, postProcessing, request) {
-    	return function() {
-			if (request.readyState != 4)  return;
-			// 200 == success, 304 = not modified
-			if  (request.status === 200 || request.status === 304) {
-				success(callback, postProcessing, request, responseType);
-			} else {
-				// Otherwise an error
-				console.log("sendRequest error", request, request.status, request.statusText);
-				if (typeof (callback) === "function") {
-					callback("ERROR", request);
-				} else {
-					alert("Failed POST to " + remoteScript + "\nstatus: " + request.status + " statusText: " + request.statusText);
-				}
-			}
-		};
-    }
+	// end support functions
     
     /* global XMLHttpRequest,  ActiveXObject */
     // Factories and creation method from: http://stackoverflow.com/questions/2557247/easiest-way-to-retrieve-cross-browser-xmlhttprequest
@@ -206,20 +195,54 @@
         return xmlhttp;
     }
     
-    // http://stackoverflow.com/questions/22582795/jquery-param-alternative-for-javascript
-    function queryParams(data) {
-        var array = [];
-        
-	    for(var key in data) {
-	        array.push(encodeURIComponent(key) + "=" + encodeURIComponent(data[key]));
-	    }
-	    
-	   return array.join("&");
-	}
-
+    // Currying two variables
+    function success(callback, postProcessing, request, responseType) {
+    	var response = request.response;
+    	if (responseType === "json") {
+    		// TODO: Exception handling
+    		try {
+    			response = JSON.parse(response);
+    		} catch (err) {
+    			callback("ERROR parsing JSON", response);
+    		}
+    	}
+		// console.log("sendRequest result:", request, response);
+		if (responseType === "text" || response.status === "OK") {
+			if (isFunction(callback)) {
+				if (isFunction(postProcessing)) {
+					response = postProcessing(response);
+				}
+				callback(null, response);
+			}
+		} else {
+			console.log("request failed", request, response);
+			if (isFunction(callback)) {
+				callback("FAILED", request);
+			}
+		}
+    }
+    
+    function createOnReadyStateChangeCallback(responseType, remoteScript, callback, postProcessing, request) {
+    	return function() {
+			if (request.readyState != 4)  return;
+			// 200 == success, 304 = not modified
+			if  (request.status === 200 || request.status === 304) {
+				success(callback, postProcessing, request, responseType);
+			} else {
+				// Otherwise an error
+				console.log("sendRequest error", request, request.status, request.statusText);
+				if (isFunction(callback)) {
+					callback("ERROR", request);
+				} else {
+					alert("Failed POST to " + remoteScript + "\nstatus: " + request.status + " statusText: " + request.statusText);
+				}
+			}
+		};
+    }
+    
 	function sendRequest(serverURL, remoteScript, credentials, data, callback, postProcessing) {
 		var userID = "anonymous";
-		if (typeof credentials == 'string' || credentials instanceof String) {
+		if (isString(credentials)) {
 			userID = credentials;
 		} else if (credentials.userID !== undefined) {
 			userID = credentials.userID;
@@ -253,7 +276,7 @@
         
         // TODO: Are these needed?
         // request.setRequestHeader('User-Agent','XMLHTTP/1.0');
-        if (requestType === "POST") request.setRequestHeader('Content-type','application/x-www-form-urlencoded');   
+        if (requestType === "POST") request.setRequestHeader('Content-type','application/x-www-form-urlencoded; charset=UTF-8');   
         
 		// TODO: Are these headers really needed? They are not used in the other requests, although this one has encoded data
         // headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
@@ -264,7 +287,6 @@
 		if (requestType === "GET") {
 			request.send();
 		} else {
-			// Need to pass original data string as it will be utf-8 encoded by jQuery
 			var dataToSend = "";
 			if (data) dataToSend = queryParams(data);
 			request.send(dataToSend);
@@ -273,32 +295,67 @@
 
     //////// RESOURCES
 	
+	/* global Uint8Array */
+	
     // TODO: Might need to think about decoding URLs passed back to user and encoding them for variables
 
     // Data passed to this needs to be only characters in the range 0-255 (byte)
     // That means you should encode and decode arbitrary JavaScript string text using the UTF8 functions if needed
-	function pointrel_resource_add(serverURL, credentials, originalDataString, extension, callback) {
+	function pointrel_resource_add(serverURL, credentials, originalData, extension, callback) {
         console.log("pointrel_resource_add extension: ", extension);
-        // special validation for now
-        if (!validateBinaryData(originalDataString)) { callback("FAILED Not Binary Data", null); return ""; }
+        
+        // originalData shauld be either a string or an ArrayBuffer
+        
+        var dataAsStringOfBytes;
+        
+        if (isString(originalData)) {
+        	dataAsStringOfBytes = encodeAsUTF8(originalData);
+            // special validation for now
+            // if (!validateBinaryData(originalData)) { callback("FAILED Not Binary Data", null); return ""; }
+        } else {
+        	dataAsStringOfBytes = String.fromCharCode.apply(null, Array.prototype.slice.apply(new Uint8Array(originalData)));
+         }
 
-        var stringInCryptoJSWords = CryptoJS.enc.Latin1.parse(originalDataString);
+        var stringInCryptoJSWords = CryptoJS.enc.Latin1.parse(dataAsStringOfBytes);
         var hash = CryptoJS.SHA256(stringInCryptoJSWords);
+        
+        console.log("pointrel_resource_add", originalData.length, dataAsStringOfBytes.length, "" + hash, originalData, dataAsStringOfBytes);
 
         var extensionSeperator = ".";
         if (extension === "") extensionSeperator = "";
-        var uri = "pointrel://sha256_" + hash + "_" + originalDataString.length + extensionSeperator + extension;
+        var uri = "pointrel://sha256_" + hash + "_" + dataAsStringOfBytes.length + extensionSeperator + extension;
+        
+        var byteStringEncodedAsBase64 = base64_encode(dataAsStringOfBytes);
+        console.log("encodedData", byteStringEncodedAsBase64);
+        
+        // check
+        var checkData = base64_decode(byteStringEncodedAsBase64);
+        if (checkData !== dataAsStringOfBytes) {
+        	console.log("data check: does not match", checkData);
+        } else {
+        	console.log("data check matches");
+        }
 
-        var data = {"resourceURI": uri, "resourceContent": base64_encode(originalDataString)};
+        var data = {"resourceURI": uri, "resourceContent": byteStringEncodedAsBase64};
+        console.log("data sending", data);
         sendRequest(serverURL, "resource-add.php", credentials, data, callback);
 
         console.log("pointrel_resource_add returning: ", uri);
         return uri;
     }
 
-    function pointrel_resource_get(serverURL, credentials, uri, callback) {
+	// The "charset" parameter of extraData (defaults to utf8 if not specified) will control how the binary data downloaded from the server is decoded into a string
+    // To retrieve binary data from the server, try specifying "8BIT" or "BINARY" as the charset
+	function pointrel_resource_get(serverURL, credentials, uri, extraData, callback) {
         console.log("pointrel_resource_get: ", uri);
         var data = {"resourceURI": uri};
+        if (extraData) {
+        	for (var key in extraData) {
+        		if (extraData.hasOwnProperty(key)) {
+        			data[key] = extraData[key];
+        		}
+        	}
+        }
         sendRequest(serverURL, "resource-get.php", credentials, data, callback);
     }
 
@@ -340,6 +397,9 @@
     }
 
     ///// JOURNALS
+    
+    // TODO: Aassuming utf8 by default when return data, but it maybe binary or other
+    // TODO: Also, what happens if request data that ends in the middle of a multi-byte unicode character?
     
     function decodeResponseFromServer(responseFromServer) {
 		responseFromServer.result = base64_decode(responseFromServer.result);
@@ -397,13 +457,18 @@
 
         // Resources
         
-        this.resource_add = function (originalDataString, extension, callback) {
-            return pointrel_resource_add(this.serverURL, this.credentials, originalDataString, extension, callback);
+        this.resource_add = function (originalData, extension, callback) {
+            return pointrel_resource_add(this.serverURL, this.credentials, originalData, extension, callback);
 
         };
 
-        this.resource_get = function (uri, callback) {
-            return pointrel_resource_get(this.serverURL, this.credentials, uri, callback);
+        // extraParams is optional and cannot be a function; it can be used to specifiy a "charset" of "8bit" to return binary data
+        this.resource_get = function (uri, extraParams, callback) {
+        	if (isFunction(extraParams)) {
+        		callback = extraParams;
+        		extraParams = {};
+        	}
+            return pointrel_resource_get(this.serverURL, this.credentials, uri, extraParams, callback);
 
         };
 
@@ -477,8 +542,6 @@
     
     var Utility = {};
     
-    /* global escape, unescape, window */
-    
 	// Get the value of a parameter in the query string
 	function getParameter(paramName) {
 	    var searchString = window.location.search.substring(1);
@@ -500,16 +563,6 @@
 	function startsWith(data, start) {
 		if (!data) return false;
 	    return data.substring(0, start.length) === start;
-	}
-	
-	/// encoding and decoding so can send binary data via pointrel and process it when it comes back
-	
-	function encodeAsUTF8(text) {
-	    return unescape(encodeURIComponent(text));
-	}
-	
-	function decodeFromUTF8(text) {
-	    return decodeURIComponent(escape(text));
 	}
 	
 	Utility.getParameter = getParameter;
@@ -545,11 +598,11 @@
 	    this.done = function (status) {
 	        this.endingStatus = status;
 	        console.log("endingStatus", this.endingStatus);
-	        if (typeof(this.callbackForAllVersions) == "function") this.callbackForAllVersions(null, this.versions, this.endingStatus, this);
+	        if (isFunction(this.callbackForAllVersions)) this.callbackForAllVersions(null, this.versions, this.endingStatus, this);
 	    };
 
 	    this.nextVersion = function (version) {
-	        if (typeof(this.callbackForNextVersion) == "function") this.callbackForNextVersion(null, version, this);
+	        if (isFunction(this.callbackForNextVersion)) this.callbackForNextVersion(null, version, this);
 	    };
 
 	    this.doneBecauseOfError = function (error) {
@@ -557,7 +610,7 @@
 	        this.errorStatus = error;
 	        console.log("endingStatus", this.endingStatus);
 	        console.log("errorStatus", this.errorStatus);
-	        if (typeof(this.callbackForAllVersions) == "function") {
+	        if (isFunction(this.callbackForAllVersions)) {
 	            this.callbackForAllVersions(this.errorStatus, this.versions, this.endingStatus, this);
 	        } else {
 	            alert("Some kind of error happened in VersionFollower");
@@ -651,7 +704,7 @@
 				console.log("callback for archiver.variable_get in getLatestVariableVersionURI");
 				if (error) {
 					console.log("error in getLastestVariableVersionURI", error);
-					if (typeof(callback) === "function") {
+					if (isFunction(callback)) {
 						callback(error, variableGetResult);
 					} else {
 						alert("Error happened on variable get");
@@ -661,7 +714,7 @@
 				self.latestVariableVersionURI = variableGetResult.currentValue;
 				console.log("getLatestVariableVersionURI result", self.latestVariableVersionURI);
 				console.log("Callback", callback);
-				if (typeof(callback) === "function") callback(null, self.latestVariableVersionURI);
+				if (isFunction(callback)) callback(null, self.latestVariableVersionURI);
 			});
 	    };
 
@@ -670,7 +723,7 @@
 			console.log("newVersionsDone this", this);
 			if (error) {
 				console.log("error in NewVersionsDone", error, versions, endingStatus, follower);
-				if (typeof (this.callbackWhenVersionsLoaded) == "function") {
+				if (isFunction(this.callbackWhenVersionsLoaded)) {
 					this.callbackWhenVersionsLoaded(error, versions, endingStatus, follower);
 				} else {
 					alert("error in nevVersionsDone");
@@ -681,7 +734,7 @@
 				this.mostRecentlyLoadedVersionURI = this.latestVariableVersionURI;
 			}
 			console.log("about to try callback", this.callbackWhenVersionsLoaded);
-			if (typeof (this.callbackWhenVersionsLoaded) == "function") this.callbackWhenVersionsLoaded(error, versions, endingStatus, follower);
+			if (isFunction(this.callbackWhenVersionsLoaded)) this.callbackWhenVersionsLoaded(error, versions, endingStatus, follower);
 			console.log("after tried callback");
 		};
 
@@ -694,7 +747,7 @@
 				console.log("callback in getNewVersions after getLatestVariableVersionURI", variableGetResult);
 				if (error) {
 					console.log("error getting latest value of variable");
-					if (typeof (this.callbackWhenVersionsLoaded) == "function") {
+					if (isFunction(this.callbackWhenVersionsLoaded)) {
 						this.callbackWhenVersionsLoaded(error, null, null, null);
 					} else {
 						alert("error in getNewVersions when getting latest value of variable");
@@ -712,7 +765,7 @@
 			this.archiver.variable_set(this.variableName, this.latestVariableVersionURI, newVersionURI, function(error, status) {
 				if (error) {
 					console.log("Error in setNewVersionURI", error, status);
-					if (typeof(callback) === "function") {
+					if (isFunction(callback)) {
 						callback(error, status, null);
 					} else {
 						alert("Error happened when trying to set variable: " + JSON.stringify(status));
@@ -721,7 +774,7 @@
 				}
 				console.log("after updating to: ", newVersionURI);
 				self.latestVariableVersionURI = newVersionURI;
-				if (typeof(callback) === "function") callback(error, status, newVersionURI);
+				if (isFunction(callback)) callback(error, status, newVersionURI);
 			});
 		};
 	}
@@ -741,7 +794,7 @@
 				if (error) {
 					console.log("Error happened on journal get", error, journalGetResult);
 					// self.latestVariableVersionURI = null;
-					if (typeof(callback) === "function") {
+					if (isFunction(callback)) {
 						callback(error, journalGetResult);
 					} else {
 						alert("Error happened on journal get");
@@ -759,7 +812,7 @@
 					self.content = self.content + newContent;
 				}
 				console.log("Callback", callback);
-				if (typeof(callback) === "function") callback(null, self.content, newContent);
+				if (isFunction(callback)) callback(null, self.content, newContent);
 			});
 		};
 	}
@@ -802,7 +855,7 @@
 				if (error) {
 					console.log("Error happened on index get", error, indexGetResult);
 					// self.latestVariableVersionURI = null;
-					if (typeof(callback) === "function") {
+					if (isFunction(callback)) {
 						callback(error, indexGetResult);
 					} else {
 						alert("Error happened on index get");
@@ -852,13 +905,13 @@
 //									entry.resource = resourceParsed;
 //								}
 //							});
-//							// Somehow need to do this at end: if (typeof(callback) === "function") callback(null, self.entries, self.newEntries);
+//							// Somehow need to do this at end: if (isFunction(callback)) callback(null, self.entries, self.newEntries);
 //						});
 //					});
 					self.fetchEntries(self, 0, self.newEntries, callback);
 				} else {
 					console.log("Callback", callback);
-					if (typeof(callback) === "function") callback(null, self.entries, self.newEntries);
+					if (isFunction(callback)) callback(null, self.entries, self.newEntries);
 				}
 			});
 		};
@@ -867,7 +920,7 @@
 		this.fetchEntries = function(self, entryIndex, newEntries, callback) {
 			if (entryIndex >= newEntries.length) {
 				console.log("Callback", callback);
-				if (typeof(callback) === "function") callback(null, self.entries, newEntries);
+				if (isFunction(callback)) callback(null, self.entries, newEntries);
 				return;
 			}
 			var entry = newEntries[entryIndex];

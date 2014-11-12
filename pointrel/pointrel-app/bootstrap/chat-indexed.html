@@ -94,7 +94,7 @@
         var versionAsString = JSON.stringify(version);
         console.log("versionAsString:", versionAsString);
         
-        var newVersionURI = archiver.resource_add(Pointrel20130202.Utility.encodeAsUTF8(versionAsString), "PointrelChat.pce.json", function(error, status) {
+        var newVersionURI = archiver.resource_add(versionAsString, "PointrelChat.pce.json", function(error, status) {
 	        if (error) { alert("could not write new version: " + JSON.stringify(status)); return }
 	        console.log("wrote newVersionURI:", newVersionURI);
 			refresh();

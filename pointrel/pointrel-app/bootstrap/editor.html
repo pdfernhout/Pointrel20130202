@@ -75,7 +75,7 @@
                         console.log("in callback from resource_get");
                         if (error) {
                             alert("Error happened when getting text of version");
-                            return;
+                            text = error;
                         }
                         console.log("latest updating before:", versionURI);
                         $("#timestamp").val(version.timestamp);
@@ -120,7 +120,7 @@
                         console.log("in callback from resource_get");
                         if (error) {
                             alert("Error happened when getting text of previous version");
-                            return;
+                            text = error;
                         }
                         console.log("previousVersion:", previousVersion);
                         $("#timestamp").val(previousVersion.timestamp);
@@ -141,9 +141,7 @@
             updateURI();
             var editorText = $("#editor").val();
             console.log("editorText", editorText.length, editorText);
-            var editorTextAsUTF8 = Pointrel20130202.Utility.encodeAsUTF8(editorText);
-            console.log("editorTextAsUTF8", editorTextAsUTF8.length, editorTextAsUTF8);
-            var textURI = archiver.resource_add(editorTextAsUTF8, "txt", function(error, status) {
+            var textURI = archiver.resource_add(editorText, "txt", function(error, status) {
                 // TODO: Improve the handling so PHP returns a better status
                 if (error && !Pointrel20130202.Utility.startsWith(status.message, "File already exists:")) {
                     alert("could not write resource: " + JSON.stringify(status) + " error: " + error);
@@ -160,7 +158,7 @@
                 console.log("version:", version);
                 var versionAsString = JSON.stringify(version);
                 console.log("versionAsString:", versionAsString);
-                var newVersionURI = archiver.resource_add(Pointrel20130202.Utility.encodeAsUTF8(versionAsString), "Version.json", function(error, status) {
+                var newVersionURI = archiver.resource_add(versionAsString, "Version.json", function(error, status) {
                     if (error) { alert("could not write new version: " + JSON.stringify(status)); return }
                     console.log("wrote newVersionURI:", newVersionURI);
                     progress("Saved version");

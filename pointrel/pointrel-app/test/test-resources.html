@@ -33,8 +33,10 @@ RETRIEVE
 
 <script type="text/javascript">
 
-const originalDataString = "this is a test";
-const resourceURIShouldBe = "pointrel://sha256_2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c_14.txt";
+// const originalDataString = "this is a test";
+// const resourceURIShouldBe = "pointrel://sha256_2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c_14.txt";
+const originalDataString = "Chinese: 中国话不用彁字。";
+const resourceURIShouldBe = "pointrel://sha256_53ab7545427438dfd77242697f409d5e626997311a6249c24dae6e6af3959439_33.txt";
 
 require(["dojo/ready", "Pointrel20130202"], function(ready, Pointrel20130202) {
 
@@ -54,13 +56,18 @@ require(["dojo/ready", "Pointrel20130202"], function(ready, Pointrel20130202) {
         //    }
         addTest(archiver);
     }
+        
+    function encodeAsUTF8(text) {
+        return unescape(encodeURIComponent(text));
+    }
 
     function addTest(archiver) {
         console.log("originalDataString", originalDataString.length, originalDataString);
-        var dataStringAsUTF8 = Pointrel20130202.Utility.encodeAsUTF8(originalDataString);
+        var dataStringAsUTF8 = encodeAsUTF8(originalDataString);
         console.log("dataStringAsUTF8", dataStringAsUTF8.length, dataStringAsUTF8);
 
-        var hash = CryptoJS.SHA256(dataStringAsUTF8);
+        var stringInCryptoJSWords = CryptoJS.enc.Latin1.parse(dataStringAsUTF8);
+        var hash = CryptoJS.SHA256(stringInCryptoJSWords);
         var expectedURI = "pointrel://sha256_" + hash + "_" + dataStringAsUTF8.length + ".txt";
         console.log("Expected name: " + expectedURI);
 
@@ -69,7 +76,7 @@ require(["dojo/ready", "Pointrel20130202"], function(ready, Pointrel20130202) {
             return;
         }
 
-        var calculatedURI = archiver.resource_add(dataStringAsUTF8, "txt", function(error, status) {
+        var calculatedURI = archiver.resource_add(originalDataString, "txt", function(error, status) {
             document.getElementById("response").innerHTML = status;
             if (error) {
                 console.log("could not write resource: " + JSON.stringify(status) + " error: " + error);

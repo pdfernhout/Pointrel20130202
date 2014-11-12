@@ -204,7 +204,7 @@
             console.log("about to publish with markdown formatting:", variableName);
             var contentToPublish = '<html>\n<head>\n<meta http-equiv="Content-Type" content="text/html; charset=utf-8">\n</head>\n<body>\n' + lastProcessedText + "\n</body>\n</html>";
 
-            var newResourceURI = archiver.resource_add(Pointrel20130202.Utility.encodeAsUTF8(contentToPublish), "html", function(error, status) {
+            var newResourceURI = archiver.resource_add(contentToPublish, "html", function(error, status) {
                 // TODO: Ignoring error for now as may already exist
                 // if (error) { alert("could not write new resource: " + JSON.stringify(status)); return }
                 console.log("wrote newResourceURI:", newResourceURI);
@@ -235,7 +235,7 @@
             }
             if (extension === "") {extension = "html";}
 
-            var newResourceURI = archiver.resource_add(Pointrel20130202.Utility.encodeAsUTF8(contentToPublish), extension, function(error, status) {
+            var newResourceURI = archiver.resource_add(contentToPublish, extension, function(error, status) {
                 // TODO: Ignoring error for now as may already exist
                 // if (error) { alert("could not write new resource: " + JSON.stringify(status)); return }
                 console.log("wrote newResourceURI:", newResourceURI);

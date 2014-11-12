@@ -75,16 +75,14 @@
             var newContent = $("#newContent").val();
             
             console.log("newContent", newContent.length, newContent);
-            var newContentAsUTF8 = Pointrel20130202.Utility.encodeAsUTF8(newContent);
-            console.log("newContenttAsUTF8", newContentAsUTF8.length, newContentAsUTF8);
             
-            archiver.journal_put(journalName, newContentAsUTF8, function (error, response) {
+            archiver.journal_put(journalName, newContent, function (error, response) {
             	progress("done appending", error);
                 if (error) {
                     alert("Error when fetching:" + JSON.stringify(response));
                     return;
                 }
-                alert("Appended new content to journal: " + newContentAsUTF8);
+                alert("Appended new content to journal: " + newContent);
             });
         }
         

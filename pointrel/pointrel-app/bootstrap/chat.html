@@ -90,7 +90,7 @@
             console.log("version:", version);
             var versionAsString = JSON.stringify(version);
             console.log("versionAsString:", versionAsString);
-            var newVersionURI = archiver.resource_add(Pointrel20130202.Utility.encodeAsUTF8(versionAsString), "Version.json", function(error, status) {
+            var newVersionURI = archiver.resource_add(versionAsString, "Version.json", function(error, status) {
                 if (error) { alert("could not write new version: " + JSON.stringify(status)); return }
                 console.log("wrote newVersionURI:", newVersionURI);
                 console.log("about to update variable");
