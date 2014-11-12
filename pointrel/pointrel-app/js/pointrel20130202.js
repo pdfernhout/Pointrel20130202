@@ -37,9 +37,9 @@
 	    return unescape(encodeURIComponent(text));
 	}
 	
-	function decodeFromUTF8(text) {
-	    return decodeURIComponent(escape(text));
-	}
+	// function decodeFromUTF8(text) {
+	//    return decodeURIComponent(escape(text));
+	//}
 	
 	function validateBinaryData(dataString) {
 	    // slow for now...
@@ -371,28 +371,24 @@
 
     function pointrel_variable_new(serverURL, credentials, variableName, newValue, callback) {
         console.log("pointrel_variable_new: ", variableName);
-        // var encodedVariableName = EncodeAsUTF8(variableName);
         var data = {"variableName": variableName, "operation": "new", "newValue": newValue};
         sendRequest(serverURL, "variable-query.php", credentials, data, callback);
     }
 
     function pointrel_variable_get(serverURL, credentials, variableName, callback) {
         console.log("pointrel_variable_get: ", variableName);
-        // var encodedVariableName = EncodeAsUTF8(variableName);
         var data = {"variableName": variableName, "operation": "get"};
         sendRequest(serverURL, "variable-query.php", credentials, data, callback);
     }
 
     function pointrel_variable_set(serverURL, credentials, variableName, oldVersionURI, newVersionURI, callback) {
         console.log("pointrel_resource_set: ", variableName, " old: ", oldVersionURI, " new: ", newVersionURI);
-        // var encodedVariableName = EncodeAsUTF8(variableName);
         var data = {"variableName": variableName, "operation": "set", "currentValue": oldVersionURI, "newValue": newVersionURI};
         sendRequest(serverURL, "variable-query.php", credentials, data, callback);
     }
 
     function pointrel_variable_delete(serverURL, credentials, variableName, currentValue, callback) {
         console.log("pointrel_variable_delete: ", variableName);
-        // var encodedVariableName = EncodeAsUTF8(variableName);
         var data = {"variableName": variableName, "operation": "delete", currentValue: currentValue};
         sendRequest(serverURL, "variable-query.php", credentials, data, callback);
     }
@@ -409,7 +405,6 @@
     
     function pointrel_journal_ajax(operation, serverURL, credentials, journalName, journalType, callback, extra) {
         console.log("pointrel_journal_ajax", operation, journalName, journalType);
-        // var encodedJournalName = encodeAsUTF8(journalName);
         
         // Build merged content with extra fields if needed
         var data = {"journalName": journalName, "journalType": journalType, "operation": operation};
@@ -569,8 +564,6 @@
 	Utility.getParameter = getParameter;
 	Utility.displayStringForTimestamp = displayStringForTimestamp;
 	Utility.startsWith = startsWith;
-	Utility.encodeAsUTF8 = encodeAsUTF8;
-	Utility.decodeFromUTF8 = decodeFromUTF8;
 	
 	// Support classes that define conventient ways to use the Pointrel system as one approach
 	// TODO: Move these function definitions into prototype definitions instead of setting when instance is created with this.X = function ...
